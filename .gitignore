@@ -1,3 +1,4 @@
+.ipynb_checkpoints
 *.jld2
 *.jl.*.cov
 *.jl.cov
