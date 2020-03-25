@@ -1,17 +1,17 @@
-using Documenter, PlanckCov
+using Documenter, PSPlanck
 
 makedocs(;
-    modules=[PlanckCov],
+    modules=[PSPlanck],
     format=Documenter.HTML(),
     pages=[
         "Home" => "index.md",
     ],
-    repo="https://github.com/xzackli/PlanckCov.jl/blob/{commit}{path}#L{line}",
-    sitename="PlanckCov.jl",
+    repo="https://github.com/xzackli/PSPlanck.jl/blob/{commit}{path}#L{line}",
+    sitename="PSPlanck.jl",
     authors="xzackli",
     assets=String[],
 )
 
 deploydocs(;
-    repo="github.com/xzackli/PlanckCov.jl",
+    repo="github.com/xzackli/PSPlanck.jl",
 )

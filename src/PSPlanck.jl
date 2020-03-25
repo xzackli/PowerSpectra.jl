@@ -1,4 +1,4 @@
-module PlanckCov
+module PSPlanck
 
 # greet() = print("Hello World!")
 

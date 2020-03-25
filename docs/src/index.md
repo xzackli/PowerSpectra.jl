@@ -1,8 +1,8 @@
-# PlanckCov.jl
+# PSPlanck.jl
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [PlanckCov]
+Modules = [PSPlanck]
 ```

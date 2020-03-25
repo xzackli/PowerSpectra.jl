@@ -1,6 +1,6 @@
-using PlanckCov
+using PSPlanck
 using Test
 
-@testset "PlanckCov.jl" begin
+@testset "PSPlanck.jl" begin
     # Write your own tests here.
 end

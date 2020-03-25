@@ -1,20 +1,21 @@
-using PlanckCov
+using PSPlanck
 using WignerSymbols
+using Libsharp
+using PyPlot
 
 ##
-PlanckCov.greet()
-print("oh yeahhh")
 
 ## 
 x = wigner3j(1,1,0, 0,0)
 
 ##
-using PyPlot
+
 ##
 clf()
 
 x = collect(1:0.1:8)
 plt.plot(x, sin.(x))
+plt.xlabel("x axis")
 
 gcf()
 ##
@@ -35,4 +36,4 @@ end
 
 
 ##
-@code_warntype Ξ_TT(Float64, "TT", "TT", 5, 6, 10)
+Ξ_TT(Float64, "TT", "TT", 5, 6, 10000)
