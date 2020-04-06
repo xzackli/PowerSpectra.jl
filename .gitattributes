@@ -1,2 +1,2 @@
-notebooks/* linguist-documentation
-*.ipynb linguist-documentation
+notebooks/* linguist-vendored
+*.ipynb linguist-vendored
