@@ -1,10 +1,12 @@
 ##
 using PSPlanck
-using Libsharp
-using PyPlot
-using DataFrames
-using RationalRoots
-using BenchmarkTools
+using Healpix
+
+# using RationalRoots
+# using BenchmarkTools
+# using WignerSymbols
+
+
 
 ## 
 for i in 1:5
