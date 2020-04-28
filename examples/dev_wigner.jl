@@ -1,28 +1,55 @@
-using PyPlot
-plt.plot()
-plt.gcf()
+
 ## load in the data
 using PSPlanck
 using Healpix
-
+PSPlanck.__init__()
+PSPlanck.wigner3j²(Float64, 2,2,2,0,0)
+##
 data_dir = "/home/zequnl/.julia/dev/PSPlanck/notebooks/data/"
-# m = Healpix.readMapFromFITS(data_dir * "mask.fits", 1, Float64)
-flatmap = Map{Float64, RingOrder}(ones(nside2npix(32)))  # FLAT MASK
-# flat_alm = map2alm(m)
+flatmap = Healpix.readMapFromFITS(data_dir * "mask.fits", 1, Float64)
+# flatmap = Map{Float64, RingOrder}(ones(nside2npix(512)))  # FLAT MASK
+
 
 m_143_hm1 = Field("143_hm1", flatmap, flatmap)
 m_143_hm2 = Field("143_hm2", flatmap, flatmap)
 
+# w = cov(m_143_hm1, m_143_hm2)
+@time begin
+wcoeff = PSPlanck.w_coefficients(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+field_names = [m_143_hm1.name, m_143_hm2.name, m_143_hm1.name, m_143_hm2.name]
+W_spec = PSPlanck.W_spectra(Float64, field_names, wcoeff)
+end
 
-w = cov(m_143_hm1, m_143_hm2)
+##
+using LinearAlgebra
+function test(n, W)
+    x = zeros(Float64, (n,n))
+    W_arr = W[
+        PSPlanck.∅∅, PSPlanck.II, "143_hm1", "143_hm1", 
+        "143_hm2", "143_hm2", PSPlanck.TT, PSPlanck.TT]
+
+    ij = [(i,j) for i in 1:n for j in i:n]
+    Threads.@threads for (i,j) in ij
+        x[i, j] = PSPlanck.ΞTT(W_arr, i, j)
+    end
+    return Symmetric(x)
+end
+##
+@time begin
+    test(150, W_spec)
+    GC.gc()
+end
+
 # mollview(m)
-
 ##
-res = PSPlanck.wigner3j²(Float64, 6,6,6,0,0)
+using PyPlot
+using LinearAlgebra
 
-##
+plt.clf()
+plt.plot( (diag(test(150, W_spec))) )
+plt.gcf()
 ##
 
 plt.clf()
-plt.plot(alm2cl(x.I))
+plt.imshow( log.((test(150, W_spec))) )
 plt.gcf()
