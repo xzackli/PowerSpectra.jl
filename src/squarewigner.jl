@@ -57,7 +57,7 @@ function wigner3j²(cache::BoundedWignerCache{Tdict}, T::Type{<:Real},
 
     # dictionary lookup or compute
     if haskey(cache.Wigner3j, (β₁, β₂, β₃, α₁, α₂))
-        rs = cache.Wigner3j[(β₁, β₂, β₃, α₁, α₂)]
+        rs = cache.Wigner3j.d[(β₁, β₂, β₃, α₁, α₂)]  # unsafe!
     else
         # get buffered variables 
         s1n, s1d, s2n = cache.numbuf, cache.denbuf, cache.s2n
