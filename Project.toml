@@ -17,6 +17,7 @@ Libsharp = "ac8d63fe-4615-43ae-9860-9cd4a3820532"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 RationalRoots = "308eb6b3-cc68-5ff3-9e97-c3c4da4fa681"
+ThreadSafeDicts = "4239201d-c60e-5e0a-9702-85d713665ba7"
 WignerSymbols = "9f57e263-0b3d-5e2e-b1be-24f2bb48858b"
 
 [compat]

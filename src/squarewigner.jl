@@ -3,7 +3,7 @@
 The default global thread-safe dictionaries used to cache results of calculations.
 They map the symmetrized form to r,s pairs.
 """
-const MAX_J = Ref(200)
+const MAX_J = Ref(1000)
 
 const Wigner3j = WignerSymbols.wigner_dicts(Float64)[1]  # shared by all threads
 const Wigner6j = WignerSymbols.wigner_dicts(Float64)[2]  # shared by all threads
@@ -54,7 +54,6 @@ function wigner3j²(cache::BoundedWignerCache{Tdict}, T::Type{<:Real},
     β₁ = convert(Int, j₁ + j₂ - j₃ )
     β₂ = convert(Int, j₁ - m₁ )
     β₃ = convert(Int, j₂ + m₂ )
-
 
     # dictionary lookup or compute
     if haskey(cache.Wigner3j, (β₁, β₂, β₃, α₁, α₂))

@@ -106,9 +106,9 @@ end
 function ΞTT(W_arr::Array{T,1}, ℓ₁::Integer, ℓ₂::Integer) where T
     Ξ = zero(T)
     for ℓ₃ in abs(ℓ₁ - ℓ₂):(ℓ₁ + ℓ₂)
-        Ξ += (2ℓ₃ + 1)/4π * wigner3j²(T, ℓ₁, ℓ₂, ℓ₃, 0, 0, 0) * W_arr[ℓ₃+1]
+        Ξ += (2ℓ₃ + 1) * wigner3j²(T, ℓ₁, ℓ₂, ℓ₃, 0, 0, 0) * W_arr[ℓ₃+1]
     end
-    return Ξ
+    return Ξ/4π
 end
 
 end

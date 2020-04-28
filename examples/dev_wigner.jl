@@ -2,9 +2,7 @@
 ## load in the data
 using PSPlanck
 using Healpix
-PSPlanck.__init__()
-PSPlanck.wigner3j²(Float64, 2,2,2,0,0)
-##
+
 data_dir = "/home/zequnl/.julia/dev/PSPlanck/notebooks/data/"
 flatmap = Healpix.readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 # flatmap = Map{Float64, RingOrder}(ones(nside2npix(512)))  # FLAT MASK
@@ -21,22 +19,36 @@ W_spec = PSPlanck.W_spectra(Float64, field_names, wcoeff)
 end
 
 ##
+
 using LinearAlgebra
+import ThreadPools: @qthreads
+
 function test(n, W)
     x = zeros(Float64, (n,n))
-    W_arr = W[
+    W_arr1 = W[
+        PSPlanck.∅∅, PSPlanck.∅∅, "143_hm1", "143_hm1", 
+        "143_hm2", "143_hm2", PSPlanck.TT, PSPlanck.TT]
+    W_arr2 = W[
+        PSPlanck.∅∅, PSPlanck.∅∅, "143_hm1", "143_hm2", 
+        "143_hm1", "143_hm2", PSPlanck.TT, PSPlanck.TT]
+    W_arr3 = W[
         PSPlanck.∅∅, PSPlanck.II, "143_hm1", "143_hm1", 
         "143_hm2", "143_hm2", PSPlanck.TT, PSPlanck.TT]
 
     ij = [(i,j) for i in 1:n for j in i:n]
-    Threads.@threads for (i,j) in ij
-        x[i, j] = PSPlanck.ΞTT(W_arr, i, j)
+    @qthreads for (i,j) in ij
+        x[i, j] = (
+            PSPlanck.ΞTT(W_arr1, i, j) +
+            PSPlanck.ΞTT(W_arr2, i, j) + 
+            PSPlanck.ΞTT(W_arr3, i, j) 
+        )
     end
     return Symmetric(x)
 end
+
 ##
 @time begin
-    test(150, W_spec)
+    test(128, W_spec)
     GC.gc()
 end
 
