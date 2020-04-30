@@ -17,7 +17,7 @@ PSPlanck.W_spectra!(workspace)
 # using ProfileVega  # NO THREADING
 PSPlanck.__init__()
 @time begin
-    c = cov(workspace, m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2; lmax=256)
+    c = cov(workspace, m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2; lmax=150)
     GC.gc()
 end
 
@@ -26,7 +26,20 @@ end
 @time cov(workspace, m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2; lmax=256)
 
 ##
-@time 
+using PSPlanck
+
+function test1(n)
+    for i in 1:n
+        for j in reverse(1:n)
+            for k in abs(i-j):(i+j)
+                PSPlanck.wigner3j²(Float64,i,j,k,0,0)
+            end
+        end
+    end
+end
+##
+PSPlanck.__init__()
+@time test1(200)
 
 
 ##
@@ -44,3 +57,8 @@ plt.clf()
 plt.imshow( log10.(c) )
 plt.colorbar()
 plt.gcf()
+
+
+
+##
+

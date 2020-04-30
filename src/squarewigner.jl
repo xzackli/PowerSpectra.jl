@@ -56,9 +56,9 @@ function wigner3j²(cache::BoundedWignerCache{Tdict}, T::Type{<:Real},
     β₃ = convert(Int, j₂ + m₂ )
 
     # dictionary lookup or compute
-    if haskey(cache.Wigner3j, (β₁, β₂, β₃, α₁, α₂))
-        rs = cache.Wigner3j.d[(β₁, β₂, β₃, α₁, α₂)]  # unsafe!
-    else
+    # if haskey(cache.Wigner3j, (β₁, β₂, β₃, α₁, α₂))
+    #     rs = cache.Wigner3j.d[(β₁, β₂, β₃, α₁, α₂)]  # unsafe!
+    # else
         # get buffered variables 
         s1n, s1d, s2n = cache.numbuf, cache.denbuf, cache.s2n
         snum, rnum, sden, rden = cache.snum, cache.rnum, cache.sden, cache.rden
@@ -81,8 +81,8 @@ function wigner3j²(cache::BoundedWignerCache{Tdict}, T::Type{<:Real},
 
         # store the r and s pair into the dictionary. 
         rs = convert(BigFloat, r) * convert(BigFloat, s)^2
-        cache.Wigner3j[(β₁, β₂, β₃, α₁, α₂)] = convert(Tdict, rs)
-    end
+        # cache.Wigner3j[(β₁, β₂, β₃, α₁, α₂)] = convert(Tdict, rs)
+    # end
     return convert(T, rs)
 end
 function wigner3j²(T::Type{<:Real}, j₁, j₂, j₃, m₁, m₂, m₃ = -m₁-m₂) where Tdict <: Number

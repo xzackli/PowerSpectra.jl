@@ -7,15 +7,16 @@ import Combinatorics: permutations, combinations, with_replacement_combinations
 import DataStructures: DefaultDict
 import ThreadSafeDicts: ThreadSafeDict
 import ThreadPools: @qthreads
-import Random: shuffle!
+# import Random: shuffle!
 using WignerSymbols
-WignerSymbols.MAX_J[] = 1000
+WignerSymbols.MAX_J[] = 1
 
 export mollview
 export cov, Field, CovarianceWorkspace
 
 include("field.jl")
 include("squarewigner.jl")
+include("rausch_yu.jl")
 
 function __init__()
     global wigner_caches
@@ -23,6 +24,7 @@ function __init__()
     empty!(Wigner3j)
     empty!(Wigner6j)
 end
+
 
 @enum MapType ∅∅ II QQ UU TT PP TP
 
@@ -33,6 +35,7 @@ struct CovarianceWorkspace{T <: Real}
     field_names::NTuple{4, String}
     w_coeff::DefaultDict{Tuple{MapType, String, String, MapType}, Healpix.Alm{Complex{T}}}
     W_spectra::DefaultDict{WIndex, Vector{T}}
+    WignerTable_TT::Array{Vector{T}, 2}
 end
 
 function CovarianceWorkspace(m_i::Field{T}, m_j::Field{T}, 
@@ -41,10 +44,15 @@ function CovarianceWorkspace(m_i::Field{T}, m_j::Field{T},
     lmax = 3 * m_i.maskT.resolution.nside - 1
     zero_alm = Alm{Complex{T}}(lmax, lmax)
     zero_cl = alm2cl(zero_alm)
+
+    wigTT = Array{Vector{T}, 2}(undef, lmax, lmax)
+    
+
     return CovarianceWorkspace{T}(
         field_names, 
         DefaultDict{Tuple{MapType, String, String, MapType}, Healpix.Alm{Complex{T}}}(zero_alm),
-        DefaultDict{WIndex, Vector{T}}(zero_cl)
+        DefaultDict{WIndex, Vector{T}}(zero_cl),
+        wigTT
     )
 end
 """
@@ -176,7 +184,7 @@ function _covTT!(C::AbstractArray{T,2}, lmax::Integer,
     ℓpairs = [(ℓ₁,ℓ₂) for ℓ₁ in 1:lmax for ℓ₂ in ℓ₁:min(ℓ₁+band,lmax)]
     reverse!(ℓpairs)
     
-    @qthreads for (ℓ₁,ℓ₂) in ℓpairs
+    @threads for (ℓ₁,ℓ₂) in ℓpairs
         Ξ = zeros(T, 8)
         @inbounds for ℓ₃ in abs(ℓ₁ - ℓ₂):(ℓ₁ + ℓ₂)
             wig = wigner3j²(T, ℓ₁, ℓ₂, ℓ₃, 0, 0, 0)
