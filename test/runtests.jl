@@ -1,6 +1,6 @@
-using PSPlanck
+using AngularPowerSpectrum
 using Test
 
-@testset "PSPlanck.jl" begin
-    # Write your own tests here.
+@testset "AngularPowerSpectrum.jl" begin
+    # Write your tests here.
 end

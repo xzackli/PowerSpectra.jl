@@ -1,8 +1,12 @@
-# PSPlanck.jl
+```@meta
+CurrentModule = AngularPowerSpectrum
+```
+
+# AngularPowerSpectrum
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [PSPlanck]
+Modules = [AngularPowerSpectrum]
 ```
