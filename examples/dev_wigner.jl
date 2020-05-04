@@ -1,8 +1,8 @@
 ## load in the data
-using AngularPowerSpectrum
+using AngularPowerSpectra
 using Healpix
 
-data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectrum/notebooks/data/"
+data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
 flatmap = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 # flatmap = Map{Float64, RingOrder}(ones(nside2npix(512)))  # FLAT MASK
 
@@ -10,8 +10,8 @@ m_143_hm1 = Field("143_hm1", flatmap, flatmap)
 m_143_hm2 = Field("143_hm2", flatmap, flatmap)
 workspace = CovarianceWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 
-AngularPowerSpectrum.w_coefficients!(workspace, m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-AngularPowerSpectrum.W_spectra!(workspace)
+AngularPowerSpectra.w_coefficients!(workspace, m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+AngularPowerSpectra.W_spectra!(workspace)
 
 ## 
 # using ProfileVega  # NO THREADING

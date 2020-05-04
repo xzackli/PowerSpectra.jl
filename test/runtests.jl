@@ -1,6 +1,6 @@
-using AngularPowerSpectrum
+using AngularPowerSpectra
 using Test
 
-@testset "AngularPowerSpectrum.jl" begin
+@testset "AngularPowerSpectra.jl" begin
     # Write your tests here.
 end

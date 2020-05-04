@@ -1,12 +1,12 @@
 ```@meta
-CurrentModule = AngularPowerSpectrum
+CurrentModule = AngularPowerSpectra
 ```
 
-# AngularPowerSpectrum
+# AngularPowerSpectra
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [AngularPowerSpectrum]
+Modules = [AngularPowerSpectra]
 ```

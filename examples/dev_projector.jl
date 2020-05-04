@@ -1,5 +1,5 @@
 ##
-using AngularPowerSpectrum
+using AngularPowerSpectra
 using Healpix
 using PyPlot
 # using RationalRoots

@@ -1,4 +1,4 @@
-module AngularPowerSpectrum
+module AngularPowerSpectra
 
 import Base.Threads: @threads
 import Healpix: Map, Alm, RingOrder, alm2cl, map2alm, numberOfAlms
