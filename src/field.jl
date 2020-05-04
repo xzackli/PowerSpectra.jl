@@ -2,16 +2,16 @@
 
 struct Field{T}
     name::String
-    maskT::Healpix.Map{T}
-    σTT::Healpix.Map{T}
+    maskT::Map{T}
+    σTT::Map{T}
 end
 
 struct PolarizedField{T}
     name::String
-    maskT::Healpix.Map{T}
-    maskP::Healpix.PolarizedMap{T}
-    σTT::Healpix.Map{T}
-    σPP::Healpix.PolarizedMap{T}
+    maskT::Map{T}
+    maskP::PolarizedMap{T}
+    σTT::Map{T}
+    σPP::PolarizedMap{T}
 end
 
 function Base.show(io::IO, ::MIME"text/plain", x::Field{T}) where T
