@@ -1,8 +1,4 @@
 
-import Healpix
-
-import PyCall
-import PyPlot
 
 struct Field{T}
     name::String
@@ -16,12 +12,6 @@ struct PolarizedField{T}
     maskP::Healpix.PolarizedMap{T}
     σTT::Healpix.Map{T}
     σPP::Healpix.PolarizedMap{T}
-end
-
-function mollview(m::Healpix.Map{Float64, Healpix.RingOrder}, args...; kws...)
-    hp = PyCall.pyimport("healpy")
-    hp.mollview(m.pixels, args...; kws...)
-    PyPlot.gcf()
 end
 
 function Base.show(io::IO, ::MIME"text/plain", x::Field{T}) where T

@@ -3,6 +3,9 @@ uuid = "f5ca4f4d-e898-4791-800e-627d1338a64b"
 authors = ["xzackli <xzackli@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
+
 [compat]
 julia = "1"
 

@@ -1,7 +1,7 @@
 ##
-using PSPlanck
+using AngularPowerSpectrum
 using Healpix
-
+using PyPlot
 # using RationalRoots
 # using BenchmarkTools
 # using WignerSymbols

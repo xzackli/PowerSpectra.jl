@@ -1,29 +1,14 @@
-module PSPlanck
+module AngularPowerSpectrum
 
 import Base.Threads: @threads
-import PyCall
 import Healpix: Map, Alm, RingOrder, alm2cl, map2alm, numberOfAlms
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import DataStructures: DefaultDict
-import ThreadSafeDicts: ThreadSafeDict
-import ThreadPools: @qthreads
-# import Random: shuffle!
-using WignerSymbols
-WignerSymbols.MAX_J[] = 1
+import WignerFamilies: wigner3j_f
 
-export mollview
 export cov, Field, CovarianceWorkspace
 
 include("field.jl")
-include("squarewigner.jl")
-include("rausch_yu.jl")
-
-function __init__()
-    global wigner_caches
-    resize!(empty!(wigner_caches), Threads.nthreads())
-    empty!(Wigner3j)
-    empty!(Wigner6j)
-end
 
 
 @enum MapType ∅∅ II QQ UU TT PP TP
