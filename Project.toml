@@ -7,7 +7,9 @@ version = "0.1.0"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
+Healpix = "9f4e344d-96bc-545a-84a3-ae6b9e1b672b"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+ThreadPools = "b189fb0b-2eb5-4ed4-bc0c-d34c51242431"
 UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
 
 [compat]

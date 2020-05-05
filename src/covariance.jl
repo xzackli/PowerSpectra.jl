@@ -1,33 +1,8 @@
 
-@enum MapType ∅∅ II QQ UU TT PP TP
-# Index for the W spectra, indexed X, Y, i, j, α, p, q, β
-const WIndex = Tuple{MapType, MapType, String, String, MapType, String, String, MapType}
-
-struct CovarianceWorkspace{T <: Real}
-    field_names::NTuple{4, String}
-    w_coeff::DefaultDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}
-    W_spectra::DefaultDict{WIndex, PowerSpectrum{T}}
-end
-
-function CovarianceWorkspace(m_i::Field{T}, m_j::Field{T}, 
-                             m_p::Field{T}, m_q::Field{T}) where {T}
-    field_names = (m_i.name, m_j.name, m_p.name, m_q.name)
-    lmax = 3 * m_i.maskT.resolution.nside - 1
-
-    zero_alm = Alm(lmax, lmax, Zeros{Complex{T}}(numberOfAlms(lmax, lmax)))
-    zero_cl = PowerSpectrum(collect(Zeros{T}(lmax+1)))
-
-    return CovarianceWorkspace{T}(
-        field_names, 
-        DefaultDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(zero_alm),
-        DefaultDict{WIndex, PowerSpectrum{T}}(zero_cl)
-    )
-end
-
 """
 Compute the effective weight map copefficients and store them in the workspace.
 """
-function w_coefficients!(workspace::CovarianceWorkspace{T},
+function w_coefficients!(workspace::SpectralWorkspace{T},
                          m_i::Field{T}, m_j::Field{T}, 
                          m_p::Field{T}, m_q::Field{T}) where {T <: Real}
     # generate coefficients w
@@ -60,7 +35,7 @@ function w_coefficients!(workspace::CovarianceWorkspace{T},
 end
 
 
-function W_spectra!(workspace::CovarianceWorkspace{T}) where {T}
+function W_spectra!(workspace::SpectralWorkspace{T}) where {T}
     # generate a list of jobs
     weight_indices = WIndex[]
     for (i, j, p, q) in permutations(workspace.field_names)
@@ -77,7 +52,7 @@ function W_spectra!(workspace::CovarianceWorkspace{T}) where {T}
             w1 = workspace.w_coeff[X, i, j, TT]
             w2 = workspace.w_coeff[Y, p, q, TT]
             if(typeof(w1) <: Alm && typeof(w2) <: Alm)
-                W[X, Y, i, j, α, p, q, β] = PowerSpectrum(alm2cl(w1, w2))
+                W[X, Y, i, j, α, p, q, β] = SpectralVector(alm2cl(w1, w2))
             end
         end
     end
@@ -103,7 +78,7 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 # Returns
 - `Symmetric{Array{T,2}}`: covariance
 """
-function cov(workspace::CovarianceWorkspace{T}, 
+function cov(workspace::SpectralWorkspace{T}, 
              m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
              lmax=nothing, band=nothing) where {T <: Real}
 
@@ -126,7 +101,7 @@ function cov(workspace::CovarianceWorkspace{T},
         W[TT, TT, i, q, TT, j, p, TT]
     )
     
-    C = zeros(T, (lmax, lmax))
+    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_covTT!(C, lmax, W_arr, band)
     # return C
 end
@@ -136,7 +111,7 @@ cov(m_i::Field{T}, m_j::Field{T}) where {T <: Real} = cov(m_i, m_j, m_i, m_j)
 """
 Projector function for temperature.
 """
-function ΞTT(W_arr::PowerSpectrum{T}, w3j²::WignerSymbolVector{T, Int}, ℓ₁::Int, ℓ₂::Int) where T
+function ΞTT(W_arr::SpectralVector{T}, w3j²::WignerSymbolVector{T, Int}, ℓ₁::Int, ℓ₂::Int) where T
     Ξ = zero(T)
     @inbounds for ℓ₃ in abs(ℓ₁ - ℓ₂):(ℓ₁ + ℓ₂)
         Ξ += (2ℓ₃ + 1) * w3j²[ℓ₃] * W_arr[ℓ₃]
@@ -145,8 +120,8 @@ function ΞTT(W_arr::PowerSpectrum{T}, w3j²::WignerSymbolVector{T, Int}, ℓ₁
 end
 
 # inner loop 
-function loop_covTT!(C::AbstractArray{T,2}, lmax::Integer, 
-                 W_arr::NTuple{8,PowerSpectrum{T}}, 
+function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer, 
+                 W_arr::NTuple{8,SpectralVector{T}}, 
                  band::Integer) where {T}
 
     thread_buffers = Vector{Vector{T}}(undef, Threads.nthreads())
@@ -154,7 +129,7 @@ function loop_covTT!(C::AbstractArray{T,2}, lmax::Integer,
         thread_buffers[i] = Vector{T}(undef, 2*lmax+1)
     end
     
-    @qthreads for ℓ₁ in 1:lmax
+    @qthreads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:min(ℓ₁+band,lmax)
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
