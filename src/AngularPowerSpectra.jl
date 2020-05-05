@@ -14,7 +14,7 @@ import OffsetArrays: OffsetArray
 export cov, Field, SpectralWorkspace, SpectralVector, SpectralArray
 
 include("spectralarray.jl")
-include("field.jl")
+include("workspace.jl")
 include("modecoupling.jl")
 include("covariance.jl")
 
