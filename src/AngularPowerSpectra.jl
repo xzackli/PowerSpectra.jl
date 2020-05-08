@@ -10,7 +10,7 @@ import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_arra
     swap_triangular
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
-import LoopVectorization: @avx
+# import LoopVectorization: @avx
 
 export cov, Field, SpectralWorkspace, SpectralVector, SpectralArray
 
