@@ -14,9 +14,6 @@ AngularPowerSpectra.effective_weights!(workspace, m_143_hm1, m_143_hm2, m_143_hm
 AngularPowerSpectra.W_spectra!(workspace)
 
 ##
-
-
-##
 using BenchmarkTools
 @btime cov($workspace, $m_143_hm1, $m_143_hm2, $m_143_hm1, $m_143_hm2)
 
