@@ -90,7 +90,9 @@ function cov(workspace::SpectralWorkspace{T},
 
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
-    W_arr = (
+
+    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    loop_covTT!(C, lmax, band,
         W[∅∅, ∅∅, i, p, TT, j, q, TT],
         W[∅∅, ∅∅, i, q, TT, j, p, TT],
         W[∅∅, TT, i, p, TT, j, q, TT],
@@ -98,12 +100,8 @@ function cov(workspace::SpectralWorkspace{T},
         W[∅∅, TT, i, q, TT, j, p, TT],
         W[∅∅, TT, j, p, TT, i, q, TT],
         W[TT, TT, i, p, TT, j, q, TT],
-        W[TT, TT, i, q, TT, j, p, TT]
-    )
-    
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    return loop_covTT!(C, lmax, W_arr, band)
-    # return C
+        W[TT, TT, i, q, TT, j, p, TT])
+    return C
 end
 cov(m_i::Field{T}, m_j::Field{T}) where {T <: Real} = cov(m_i, m_j, m_i, m_j)
 
@@ -111,18 +109,19 @@ cov(m_i::Field{T}, m_j::Field{T}) where {T <: Real} = cov(m_i, m_j, m_i, m_j)
 """
 Projector function for temperature.
 """
-function ΞTT(W_arr::SpectralVector{T}, w3j²::WignerSymbolVector{T, Int}, ℓ₁::Int, ℓ₂::Int) where T
+function ΞTT(W_arr::SpectralVector{T, AA}, w3j²::WignerSymbolVector{T, Int}, ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    @inbounds for ℓ₃ in abs(ℓ₁ - ℓ₂):(ℓ₁ + ℓ₂)
+    @inbounds for ℓ₃ in eachindex(w3j²)
         Ξ += (2ℓ₃ + 1) * w3j²[ℓ₃] * W_arr[ℓ₃]
     end
     return Ξ/4π
 end
+ΞTT(W_arr::SpectralVector{T, AA}, w3j²::WignerSymbolVector{T, Int}, 
+    ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros{T,1,Tuple{Base.OneTo{Int}}}} = zero(T)
 
 # inner loop 
-function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer, 
-                 W_arr::NTuple{8,SpectralVector{T}}, 
-                 band::Integer) where {T}
+function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer, band::Integer,
+                     W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
     thread_buffers = Vector{Vector{T}}(undef, Threads.nthreads())
     Threads.@threads for i in 1:Threads.nthreads()
@@ -137,11 +136,11 @@ function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer,
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
             wigner3j_f!(w, w3j²)  # deposit symbols into buffer
             w3j².symbols .= w3j².symbols .^ 2  # square the symbols
-            @inbounds for term_index in 1:8
-                C[ℓ₁, ℓ₂] += ΞTT(W_arr[term_index], w3j², ℓ₁, ℓ₂)
-            end
+            C[ℓ₁, ℓ₂] = (
+                ΞTT(W1, w3j², ℓ₁, ℓ₂) + ΞTT(W2, w3j², ℓ₁, ℓ₂) + ΞTT(W3, w3j², ℓ₁, ℓ₂) +
+                ΞTT(W4, w3j², ℓ₁, ℓ₂) + ΞTT(W5, w3j², ℓ₁, ℓ₂) + ΞTT(W6, w3j², ℓ₁, ℓ₂) +
+                ΞTT(W7, w3j², ℓ₁, ℓ₂) + ΞTT(W8, w3j², ℓ₁, ℓ₂))
             C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
         end
     end
-    return C
 end

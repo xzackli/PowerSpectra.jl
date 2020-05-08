@@ -45,7 +45,7 @@ function SpectralWorkspace(m_i::Field{T}, m_j::Field{T},
     lmax = 3 * m_i.maskT.resolution.nside - 1
 
     zero_alm = Alm(lmax, lmax, Zeros{Complex{T}}(numberOfAlms(lmax, lmax)))
-    zero_cl = SpectralVector(collect(Zeros{T}(lmax+1)))
+    zero_cl = SpectralVector(Zeros{T}(lmax+1))
 
     return SpectralWorkspace{T}(
         field_names, 
