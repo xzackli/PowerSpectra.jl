@@ -2,7 +2,7 @@
 """
 Compute the effective weight map copefficients and store them in the workspace.
 """
-function w_coefficients!(workspace::SpectralWorkspace{T},
+function effective_weights!(workspace::SpectralWorkspace{T},
                          m_i::Field{T}, m_j::Field{T}, 
                          m_p::Field{T}, m_q::Field{T}) where {T <: Real}
     # generate coefficients w
@@ -12,7 +12,7 @@ function w_coefficients!(workspace::SpectralWorkspace{T},
     map_buffer = Map{T, RingOrder}(zeros(T, size(m_i.maskT.pixels)))  # reuse pixel buffer
 
     # XX, i, j, YY
-    w = workspace.w_coeff
+    w = workspace.effective_weights
 
     for (i, name_i) in enumerate(names)
         for (j, name_j) in enumerate(names)
@@ -49,8 +49,8 @@ function W_spectra!(workspace::SpectralWorkspace{T}) where {T}
     W = workspace.W_spectra
     @threads for (X, Y, i, j, α, p, q, β) in weight_indices
         if (X, Y, i, j, α, p, q, β) ∉ keys(W)
-            w1 = workspace.w_coeff[X, i, j, TT]
-            w2 = workspace.w_coeff[Y, p, q, TT]
+            w1 = workspace.effective_weights[X, i, j, TT]
+            w2 = workspace.effective_weights[Y, p, q, TT]
             if(typeof(w1) <: Alm && typeof(w2) <: Alm)
                 W[X, Y, i, j, α, p, q, β] = SpectralVector(alm2cl(w1, w2))
             end
@@ -80,17 +80,17 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 """
 function cov(workspace::SpectralWorkspace{T}, 
              m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
-             lmax=nothing, band=nothing) where {T <: Real}
+             lmax=0) where {T <: Real}
 
-    w_coefficients!(workspace, m_i, m_j, m_p, m_q)
+    effective_weights!(workspace, m_i, m_j, m_p, m_q)
     W_spectra!(workspace)
 
-    lmax = isnothing(lmax) ? (m_i.maskT.resolution.nside - 1) : lmax
-    band = isnothing(band) ? lmax : band
-
+    lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
-    W_arr = (
+
+    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    loop_covTT!(C, lmax,
         W[∅∅, ∅∅, i, p, TT, j, q, TT],
         W[∅∅, ∅∅, i, q, TT, j, p, TT],
         W[∅∅, TT, i, p, TT, j, q, TT],
@@ -98,50 +98,31 @@ function cov(workspace::SpectralWorkspace{T},
         W[∅∅, TT, i, q, TT, j, p, TT],
         W[∅∅, TT, j, p, TT, i, q, TT],
         W[TT, TT, i, p, TT, j, q, TT],
-        W[TT, TT, i, q, TT, j, p, TT]
-    )
-    
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    return loop_covTT!(C, lmax, W_arr, band)
-    # return C
+        W[TT, TT, i, q, TT, j, p, TT])
+    return C
 end
 cov(m_i::Field{T}, m_j::Field{T}) where {T <: Real} = cov(m_i, m_j, m_i, m_j)
 
 
-"""
-Projector function for temperature.
-"""
-function ΞTT(W_arr::SpectralVector{T}, w3j²::WignerSymbolVector{T, Int}, ℓ₁::Int, ℓ₂::Int) where T
-    Ξ = zero(T)
-    @inbounds for ℓ₃ in abs(ℓ₁ - ℓ₂):(ℓ₁ + ℓ₂)
-        Ξ += (2ℓ₃ + 1) * w3j²[ℓ₃] * W_arr[ℓ₃]
-    end
-    return Ξ/4π
-end
-
 # inner loop 
 function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer, 
-                 W_arr::NTuple{8,SpectralVector{T}}, 
-                 band::Integer) where {T}
+                     W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
-    thread_buffers = Vector{Vector{T}}(undef, Threads.nthreads())
-    Threads.@threads for i in 1:Threads.nthreads()
-        thread_buffers[i] = Vector{T}(undef, 2*lmax+1)
-    end
+    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
     @qthreads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:min(ℓ₁+band,lmax)
+        for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
             wigner3j_f!(w, w3j²)  # deposit symbols into buffer
             w3j².symbols .= w3j².symbols .^ 2  # square the symbols
-            @inbounds for term_index in 1:8
-                C[ℓ₁, ℓ₂] += ΞTT(W_arr[term_index], w3j², ℓ₁, ℓ₂)
-            end
+            C[ℓ₁, ℓ₂] = (
+                ΞTT(W1, w3j², ℓ₁, ℓ₂) + ΞTT(W2, w3j², ℓ₁, ℓ₂) + ΞTT(W3, w3j², ℓ₁, ℓ₂) +
+                ΞTT(W4, w3j², ℓ₁, ℓ₂) + ΞTT(W5, w3j², ℓ₁, ℓ₂) + ΞTT(W6, w3j², ℓ₁, ℓ₂) +
+                ΞTT(W7, w3j², ℓ₁, ℓ₂) + ΞTT(W8, w3j², ℓ₁, ℓ₂))
             C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
         end
     end
-    return C
 end

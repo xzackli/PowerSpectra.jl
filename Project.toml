@@ -11,12 +11,15 @@ Healpix = "9f4e344d-96bc-545a-84a3-ae6b9e1b672b"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 ThreadPools = "b189fb0b-2eb5-4ed4-bc0c-d34c51242431"
 UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
+WignerFamilies = "a8f88a7a-0a89-491c-8ecb-051e99aa9f5e"
 
 [compat]
+=======
+WignerFamilies = "0.1.1"
 Combinatorics = "1.0"
 DataStructures = "0.17"
 FillArrays = "0.8"
-Healpix = "2.3"
+Healpix = "3.0"
 OffsetArrays = "1.0"
 ThreadPools = "1.1"
 UnsafeArrays = "1.0"
