@@ -9,7 +9,7 @@ hp = pyimport("healpy")
 
 data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
 # mask = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
-nside = 256
+nside = 512
 
 mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )  # FLAT MASK
 θ = [pix2ang(mask, i)[1] for i in 1:nside2npix(nside)]
@@ -27,10 +27,6 @@ m = Map{Float64, RingOrder}(nside)
 m.pixels .= m0;
 
 ##
-
-nw = pyimport("nawrapper")
-nm1 = nw.namap_hp(
-    maps=(m.pixels), masks=mask.pixels, verbose=false, unpixwin=false)
 
 ##
 using PyPlot
@@ -60,9 +56,10 @@ Cl_hat = inv(Symmetric(M.parent)) * Cl_hat
 
 # println(sum(Cl_hat[100:300]) / 200)
 ##
+using PyPlot
 clf()
 axhline(1)
-plot(Cl_hat .* (1:length(Cl_hat)).^2 , alpha=0.5)
+plot(Cl_hat .* (1:length(Cl_hat)).^2 , alpha=0.5, color="C2")
 # yscale("log")
 gcf()
 
