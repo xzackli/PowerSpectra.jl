@@ -41,10 +41,11 @@ end
 
 
 function compute_mcm!(workspace::SpectralWorkspace{T}, 
-                      name_i::String, name_j::String; lmax=0) where {T}
+                      name_i::String, name_j::String; lmax::Int=0) where {T}
     
     lmax = iszero(lmax) ? workspace.lmax : lmax
     VTTij = SpectralVector(alm2cl(workspace.masks[name_i], workspace.masks[name_j]))
+    workspace.V_spectra[TT, name_i, name_j] = VTTij
     mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm!(mcm, lmax, VTTij)
  end
