@@ -1,7 +1,7 @@
 # This file is machine-generated - editing it directly is not advised
 
 [[AngularPowerSpectrum]]
-deps = ["Combinatorics", "DataStructures", "FillArrays", "Healpix", "OffsetArrays", "ThreadPools", "UnsafeArrays"]
+deps = ["Combinatorics", "DataStructures", "FillArrays", "Healpix", "OffsetArrays", "ThreadPools", "UnsafeArrays", "WignerFamilies"]
 path = ".."
 uuid = "f5ca4f4d-e898-4791-800e-627d1338a64b"
 version = "0.1.0"
@@ -20,6 +20,11 @@ deps = ["Polynomials"]
 git-tree-sha1 = "8153f2c7cc4446958920242c4caa3dc0e061918f"
 uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 version = "1.0.1"
+
+[[CustomUnitRanges]]
+git-tree-sha1 = "0d42a23be3acfb3c58569b28ed3ab8bd67af5ced"
+uuid = "dc8bdbbb-1ca9-579f-8c36-e416f6a65cce"
+version = "1.0.0"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections"]
@@ -69,6 +74,11 @@ deps = ["LinearAlgebra", "Random", "SparseArrays"]
 git-tree-sha1 = "5322d34d7600d3429665b37bcf7628dc602a28cc"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "0.8.8"
+
+[[HalfIntegers]]
+git-tree-sha1 = "dda04cbf819c4d62abaa4593aa7f108a291651ba"
+uuid = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
+version = "1.1.0"
 
 [[Healpix]]
 deps = ["FITSIO", "Printf", "RecipesBase", "Test"]
@@ -137,9 +147,9 @@ version = "1.2.0"
 
 [[Parsers]]
 deps = ["Dates", "Test"]
-git-tree-sha1 = "f8f5d2d4b4b07342e5811d2b6428e45524e241df"
+git-tree-sha1 = "72c3451932513427caffbd8bab15643ad693804b"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "1.0.2"
+version = "1.0.3"
 
 [[Pkg]]
 deps = ["Dates", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
@@ -212,6 +222,12 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 git-tree-sha1 = "9740b414f85ec2fa9135066f81b1fb14212befd6"
 uuid = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
 version = "1.0.1"
+
+[[WignerFamilies]]
+deps = ["CustomUnitRanges", "HalfIntegers", "OffsetArrays"]
+git-tree-sha1 = "25f2c0f5bb7ea649c9e9ef3433d2662699e9e895"
+uuid = "a8f88a7a-0a89-491c-8ecb-051e99aa9f5e"
+version = "0.1.0"
 
 [[XML2_jll]]
 deps = ["Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
