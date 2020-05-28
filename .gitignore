@@ -7,3 +7,5 @@ notebooks/data/*
 .ipynb_checkpoints
 .vscode
 *.jld2
+*.fits
+data/*

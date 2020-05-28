@@ -79,7 +79,7 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 - `Symmetric{Array{T,2}}`: covariance
 """
 function compute_covmat(workspace::SpectralWorkspace{T}, 
-             spectra, factorized_mcm_XY, factorized_mcm_ZY,
+             spectra, factorized_mcm_XY, factorized_mcm_ZW,
              m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
              lmax=0) where {T <: Real}
 
@@ -102,10 +102,10 @@ function compute_covmat(workspace::SpectralWorkspace{T},
         W[TT, TT, i, p, TT, j, q, TT],
         W[TT, TT, i, q, TT, j, p, TT])
 
-    rdiv!(C.parent, factorized_mcm_ZY)
+    rdiv!(C.parent, factorized_mcm_ZW)
     ldiv!(factorized_mcm_XY, C.parent)
 
-    beam_covTT!(C, m_i.beam, m_j.beam, m_p.beam, m_q.beam)
+    # beam_covTT!(C, m_i.beam, m_j.beam, m_p.beam, m_q.beam)
     return C
 end
 # cov(m_i::Field{T}, m_j::Field{T}) where {T <: Real} = cov(m_i, m_j, m_i, m_j)
