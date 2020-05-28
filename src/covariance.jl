@@ -78,7 +78,8 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 # Returns
 - `Symmetric{Array{T,2}}`: covariance
 """
-function cov(workspace::SpectralWorkspace{T}, 
+function compute_covmat(workspace::SpectralWorkspace{T}, 
+             spectra, factorized_mcm_XY, factorized_mcm_ZY,
              m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
              lmax=0) where {T <: Real}
 
@@ -90,7 +91,8 @@ function cov(workspace::SpectralWorkspace{T},
     W = workspace.W_spectra
 
     C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    loop_covTT!(C, lmax,
+    loop_covTT!(C, lmax, 
+        spectra[TT,i,p], spectra[TT,j,q], spectra[TT,i,q], spectra[TT,j,p],
         W[∅∅, ∅∅, i, p, TT, j, q, TT],
         W[∅∅, ∅∅, i, q, TT, j, p, TT],
         W[∅∅, TT, i, p, TT, j, q, TT],
@@ -99,13 +101,26 @@ function cov(workspace::SpectralWorkspace{T},
         W[∅∅, TT, j, p, TT, i, q, TT],
         W[TT, TT, i, p, TT, j, q, TT],
         W[TT, TT, i, q, TT, j, p, TT])
+
+    rdiv!(C.parent, factorized_mcm_ZY)
+    ldiv!(factorized_mcm_XY, C.parent)
+
+    beam_covTT!(C, m_i.beam, m_j.beam, m_p.beam, m_q.beam)
     return C
 end
-cov(m_i::Field{T}, m_j::Field{T}) where {T <: Real} = cov(m_i, m_j, m_i, m_j)
+# cov(m_i::Field{T}, m_j::Field{T}) where {T <: Real} = cov(m_i, m_j, m_i, m_j)
 
+
+function beam_covTT!(C, Bl_i, Bl_j, Bl_p, Bl_q)
+    for ℓ ∈ axes(C,1), ℓp ∈ axes(C,2)
+        C[ℓ, ℓp] *= 1.0 / (Bl_i[ℓ] * Bl_j[ℓ] * Bl_p[ℓp] * Bl_q[ℓp])
+    end
+end
 
 # inner loop 
 function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer, 
+                     TTip::SpectralVector{T}, TTjq::SpectralVector{T}, 
+                     TTiq::SpectralVector{T}, TTjp::SpectralVector{T},
                      W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
@@ -119,9 +134,15 @@ function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer,
             wigner3j_f!(w, w3j²)  # deposit symbols into buffer
             w3j².symbols .= w3j².symbols .^ 2  # square the symbols
             C[ℓ₁, ℓ₂] = (
-                ΞTT(W1, w3j², ℓ₁, ℓ₂) + ΞTT(W2, w3j², ℓ₁, ℓ₂) + ΞTT(W3, w3j², ℓ₁, ℓ₂) +
-                ΞTT(W4, w3j², ℓ₁, ℓ₂) + ΞTT(W5, w3j², ℓ₁, ℓ₂) + ΞTT(W6, w3j², ℓ₁, ℓ₂) +
-                ΞTT(W7, w3j², ℓ₁, ℓ₂) + ΞTT(W8, w3j², ℓ₁, ℓ₂))
+                sqrt(TTip[ℓ₁] * TTip[ℓ₂] * TTjq[ℓ₁] * TTjq[ℓ₂]) * ΞTT(W1, w3j², ℓ₁, ℓ₂) + 
+                sqrt(TTiq[ℓ₁] * TTiq[ℓ₂] * TTjp[ℓ₁] * TTjp[ℓ₂]) * ΞTT(W2, w3j², ℓ₁, ℓ₂) + 
+                sqrt(TTip[ℓ₁] * TTip[ℓ₂]) * ΞTT(W3, w3j², ℓ₁, ℓ₂) +
+                sqrt(TTjq[ℓ₁] * TTjq[ℓ₂]) * ΞTT(W4, w3j², ℓ₁, ℓ₂) + 
+                sqrt(TTiq[ℓ₁] * TTiq[ℓ₂]) * ΞTT(W5, w3j², ℓ₁, ℓ₂) + 
+                sqrt(TTjp[ℓ₁] * TTjp[ℓ₂]) * ΞTT(W6, w3j², ℓ₁, ℓ₂) +
+                ΞTT(W7, w3j², ℓ₁, ℓ₂) + 
+                ΞTT(W8, w3j², ℓ₁, ℓ₂)
+            )
             C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
         end
     end

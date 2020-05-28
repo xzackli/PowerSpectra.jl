@@ -17,7 +17,6 @@ end
     ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
 
 
-
 # inner MCM loop
 function loop_mcm!(mcm::SpectralArray{T,2}, lmax::Integer, 
                    VTTij::SpectralVector{T}) where {T}
@@ -39,13 +38,20 @@ function loop_mcm!(mcm::SpectralArray{T,2}, lmax::Integer,
     return mcm
 end
 
-
-function compute_mcm!(workspace::SpectralWorkspace{T}, 
-                      name_i::String, name_j::String; lmax::Int=0) where {T}
+function compute_mcm(workspace::SpectralWorkspace{T}, 
+                     name_i::String, name_j::String; lmax::Int=0) where {T}
     
     lmax = iszero(lmax) ? workspace.lmax : lmax
     VTTij = SpectralVector(alm2cl(workspace.masks[name_i], workspace.masks[name_j]))
     workspace.V_spectra[TT, name_i, name_j] = VTTij
     mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm!(mcm, lmax, VTTij)
- end
+end
+
+function compute_spectra(map_1::Map{T}, map_2::Map{T}, 
+                         factorized_mcm::Cholesky{T,Array{T,2}},
+                         Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
+    Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
+    ldiv!(factorized_mcm, Cl_hat)
+    return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
+end

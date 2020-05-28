@@ -1,7 +1,6 @@
 """
 A SpectralArray is just a 0-based array.
 """
-
 const SpectralVector{T,AA<:AbstractArray} = OffsetArray{T,1,AA}
 const SpectralArray{T,N,AA<:AbstractArray} = OffsetArray{T,N,AA}
 

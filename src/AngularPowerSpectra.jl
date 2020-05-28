@@ -10,9 +10,11 @@ import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_arra
     swap_triangular
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
-# import LoopVectorization: @avx
+import LinearAlgebra: Cholesky, ldiv!, rdiv!, Hermitian
+import LoopVectorization: @avx
 
-export cov, Field, SpectralWorkspace, SpectralVector, SpectralArray
+export compute_mcm, compute_spectra, compute_covmat
+export Field, SpectralWorkspace, SpectralVector, SpectralArray
 
 include("spectralarray.jl")
 include("workspace.jl")
