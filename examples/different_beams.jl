@@ -56,9 +56,9 @@ function generate_sim_array(nsims)
 end
 
 using JLD2
-# sims = generate_sim_array(1000)
+sims = generate_sim_array(500)
 # @save "sims.jld2" sims
-@load "sims.jld2" sims
+# @load "sims.jld2" sims
 
 
 ##
@@ -89,11 +89,12 @@ plot( (Statistics.var(sims, dims=2) ./ diag(C.parent))[2:2nside] )
 ylabel(raw"$\mathrm{Var}^{\mathrm{sim}}(C_{\ell}) / \mathrm{Var}^{\mathrm{analytic}}(C_{\ell})$")
 xlabel(raw"Multipole moment, $\ell$")
 # yscale("log")
+ylim(0,2)
 gcf()
 
 
 ##
-
+clf(); plot(nltt); gcf()
 ##
 
 using Statistics

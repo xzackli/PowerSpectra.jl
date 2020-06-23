@@ -41,13 +41,7 @@ function generate_correlated_noise(nside, σ, nltt)
         end
     end
 
-    # n0 = 1.5394030890788515 / nside
-    # for l in 0:alms.lmax
-    #     for m in 0:alms.mmax
-    #         alm_ind = almIndex(alms, l, m)
-    #         alms.alm[alm_ind] = sqrt(l / n0) * alms.alm[alm_ind]
-    #     end
-    # end
+    # alm2map(alms, nside)
     alms
-    # return alm2map(alms, nside)
 end
+

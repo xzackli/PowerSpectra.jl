@@ -18,6 +18,7 @@ using Random
 
 export compute_mcm, compute_spectra, compute_covmat
 export Field, SpectralWorkspace, SpectralVector, SpectralArray
+export generate_correlated_noise
 
 include("util.jl")
 include("spectralarray.jl")
