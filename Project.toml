@@ -20,7 +20,7 @@ WignerFamilies = "a8f88a7a-0a89-491c-8ecb-051e99aa9f5e"
 [compat]
 Combinatorics = "1.0"
 DataStructures = "0.17"
-Distributions = "0.23.4"
+Distributions = "0.23.4, 0.24"
 FillArrays = "0.8"
 Healpix = "2.3.0"
 OffsetArrays = "1.0"
