@@ -3,6 +3,7 @@ struct Field{T}
     name::String
     maskT::Map{T}
     σTT::Map{T}
+    beam::SpectralVector{T}
 end
 
 struct PolarizedField{T}
