@@ -3,6 +3,7 @@ module AngularPowerSpectra
 import ThreadPools: @qthreads
 import Base.Threads: @threads
 import UnsafeArrays: uview, UnsafeArray
+import ThreadSafeDicts: ThreadSafeDict
 import DataStructures: DefaultDict
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,

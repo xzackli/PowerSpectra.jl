@@ -46,13 +46,29 @@ function W_spectra!(workspace::SpectralWorkspace{T}) where {T}
     end
 
     # use a thread safe dict to put it together
-    W = workspace.W_spectra
+    W = ThreadSafeDict{WIndex, SpectralVector{T}}()
     @threads for (X, Y, i, j, α, p, q, β) in weight_indices
         if (X, Y, i, j, α, p, q, β) ∉ keys(W)
             w1 = workspace.effective_weights[X, i, j, TT]
             w2 = workspace.effective_weights[Y, p, q, TT]
             if(typeof(w1) <: Alm && typeof(w2) <: Alm)
-                W[X, Y, i, j, α, p, q, β] = SpectralVector(alm2cl(w1, w2))
+
+                # PP turns into QQ and UU pair
+                wterms_X = (X == :PP) ? (:QQ, :UU) : (X,)
+                wterms_Y = (Y == :PP) ? (:QQ, :UU) : (Y,)
+                result = zeros(T, workspace.lmax+1)
+
+                # Planck 2015 eq. C.11
+                for wX in wterms_X
+                    for wY in wterms_Y
+                        result .+= alm2cl(
+                            workspace.effective_weights[wX, i, j, α], 
+                            workspace.effective_weights[wY, p, q, β])
+                    end
+                end
+                norm = one(T) / (length(wterms_X) * length(wterms_Y))
+                result .*= norm
+                W[X, Y, i, j, α, p, q, β] = SpectralVector(result)
             end
         end
     end
