@@ -56,12 +56,9 @@ function generate_sim_array(nsims)
 end
 
 using JLD2
-sims = generate_sim_array(500)
+# sims = generate_sim_array(100)
 # @save "sims.jld2" sims
-# @load "sims.jld2" sims
-
-
-##
+@load "sims.jld2" sims
 
 
 ##
@@ -80,8 +77,6 @@ spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float6
 
 
 ##
-
-
 using Statistics
 clf()
 plot( (Statistics.var(sims, dims=2) ./ diag(C.parent))[2:2nside] )

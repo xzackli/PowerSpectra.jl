@@ -10,11 +10,9 @@ hp = pyimport("healpy")
 nmt = pyimport("pymaster")
 
 ##
-
 nside = 256
 mask1 = Map{Float64, RingOrder}(ones(nside2npix(nside)))
 mask2 = Map{Float64, RingOrder}(ones(nside2npix(nside)))
-
 beam1 = SpectralVector(ones(3 * nside))
 beam2 = SpectralVector(ones(3 * nside))
 
@@ -36,7 +34,7 @@ gcf()
 
 
 ##
-function get_sim(nside, nltt)
+function get_sim(nside, nltt, factorized_mcm)
     pixwin = true
     signal = hp.synfast(theory.cltt, 
         nside, verbose=false, pixwin=pixwin, new=true)
@@ -58,17 +56,13 @@ end
 function generate_sim_array(nsims)
     result = Array{Float64, 2}(undef, (3 * nside, nsims))
     for i in 1:nsims
-        Clhat = get_sim(nside, nltt)
+        Clhat = get_sim(nside, nltt, factorized_mcm)
         result[:,i] .= Clhat
     end
     return result
 end
 
 ##
-sims = generate_sim_array(30)
-
-##
-
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 m_143_hm1 = Field("143_hm1", mask1, flat_mask, beam1)
 m_143_hm2 = Field("143_hm2", mask2, flat_mask, beam2)
@@ -77,10 +71,16 @@ workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time factorized_mcm = cholesky(Hermitian(mcm.parent));
 
 
+
+##
+sims = generate_sim_array(30)
+
+##
+
 ##
 
 σₚ = std(alm2map(nalm0, nside))
-meanpow = mean(pows, dims=1)[1,:]
+meanpow = mean(sims, dims=2)[:,1]
 
 clf()
 plot(meanpow[3:512])
@@ -89,7 +89,7 @@ n0 = 1.5394030890788515 / nside
 plot(nltt[3:512])
 # axhline(n0)
 # plot(ss.savgol_filter(ys, 51, 1))
-# yscale("log")
+yscale("log")
 gcf()
 
 ##
@@ -123,17 +123,17 @@ gcf()
 
 ##
 
-m = Map{Float64,RingOrder}(nside)
-clf(); 
-randn!(m.pixels)
-σₚ = 1.0
-npix = nside2npix(nside)
-Ωₚ = 4π / npix
-plot(alm2cl(map2alm(m))[1:512], label="realization")
-axhline(npix * σₚ^2 * Ωₚ^2 / 4π, color="C2", label="analytic")
-title("White Noise")
-xlabel(raw"Multipole moment, $\ell$")
-# yscale("log")
-gcf()
+# m = Map{Float64,RingOrder}(nside)
+# clf(); 
+# randn!(m.pixels)
+# σₚ = 1.0
+# npix = nside2npix(nside)
+# Ωₚ = 4π / npix
+# plot(alm2cl(map2alm(m))[1:512], label="realization")
+# axhline(npix * σₚ^2 * Ωₚ^2 / 4π, color="C2", label="analytic")
+# title("White Noise")
+# xlabel(raw"Multipole moment, $\ell$")
+# # yscale("log")
+# gcf()
 
 ##

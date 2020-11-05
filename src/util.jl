@@ -41,7 +41,7 @@ function generate_correlated_noise(nside, σ, nltt)
         end
     end
 
-    # alm2map(alms, nside)
-    alms
+    alm2map(alms, nside)
+    # alms
 end
 

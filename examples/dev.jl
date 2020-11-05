@@ -32,12 +32,12 @@ flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 theory = CSV.read(data_dir * "theory.csv"; limit=2000)
 
 clf()
-plot(theory.tt .* theory.ell.^2, "-")
+plot(theory.cltt .* theory.ell.^2, "-")
 plot(1e-2 .* theory.ell.^2, "-")
 gcf()
 
 ##
-m0 = hp.synfast(theory.tt, nside=nside, verbose=false, pixwin=true, new=true)
+m0 = hp.synfast(theory.cltt, nside=nside, verbose=false, pixwin=true, new=true)
 m = Map{Float64, RingOrder}(nside)
 m.pixels .= m0;
 # map = readMapFromFITS(data_dir * "map.fits", 1, Float64)
@@ -54,7 +54,7 @@ workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 ##
 import AngularPowerSpectra: TT
 
-cltt = SpectralVector(convert(Vector, theory.tt))
+cltt = SpectralVector(convert(Vector, theory.cltt))
 spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
     (TT, "143_hm1", "143_hm1") => cltt,
     (TT, "143_hm2", "143_hm2") => cltt,
@@ -84,14 +84,14 @@ function generate_sim_array(spec, nsims, nside, mask_, fact_mcm)
 
     return result
 end
-# sims = generate_sim_array(theory.tt, 100, nside, mask, factorized_mcm)
+# sims = generate_sim_array(theory.cltt, 100, nside, mask, factorized_mcm)
 # @save "sims.jld2" sims
 @load "sims.jld2" sims
 
 ##
 
 clf()
-plot(theory.tt[1:(3*nside)] ./ Clhat, "-")
+plot(theory.cltt[1:(3*nside)] ./ Clhat, "-")
 ylim(0,2)
 xlim(0, 2nside)
 ylabel(raw"$\hat{C}_{\ell} / C_{\ell}^{\mathrm{theory}}$")
