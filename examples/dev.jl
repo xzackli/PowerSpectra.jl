@@ -4,13 +4,14 @@ using Healpix
 using PyCall, PyPlot
 using CSV, DataFrames, LinearAlgebra
 using BenchmarkTools
+ENV["OMP_NUM_THREADS"] = 16
 hp = pyimport("healpy")
 nmt = pyimport("pymaster")
 
 data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
 # mask = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 nside = 256
-
+lmax = 3 * nside - 1
 mask_arr = zeros(hp.nside2npix(nside))
 θ, ϕ = hp.pix2ang(nside, 0:(hp.nside2npix(nside)-1))
 ϕ[ϕ .> π] .-= 2π
@@ -20,12 +21,65 @@ mask_arr[
 ] .= 1.0
 mask_arr = nmt.mask_apodization(mask_arr, 20.0, apotype="C2")
 
+ps_mask = ones(hp.nside2npix(nside))
+ps_mask[ rand(length(mask_arr)) .> 0.9999 ] .= 0.0
+ps_mask = nmt.mask_apodization(ps_mask, 4.0, apotype="C2")
+
 mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) ) 
-mask.pixels .= mask_arr
+mask.pixels .= mask_arr .* ps_mask
+
+saveToFITS(mask, "!test/example_mask.fits")
 
 clf()
 hp.mollview(mask.pixels, title="Simple Mask")
 gcf()
+
+##
+flat_beam = SpectralVector(ones(3*nside))
+flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+
+# m_143_hm1 = Field("143_hm1", mask, flat_mask, flat_beam)
+# m_143_hm2 = Field("143_hm2", mask, flat_mask, flat_beam)
+# workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+# @time mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
+
+m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_beam, flat_beam)
+workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+@time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
+@time factorized_mcm = cholesky(Hermitian(mcm.parent));
+
+
+##
+f_0 = nmt.NmtField(mask.pixels, [flat_mask.pixels])
+f_2 = nmt.NmtField(mask.pixels, [flat_mask.pixels, flat_mask.pixels])
+b = nmt.NmtBin.from_nside_linear(nside, 1)
+w = nmt.NmtWorkspace()
+@time w.compute_coupling_matrix(f_2, f_2, b)
+# @time w.compute_coupling_matrix(f_0, f_0, b)
+
+##
+clf()
+plt.plot(diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax]), "-")
+plt.plot(diag(mcm.parent), "--")
+plt.ylim(0.3,0.4)
+# plt.xlim(0,200)
+# plt.yscale("log")
+gcf()
+
+##
+
+
+clf()
+plt.plot(diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767]  .- diag(mcm.parent)[3:767], "-")
+# plt.xlim(0,10)
+gcf()
+
+##
+
+using DelimitedFiles
+writedlm("test/mcm_EE_diag.txt", diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767])
+
 
 ##
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )

@@ -1,36 +1,56 @@
 
 """
-Projector function for temperature.
+Projector function for TT. Goes into the mode-coupling matrix.
 """
-function ΞTT(W_arr::SpectralVector{T, AA}, 
-             w3j²::WignerSymbolVector{T, Int}, 
+function Ξ_TT(W_arr::SpectralVector{T, AA}, 
+             w3j²_00::WignerSymbolVector{T, Int}, 
              ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j²), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j²), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j²_00), firstindex(W_arr))
+    ℓ₃_end = min(lastindex(w3j²_00), lastindex(W_arr))
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * w3j²[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * w3j²_00[ℓ₃] * W_arr[ℓ₃]
     end
     return Ξ / (4π)
 end
-ΞTT(W_arr::SpectralVector{T, AA}, w3j²::WignerSymbolVector{T, Int}, 
+Ξ_TT(W_arr::SpectralVector{T, AA}, w3j²_00::WignerSymbolVector{T, Int}, 
     ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
 
 
-# inner MCM loop
-function loop_mcm!(mcm::SpectralArray{T,2}, lmax::Integer, 
-                   VTTij::SpectralVector{T}) where {T}
+"""
+Projector function for EE. Goes into the mode-coupling matrix.
+
+Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
+"""
+function Ξ_EE(W_arr::SpectralVector{T, AA}, 
+                w3j²_22::WignerSymbolVector{T, Int}, 
+                ℓ₁::Int, ℓ₂::Int) where {T, AA}
+    Ξ = zero(T)
+    ℓ₃_start = max(firstindex(w3j²_22), firstindex(W_arr))
+    ℓ₃_end = min(lastindex(w3j²_22), lastindex(W_arr))
+    @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
+        Ξ += (2ℓ₃ + 1) * (1 + (-1)^(ℓ₁ + ℓ₂ + ℓ₃))^2 * w3j²_22[ℓ₃] * W_arr[ℓ₃]
+    end
+    return Ξ / (16π)
+end
+Ξ_EE(W_arr::SpectralVector{T, AA}, w3j²_22::WignerSymbolVector{T, Int}, 
+    ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
+
+
+# inner MCM loop TT
+function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer, 
+                      Vij::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2*lmax+1)
     
-    @qthreads for ℓ₁ in 0:lmax
+    @threads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-            w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-            wigner3j_f!(w, w3j²)  # deposit symbols into buffer
-            w3j².symbols .= w3j².symbols .^ 2  # square the symbols
-            m12 = (2ℓ₂ + 1) * ΞTT(VTTij, w3j², ℓ₁, ℓ₂)
+            w3j²_00 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
+            wigner3j_f!(w, w3j²_00)  # deposit symbols into buffer
+            w3j²_00.symbols .= w3j²_00.symbols .^ 2  # square the symbols
+            m12 = (2ℓ₂ + 1) * Ξ_TT(Vij, w3j²_00, ℓ₁, ℓ₂)
             mcm[ℓ₁, ℓ₂] = m12
             mcm[ℓ₂, ℓ₁] = m12
         end
@@ -38,15 +58,47 @@ function loop_mcm!(mcm::SpectralArray{T,2}, lmax::Integer,
     return mcm
 end
 
-function compute_mcm(workspace::SpectralWorkspace{T}, 
+function compute_mcm_TT(workspace::SpectralWorkspace{T}, 
+                        name_i::String, name_j::String; lmax::Int=0) where {T}
+    lmax = iszero(lmax) ? workspace.lmax : lmax
+    Vij = SpectralVector(alm2cl(workspace.masks[name_i, TT], workspace.masks[name_j, TT]))
+    workspace.V_spectra[TT, name_i, name_j] = Vij
+    mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    return loop_mcm_TT!(mcm, lmax, Vij)
+end
+
+
+# inner MCM loop
+function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer, 
+                      Vij::SpectralVector{T}) where {T}
+    thread_buffers = get_thread_buffers(T, 2*lmax+1)
+    
+    @threads for ℓ₁ in 0:lmax
+        buffer = thread_buffers[Threads.threadid()]
+        for ℓ₂ in ℓ₁:lmax
+            w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
+            buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
+            w3j²_22 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
+            wigner3j_f!(w, w3j²_22)  # deposit symbols into buffer
+            w3j²_22.symbols .= w3j²_22.symbols .^ 2  # square the symbols
+            m12 = (2ℓ₂ + 1) * Ξ_EE(Vij, w3j²_22, ℓ₁, ℓ₂)
+            mcm[ℓ₁, ℓ₂] = m12
+            mcm[ℓ₂, ℓ₁] = m12
+        end
+    end
+    return mcm
+end
+
+function compute_mcm_EE(workspace::SpectralWorkspace{T}, 
                      name_i::String, name_j::String; lmax::Int=0) where {T}
     
     lmax = iszero(lmax) ? workspace.lmax : lmax
-    VTTij = SpectralVector(alm2cl(workspace.masks[name_i], workspace.masks[name_j]))
-    workspace.V_spectra[TT, name_i, name_j] = VTTij
+    Vij = SpectralVector(alm2cl(workspace.masks[name_i, PP], workspace.masks[name_j, PP]))
+    workspace.V_spectra[TT, name_i, name_j] = Vij
     mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    return loop_mcm!(mcm, lmax, VTTij)
+    return loop_mcm_EE!(mcm, lmax, Vij)
 end
+
 
 function compute_spectra(map_1::Map{T}, map_2::Map{T}, 
                          factorized_mcm::Cholesky{T,Array{T,2}},

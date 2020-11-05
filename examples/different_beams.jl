@@ -6,7 +6,6 @@ using BenchmarkTools
 hp = pyimport("healpy")
 nmt = pyimport("pymaster")
 
-##
 nside = 256
 mask1 = readMapFromFITS("notebooks/data/mask1.fits", 1, Float64)
 mask2 = readMapFromFITS("notebooks/data/mask2.fits", 1, Float64)
@@ -24,7 +23,7 @@ flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 m_143_hm1 = Field("143_hm1", mask1, flat_mask, beam1)
 m_143_hm2 = Field("143_hm2", mask2, flat_mask, beam2)
 workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-@time mcm = compute_mcm(workspace, "143_hm1", "143_hm2")
+@time mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
 @time factorized_mcm = cholesky(Hermitian(mcm.parent));
 
 ##
