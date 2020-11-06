@@ -3,10 +3,10 @@ using Healpix
 using CSV
 using Test
 using DelimitedFiles
+using LinearAlgebra
 
 @testset "Mode Coupling Matrix EE" begin
-    # Write your tests here.
-    
+    nside = 256
     mask = readMapFromFITS("test/example_mask.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
