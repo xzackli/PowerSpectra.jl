@@ -18,7 +18,6 @@ beam2 = SpectralVector(Bl2 .* hp.pixwin(nside))
 theory = CSV.read("notebooks/data/theory.csv")
 noise = CSV.read("notebooks/data/noise.csv")
 
-##
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 m_143_hm1 = Field("143_hm1", mask1, flat_mask, beam1)
 m_143_hm2 = Field("143_hm2", mask2, flat_mask, beam2)
@@ -26,6 +25,23 @@ workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
 @time factorized_mcm = cholesky(Hermitian(mcm.parent));
 
+
+##
+import AngularPowerSpectra: TT
+
+cltt = SpectralVector(convert(Vector, theory.cltt))
+nltt = SpectralVector(convert(Vector, noise.nltt))
+
+spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
+    (TT, "143_hm1", "143_hm1") => cltt .+ nltt,
+    (TT, "143_hm1", "143_hm2") => cltt,
+    (TT, "143_hm2", "143_hm1") => cltt,
+    (TT, "143_hm2", "143_hm2") => cltt .+ nltt)
+@time C = compute_covmat_TT(workspace, spectra, factorized_mcm, factorized_mcm,
+                         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
+
+
+                         
 ##
 function get_sim()
     pixwin = true
@@ -58,21 +74,6 @@ using JLD2
 # sims = generate_sim_array(100)
 # @save "sims.jld2" sims
 @load "sims.jld2" sims
-
-
-##
-import AngularPowerSpectra: TT
-
-cltt = SpectralVector(convert(Vector, theory.cltt))
-nltt = SpectralVector(convert(Vector, noise.nltt))
-
-spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
-    (TT, "143_hm1", "143_hm1") => cltt .+ nltt,
-    (TT, "143_hm1", "143_hm2") => cltt,
-    (TT, "143_hm2", "143_hm1") => cltt,
-    (TT, "143_hm2", "143_hm2") => cltt .+ nltt)
-@time C = compute_covmat(workspace, spectra, factorized_mcm, factorized_mcm,
-                         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
 
 
 ##

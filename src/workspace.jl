@@ -4,7 +4,7 @@ abstract type AbstractField{T} end
 struct Field{T} <: AbstractField{T}
     name::String
     maskT::Map{T}
-    σTT::Map{T}
+    σII::Map{T}
     beam::SpectralVector{T}
 end
 
@@ -12,8 +12,9 @@ struct PolarizedField{T} <: AbstractField{T}
     name::String
     maskT::Map{T}
     maskP::Map{T}
-    σTT::Map{T}
-    σPP::Map{T}
+    σII::Map{T}
+    σQQ::Map{T}
+    σUU::Map{T}
     beamT::SpectralVector{T}
     beamP::SpectralVector{T}
 end
@@ -25,7 +26,7 @@ function Base.show(io::IO, ::MIME"text/plain", x::Field{T}) where T
 end
 
 
-@enum MapType ∅∅ II QQ UU TT PP TP TE ET EE
+@enum MapType ∅∅ II QQ UU TT PP TP PT TE ET EE
 
 # index for the mask spectra V
 const VIndex = Tuple{MapType, String, String}
@@ -39,11 +40,11 @@ struct SpectralWorkspace{T <: Real}
 
     # for mode coupling matrices
     masks::Dict{Tuple{String, MapType}, Alm{Complex{T}}}
-    V_spectra::Dict{VIndex, SpectralVector{T}}
+    V_spectra::ThreadSafeDict{VIndex, SpectralVector{T}}
 
     # for covariances
-    effective_weights::DefaultDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}
-    W_spectra::DefaultDict{WIndex, SpectralVector{T}}
+    effective_weights::ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}
+    W_spectra::ThreadSafeDict{WIndex, SpectralVector{T}}
 end
 
 function SpectralWorkspace(m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
@@ -65,9 +66,9 @@ function SpectralWorkspace(m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Fie
         field_names,
         lmax,
         masks,
-        Dict{VIndex, SpectralVector{T}}(),
-        DefaultDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(zero_alm),
-        DefaultDict{WIndex, SpectralVector{T}}(zero_cl)
+        ThreadSafeDict{VIndex, SpectralVector{T}}(),
+        ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
+        ThreadSafeDict{WIndex, SpectralVector{T}}()
     )
 end
 
@@ -97,9 +98,9 @@ function PolarizedSpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{
         field_names,
         lmax,
         masks,
-        Dict{VIndex, SpectralVector{T}}(),
-        DefaultDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(zero_alm),
-        DefaultDict{WIndex, SpectralVector{T}}(zero_cl)
+        ThreadSafeDict{VIndex, SpectralVector{T}}(),
+        ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
+        ThreadSafeDict{WIndex, SpectralVector{T}}()
     )
 end
 
