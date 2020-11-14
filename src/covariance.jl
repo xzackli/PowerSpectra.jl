@@ -26,7 +26,7 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
                 if ((II, name_i, name_i, TT) ∉ keys(w))
                     map_buffer.pixels .= fields[i].maskT.pixels
                     map_buffer.pixels .*= fields[j].maskT.pixels
-                    map_buffer.pixels .*= fields[j].σII.pixels.^2
+                    map_buffer.pixels .*= fields[j].σ²II.pixels
                     w[II, name_i, name_i, TT] = map2alm(map_buffer)
                 end
             end
@@ -80,19 +80,19 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
                 if ((II, name_i, name_i, TT) ∉ keys(w))  # II TT
                     map_buffer.pixels .= fields[i].maskT.pixels
                     map_buffer.pixels .*= fields[j].maskT.pixels
-                    map_buffer.pixels .*= fields[j].σII.pixels.^2 .* Ω_p
+                    map_buffer.pixels .*= fields[j].σ²II.pixels .* Ω_p
                     w[II, name_i, name_i, TT] = map2alm(map_buffer)
                 end
                 if ((QQ, name_i, name_i, PP) ∉ keys(w))  # QQ PP
                     map_buffer.pixels .= fields[i].maskP.pixels
                     map_buffer.pixels .*= fields[j].maskP.pixels
-                    map_buffer.pixels .*= fields[j].σQQ.pixels.^2 .* Ω_p
+                    map_buffer.pixels .*= fields[j].σ²QQ.pixels .* Ω_p
                     w[QQ, name_i, name_i, PP] = map2alm(map_buffer)
                 end
                 if ((UU, name_i, name_i, PP) ∉ keys(w))  # UU PP
                     map_buffer.pixels .= fields[i].maskP.pixels
                     map_buffer.pixels .*= fields[j].maskP.pixels
-                    map_buffer.pixels .*= fields[j].σUU.pixels.^2 .* Ω_p
+                    map_buffer.pixels .*= fields[j].σ²UU.pixels .* Ω_p
                     w[UU, name_i, name_i, PP] = map2alm(map_buffer)
                 end
             else

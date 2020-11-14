@@ -70,15 +70,10 @@ workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time mcm = compute_mcm(workspace, "143_hm1", "143_hm2")
 @time factorized_mcm = cholesky(Hermitian(mcm.parent));
 
-
-
 ##
 sims = generate_sim_array(30)
 
 ##
-
-##
-
 σₚ = std(alm2map(nalm0, nside))
 meanpow = mean(sims, dims=2)[:,1]
 
@@ -93,7 +88,6 @@ yscale("log")
 gcf()
 
 ##
-
 import AngularPowerSpectra: TT
 
 theory = CSV.read("notebooks/data/theory.csv")
@@ -112,8 +106,6 @@ spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float6
 
 
 ##
-
-
 clf()
 varpow = var(sims, dims=2)
 plot(varpow[3:512])
@@ -122,18 +114,26 @@ yscale("log")
 gcf()
 
 ##
+m = Map{Float64,RingOrder}(nside)
+clf(); 
 
-# m = Map{Float64,RingOrder}(nside)
-# clf(); 
-# randn!(m.pixels)
-# σₚ = 1.0
-# npix = nside2npix(nside)
-# Ωₚ = 4π / npix
-# plot(alm2cl(map2alm(m))[1:512], label="realization")
-# axhline(npix * σₚ^2 * Ωₚ^2 / 4π, color="C2", label="analytic")
-# title("White Noise")
-# xlabel(raw"Multipole moment, $\ell$")
-# # yscale("log")
-# gcf()
+# generate a white noise realization with pixel standard 
+randn!(m.pixels)
+σₚ = Map{Float64,RingOrder}(nside)
+rand!(σₚ.pixels)
+m.pixels .*= σₚ.pixels
+
+npix = nside2npix(nside)
+Ωₚ = 4π / npix  # pixel area
+
+N_ℓ = ones(workspace.lmax+1) .* sum(σₚ .^ 2 .* Ωₚ^2 / 4π)
+
+
+plot(alm2cl(map2alm(m))[1:512], label="realization")
+plot(N_ℓ, color="C2", label="analytic")
+title("White Noise")
+xlabel(raw"Multipole moment, $\ell$")
+# yscale("log")
+gcf()
 
 ##

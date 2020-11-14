@@ -19,9 +19,9 @@ beam2 = SpectralVector(Bl2 .* hp.pixwin(nside))
 theory = CSV.read("notebooks/data/theory.csv")
 noise = CSV.read("notebooks/data/noise.csv")
 
-# fake_σ = readMapFromFITS("/media/data/wmap/ring/wmap_band_imap_r9_9yr_W_v5.fits", 1, Float64)
+fake_σ = readMapFromFITS("/media/data/wmap/ring/wmap_band_imap_r9_9yr_W_v5.fits", 1, Float64)
 
-zero_var = Map{Float64, RingOrder}(zeros(nside2npix(nside)) )
+zero_var = Map{Float64, RingOrder}(1e-1 .* ones(nside2npix(nside)))
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 m_143_hm1 = PolarizedField("143_hm1", mask1, mask1, zero_var, zero_var, zero_var, beam1, beam1)
 m_143_hm2 = PolarizedField("143_hm2", mask2, mask2, zero_var, zero_var, zero_var, beam2, beam2)
@@ -90,9 +90,8 @@ plt.legend()
 plt.ylabel(raw" Covmat Diagonal")
 plt.xlabel(raw"Multipole Moment, $\ell$")
 yscale("log")
-
-# plt.xlim(0,10)
 gcf()
+
 ##
 clf()
 plt.plot( diag(covar_EE_EE) ./  (diag(C.parent)[3:768] ), "-", label="NaMaster / Bespoke Code" )
