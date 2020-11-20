@@ -108,7 +108,7 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
 end
 
 
-function window_function_W!(workspace::SpectralWorkspace{T}, r_coeff, X, Y, i, j, α, p, q, β) where {T}
+function window_function_W!(workspace::SpectralWorkspace{T}, X, Y, i, j, α, p, q, β) where {T}
     # check if it's already computed
     if (X, Y, i, j, α, p, q, β) in keys(workspace.W_spectra)
         return workspace.W_spectra[(X, Y, i, j, α, p, q, β)]
@@ -122,18 +122,9 @@ function window_function_W!(workspace::SpectralWorkspace{T}, r_coeff, X, Y, i, j
     # Planck 2015 eq. C.11 - C.16
     for wX in wterms_X
         for wY in wterms_Y
-            Δresult = alm2cl(
+            result .+= alm2cl(
                 workspace.effective_weights[wX, i, j, α], 
                 workspace.effective_weights[wY, p, q, β])
-            if (i == j) && (X == PP)
-                @show wX, i, j
-                Δresult .*= r_coeff[wX, i, j].parent
-            end
-            if (p == q) && (Y == PP)
-                @show wY, p, q
-                Δresult .*= r_coeff[wY, p, q].parent
-            end
-            result .+= Δresult
         end
     end
     norm = one(T) / (length(wterms_X) * length(wterms_Y))
@@ -163,7 +154,7 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 - `Symmetric{Array{T,2}}`: covariance
 """
 function compute_covmat_TT(workspace::SpectralWorkspace{T}, 
-             spectra, rescaling_coefficients, factorized_mcm_XY, factorized_mcm_ZW,
+             spectra, factorized_mcm_XY, factorized_mcm_ZW,
              m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
              lmax=0) where {T <: Real}
 
@@ -172,19 +163,18 @@ function compute_covmat_TT(workspace::SpectralWorkspace{T},
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
-    r = rescaling_coefficients
 
     C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTT!(C, lmax, 
         spectra[TT,i,p], spectra[TT,j,q], spectra[TT,i,q], spectra[TT,j,p],
-        window_function_W!(workspace, r, ∅∅, ∅∅, i, p, TT, j, q, TT),
-        window_function_W!(workspace, r, ∅∅, ∅∅, i, q, TT, j, p, TT),
-        window_function_W!(workspace, r, ∅∅, TT, i, p, TT, j, q, TT),
-        window_function_W!(workspace, r, ∅∅, TT, j, q, TT, i, p, TT),
-        window_function_W!(workspace, r, ∅∅, TT, i, q, TT, j, p, TT),
-        window_function_W!(workspace, r, ∅∅, TT, j, p, TT, i, q, TT),
-        window_function_W!(workspace, r, TT, TT, i, p, TT, j, q, TT),
-        window_function_W!(workspace, r, TT, TT, i, q, TT, j, p, TT))
+        window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, TT),
+        window_function_W!(workspace, ∅∅, ∅∅, i, q, TT, j, p, TT),
+        window_function_W!(workspace, ∅∅, TT, i, p, TT, j, q, TT),
+        window_function_W!(workspace, ∅∅, TT, j, q, TT, i, p, TT),
+        window_function_W!(workspace, ∅∅, TT, i, q, TT, j, p, TT),
+        window_function_W!(workspace, ∅∅, TT, j, p, TT, i, q, TT),
+        window_function_W!(workspace, TT, TT, i, p, TT, j, q, TT),
+        window_function_W!(workspace, TT, TT, i, q, TT, j, p, TT))
 
     rdiv!(C.parent, factorized_mcm_ZW)
     ldiv!(factorized_mcm_XY, C.parent)
@@ -244,19 +234,26 @@ function compute_covmat_EE(workspace::SpectralWorkspace{T},
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
-    r = rescaling_coefficients
+
+    r_ℓ_ip = rescaling_coefficients[EE, i, p]
+    r_ℓ_jq = rescaling_coefficients[EE, j, q]
+    r_ℓ_iq = rescaling_coefficients[EE, i, q]
+    r_ℓ_jp = rescaling_coefficients[EE, j, p]
 
     C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covEE!(C, lmax, 
         spectra[EE,i,p], spectra[EE,j,q], spectra[EE,i,q], spectra[EE,j,p],
-        window_function_W!(workspace, r, ∅∅, ∅∅, i, p, PP, j, q, PP),
-        window_function_W!(workspace, r, ∅∅, ∅∅, i, q, PP, j, p, PP),
-        window_function_W!(workspace, r, ∅∅, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, r, ∅∅, PP, j, q, PP, i, p, PP),
-        window_function_W!(workspace, r, ∅∅, PP, i, q, PP, j, p, PP),
-        window_function_W!(workspace, r, ∅∅, PP, j, p, PP, i, q, PP),
-        window_function_W!(workspace, r, PP, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, r, PP, PP, i, q, PP, j, p, PP))
+        r_ℓ_ip, r_ℓ_jq, r_ℓ_iq, r_ℓ_jp,
+        window_function_W!(workspace, ∅∅, ∅∅, i, p, PP, j, q, PP),
+        window_function_W!(workspace, ∅∅, ∅∅, i, q, PP, j, p, PP),
+
+        window_function_W!(workspace, ∅∅, PP, i, p, PP, j, q, PP),
+        window_function_W!(workspace, ∅∅, PP, j, q, PP, i, p, PP),
+        window_function_W!(workspace, ∅∅, PP, i, q, PP, j, p, PP),
+        window_function_W!(workspace, ∅∅, PP, j, p, PP, i, q, PP),
+
+        window_function_W!(workspace, PP, PP, i, p, PP, j, q, PP),
+        window_function_W!(workspace, PP, PP, i, q, PP, j, p, PP))
 
     rdiv!(C.parent, factorized_mcm_ZW)
     ldiv!(factorized_mcm_XY, C.parent)
@@ -269,6 +266,8 @@ end
 function loop_covEE!(C::SpectralArray{T,2}, lmax::Integer,
                      EEip::SpectralVector{T}, EEjq::SpectralVector{T}, 
                      EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
+                     r_ℓ_ip::SpectralVector{T}, r_ℓ_jq::SpectralVector{T}, 
+                     r_ℓ_iq::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
                      W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
@@ -284,12 +283,12 @@ function loop_covEE!(C::SpectralArray{T,2}, lmax::Integer,
             C[ℓ₁, ℓ₂] = (
                 sqrt(EEip[ℓ₁] * EEip[ℓ₂] * EEjq[ℓ₁] * EEjq[ℓ₂]) * Ξ_EE(W1, w3j², ℓ₁, ℓ₂) + 
                 sqrt(EEiq[ℓ₁] * EEiq[ℓ₂] * EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W2, w3j², ℓ₁, ℓ₂) +
-                sqrt(EEip[ℓ₁] * EEip[ℓ₂]) * Ξ_EE(W3, w3j², ℓ₁, ℓ₂) +
-                sqrt(EEjq[ℓ₁] * EEjq[ℓ₂]) * Ξ_EE(W4, w3j², ℓ₁, ℓ₂) + 
-                sqrt(EEiq[ℓ₁] * EEiq[ℓ₂]) * Ξ_EE(W5, w3j², ℓ₁, ℓ₂) + 
-                sqrt(EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W6, w3j², ℓ₁, ℓ₂) + 
-                Ξ_EE(W7, w3j², ℓ₁, ℓ₂) + 
-                Ξ_EE(W8, w3j², ℓ₁, ℓ₂)
+                sqrt(EEip[ℓ₁] * EEip[ℓ₂]) * Ξ_EE(W3, w3j², ℓ₁, ℓ₂) * r_ℓ_jq[ℓ₁] * r_ℓ_jq[ℓ₂] +
+                sqrt(EEjq[ℓ₁] * EEjq[ℓ₂]) * Ξ_EE(W4, w3j², ℓ₁, ℓ₂) * r_ℓ_ip[ℓ₁] * r_ℓ_ip[ℓ₂] + 
+                sqrt(EEiq[ℓ₁] * EEiq[ℓ₂]) * Ξ_EE(W5, w3j², ℓ₁, ℓ₂) * r_ℓ_jp[ℓ₁] * r_ℓ_jp[ℓ₂]  + 
+                sqrt(EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W6, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_iq[ℓ₂]  + 
+                Ξ_EE(W7, w3j², ℓ₁, ℓ₂) * r_ℓ_ip[ℓ₁] * r_ℓ_jq[ℓ₁] * r_ℓ_ip[ℓ₂] * r_ℓ_jq[ℓ₂] + 
+                Ξ_EE(W8, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_jp[ℓ₁] * r_ℓ_iq[ℓ₂] * r_ℓ_jp[ℓ₂]
             )
 
             C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
