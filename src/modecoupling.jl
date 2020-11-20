@@ -42,7 +42,7 @@ function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer,
                       Vij::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2*lmax+1)
     
-    @threads for ℓ₁ in 0:lmax
+    @threads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
@@ -55,6 +55,8 @@ function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer,
             mcm[ℓ₂, ℓ₁] = m12
         end
     end
+    mcm[0,0] = one(T)
+    mcm[1,1] = one(T)
     return mcm
 end
 
@@ -73,7 +75,7 @@ function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer,
                       Vij::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2*lmax+1)
     
-    @threads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
@@ -86,6 +88,8 @@ function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer,
             mcm[ℓ₂, ℓ₁] = m12
         end
     end
+    mcm[0,0] = one(T)
+    mcm[1,1] = one(T)
     return mcm
 end
 
@@ -107,3 +111,16 @@ function compute_spectra(map_1::Map{T}, map_2::Map{T},
     ldiv!(factorized_mcm, Cl_hat)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end
+
+function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing)
+    nbins = length(left_bins)
+    lmax = isnothing(lmax) ? right_bins[end] : lmax
+    P = zeros(nbins, lmax)
+    for b in 1:nbins
+        weights = weight_function_ℓ.(left_bins[b]:right_bins[b])
+        norm = sum(weights)
+        P[b, left_bins[b]:right_bins[b]] .= weights ./ norm
+    end
+    return P
+end
+

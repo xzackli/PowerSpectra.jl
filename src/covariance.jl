@@ -54,35 +54,38 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
     for (i, name_i) in enumerate(names)
         for (j, name_j) in enumerate(names)
 
+
+            # OTHER PROJECTORS ARE DISABLED FOR SPEED TEMPORARILY 
+            
             # Planck 2015 C.17 - C.20
-            if ((∅∅, name_i, name_j, TT) ∉ keys(w))  # ∅∅ TT
-                map_buffer.pixels .= fields[i].maskT.pixels
-                map_buffer.pixels .*= fields[j].maskT.pixels
-                w[∅∅, name_i, name_j, TT] = map2alm(map_buffer)  # allocate new alms
-            end
+            # if ((∅∅, name_i, name_j, TT) ∉ keys(w))  # ∅∅ TT
+            #     map_buffer.pixels .= fields[i].maskT.pixels
+            #     map_buffer.pixels .*= fields[j].maskT.pixels
+            #     w[∅∅, name_i, name_j, TT] = map2alm(map_buffer)  # allocate new alms
+            # end
             if ((∅∅, name_i, name_j, PP) ∉ keys(w))  # ∅∅ PP
                 map_buffer.pixels .= fields[i].maskP.pixels
                 map_buffer.pixels .*= fields[j].maskP.pixels
                 w[∅∅, name_i, name_j, PP] = map2alm(map_buffer)  # allocate new alms
             end
-            if ((∅∅, name_i, name_j, TP) ∉ keys(w))  # ∅∅ TP
-                map_buffer.pixels .= fields[i].maskT.pixels
-                map_buffer.pixels .*= fields[j].maskP.pixels
-                w[∅∅, name_i, name_j, TP] = map2alm(map_buffer)  # allocate new alms
-            end
-            if ((∅∅, name_i, name_j, PT) ∉ keys(w))  # ∅∅ TP
-                map_buffer.pixels .= fields[i].maskP.pixels
-                map_buffer.pixels .*= fields[j].maskT.pixels
-                w[∅∅, name_i, name_j, PT] = map2alm(map_buffer)  # allocate new alms
-            end
+            # if ((∅∅, name_i, name_j, TP) ∉ keys(w))  # ∅∅ TP
+            #     map_buffer.pixels .= fields[i].maskT.pixels
+            #     map_buffer.pixels .*= fields[j].maskP.pixels
+            #     w[∅∅, name_i, name_j, TP] = map2alm(map_buffer)  # allocate new alms
+            # end
+            # if ((∅∅, name_i, name_j, PT) ∉ keys(w))  # ∅∅ TP
+            #     map_buffer.pixels .= fields[i].maskP.pixels
+            #     map_buffer.pixels .*= fields[j].maskT.pixels
+            #     w[∅∅, name_i, name_j, PT] = map2alm(map_buffer)  # allocate new alms
+            # end
 
             if name_i == name_j  # δᵢⱼ here, so we don't create arrays for this. C.21 - C.23
-                if ((II, name_i, name_i, TT) ∉ keys(w))  # II TT
-                    map_buffer.pixels .= fields[i].maskT.pixels
-                    map_buffer.pixels .*= fields[j].maskT.pixels
-                    map_buffer.pixels .*= fields[j].σ²II.pixels .* Ω_p
-                    w[II, name_i, name_i, TT] = map2alm(map_buffer)
-                end
+                # if ((II, name_i, name_i, TT) ∉ keys(w))  # II TT
+                #     map_buffer.pixels .= fields[i].maskT.pixels
+                #     map_buffer.pixels .*= fields[j].maskT.pixels
+                #     map_buffer.pixels .*= fields[j].σ²II.pixels .* Ω_p
+                #     w[II, name_i, name_i, TT] = map2alm(map_buffer)
+                # end
                 if ((QQ, name_i, name_i, PP) ∉ keys(w))  # QQ PP
                     map_buffer.pixels .= fields[i].maskP.pixels
                     map_buffer.pixels .*= fields[j].maskP.pixels
@@ -105,7 +108,7 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
 end
 
 
-function window_function_W!(workspace::SpectralWorkspace{T}, X, Y, i, j, α, p, q, β) where {T}
+function window_function_W!(workspace::SpectralWorkspace{T}, r_coeff, X, Y, i, j, α, p, q, β) where {T}
     # check if it's already computed
     if (X, Y, i, j, α, p, q, β) in keys(workspace.W_spectra)
         return workspace.W_spectra[(X, Y, i, j, α, p, q, β)]
@@ -119,9 +122,18 @@ function window_function_W!(workspace::SpectralWorkspace{T}, X, Y, i, j, α, p, 
     # Planck 2015 eq. C.11 - C.16
     for wX in wterms_X
         for wY in wterms_Y
-            result .+= alm2cl(
+            Δresult = alm2cl(
                 workspace.effective_weights[wX, i, j, α], 
                 workspace.effective_weights[wY, p, q, β])
+            if (i == j) && (X == PP)
+                @show wX, i, j
+                Δresult .*= r_coeff[wX, i, j].parent
+            end
+            if (p == q) && (Y == PP)
+                @show wY, p, q
+                Δresult .*= r_coeff[wY, p, q].parent
+            end
+            result .+= Δresult
         end
     end
     norm = one(T) / (length(wterms_X) * length(wterms_Y))
@@ -151,7 +163,7 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 - `Symmetric{Array{T,2}}`: covariance
 """
 function compute_covmat_TT(workspace::SpectralWorkspace{T}, 
-             spectra, factorized_mcm_XY, factorized_mcm_ZW,
+             spectra, rescaling_coefficients, factorized_mcm_XY, factorized_mcm_ZW,
              m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
              lmax=0) where {T <: Real}
 
@@ -160,18 +172,19 @@ function compute_covmat_TT(workspace::SpectralWorkspace{T},
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
+    r = rescaling_coefficients
 
     C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTT!(C, lmax, 
         spectra[TT,i,p], spectra[TT,j,q], spectra[TT,i,q], spectra[TT,j,p],
-        window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, TT),
-        window_function_W!(workspace, ∅∅, ∅∅, i, q, TT, j, p, TT),
-        window_function_W!(workspace, ∅∅, TT, i, p, TT, j, q, TT),
-        window_function_W!(workspace, ∅∅, TT, j, q, TT, i, p, TT),
-        window_function_W!(workspace, ∅∅, TT, i, q, TT, j, p, TT),
-        window_function_W!(workspace, ∅∅, TT, j, p, TT, i, q, TT),
-        window_function_W!(workspace, TT, TT, i, p, TT, j, q, TT),
-        window_function_W!(workspace, TT, TT, i, q, TT, j, p, TT))
+        window_function_W!(workspace, r, ∅∅, ∅∅, i, p, TT, j, q, TT),
+        window_function_W!(workspace, r, ∅∅, ∅∅, i, q, TT, j, p, TT),
+        window_function_W!(workspace, r, ∅∅, TT, i, p, TT, j, q, TT),
+        window_function_W!(workspace, r, ∅∅, TT, j, q, TT, i, p, TT),
+        window_function_W!(workspace, r, ∅∅, TT, i, q, TT, j, p, TT),
+        window_function_W!(workspace, r, ∅∅, TT, j, p, TT, i, q, TT),
+        window_function_W!(workspace, r, TT, TT, i, p, TT, j, q, TT),
+        window_function_W!(workspace, r, TT, TT, i, q, TT, j, p, TT))
 
     rdiv!(C.parent, factorized_mcm_ZW)
     ldiv!(factorized_mcm_XY, C.parent)
@@ -222,7 +235,7 @@ end
 
 
 function compute_covmat_EE(workspace::SpectralWorkspace{T}, 
-             spectra, factorized_mcm_XY, factorized_mcm_ZW,
+             spectra, rescaling_coefficients, factorized_mcm_XY, factorized_mcm_ZW,
              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
              lmax=0) where {T <: Real}
 
@@ -231,18 +244,19 @@ function compute_covmat_EE(workspace::SpectralWorkspace{T},
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
+    r = rescaling_coefficients
 
     C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covEE!(C, lmax, 
         spectra[EE,i,p], spectra[EE,j,q], spectra[EE,i,q], spectra[EE,j,p],
-        window_function_W!(workspace, ∅∅, ∅∅, i, p, PP, j, q, PP),
-        window_function_W!(workspace, ∅∅, ∅∅, i, q, PP, j, p, PP),
-        window_function_W!(workspace, ∅∅, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, ∅∅, PP, j, q, PP, i, p, PP),
-        window_function_W!(workspace, ∅∅, PP, i, q, PP, j, p, PP),
-        window_function_W!(workspace, ∅∅, PP, j, p, PP, i, q, PP),
-        window_function_W!(workspace, PP, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, PP, PP, i, q, PP, j, p, PP))
+        window_function_W!(workspace, r, ∅∅, ∅∅, i, p, PP, j, q, PP),
+        window_function_W!(workspace, r, ∅∅, ∅∅, i, q, PP, j, p, PP),
+        window_function_W!(workspace, r, ∅∅, PP, i, p, PP, j, q, PP),
+        window_function_W!(workspace, r, ∅∅, PP, j, q, PP, i, p, PP),
+        window_function_W!(workspace, r, ∅∅, PP, i, q, PP, j, p, PP),
+        window_function_W!(workspace, r, ∅∅, PP, j, p, PP, i, q, PP),
+        window_function_W!(workspace, r, PP, PP, i, p, PP, j, q, PP),
+        window_function_W!(workspace, r, PP, PP, i, q, PP, j, p, PP))
 
     rdiv!(C.parent, factorized_mcm_ZW)
     ldiv!(factorized_mcm_XY, C.parent)
@@ -252,16 +266,16 @@ end
 
 
 # inner loop 
-function loop_covEE!(C::SpectralArray{T,2}, lmax::Integer, 
+function loop_covEE!(C::SpectralArray{T,2}, lmax::Integer,
                      EEip::SpectralVector{T}, EEjq::SpectralVector{T}, 
                      EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
                      W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
-    @qthreads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax
+        for ℓ₂ in ℓ₁:lmax 
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
