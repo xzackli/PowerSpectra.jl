@@ -125,11 +125,11 @@ function window_function_W!(workspace::SpectralWorkspace{T}, r_coeff, X, Y, i, j
             Δresult = alm2cl(
                 workspace.effective_weights[wX, i, j, α], 
                 workspace.effective_weights[wY, p, q, β])
-            if (i == j) && (X == PP)
+            if (X == PP)
                 @show wX, i, j
                 Δresult .*= r_coeff[wX, i, j].parent
             end
-            if (p == q) && (Y == PP)
+            if (Y == PP)
                 @show wY, p, q
                 Δresult .*= r_coeff[wY, p, q].parent
             end
@@ -144,6 +144,75 @@ function window_function_W!(workspace::SpectralWorkspace{T}, r_coeff, X, Y, i, j
     workspace.W_spectra[X, Y, i, j, α, p, q, β] = result
     return result
 end
+
+
+
+
+function compute_covmat_EE(workspace::SpectralWorkspace{T}, 
+             spectra, rescaling_coefficients, factorized_mcm_XY, factorized_mcm_ZW,
+             m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
+             lmax=0) where {T <: Real}
+
+    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
+
+    lmax = iszero(lmax) ? workspace.lmax : lmax
+    i, j, p, q = workspace.field_names
+    W = workspace.W_spectra
+    r = rescaling_coefficients
+
+    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    loop_covEE!(C, lmax, 
+        spectra[EE,i,p], spectra[EE,j,q], spectra[EE,i,q], spectra[EE,j,p],
+        window_function_W!(workspace, r, ∅∅, ∅∅, i, p, PP, j, q, PP),
+        window_function_W!(workspace, r, ∅∅, ∅∅, i, q, PP, j, p, PP),
+        window_function_W!(workspace, r, ∅∅, PP, i, p, PP, j, q, PP),
+        window_function_W!(workspace, r, ∅∅, PP, j, q, PP, i, p, PP),
+        window_function_W!(workspace, r, ∅∅, PP, i, q, PP, j, p, PP),
+        window_function_W!(workspace, r, ∅∅, PP, j, p, PP, i, q, PP),
+        window_function_W!(workspace, r, PP, PP, i, p, PP, j, q, PP),
+        window_function_W!(workspace, r, PP, PP, i, q, PP, j, p, PP))
+
+    rdiv!(C.parent, factorized_mcm_ZW)
+    ldiv!(factorized_mcm_XY, C.parent)
+
+    return C
+end
+
+
+# inner loop 
+function loop_covEE!(C::SpectralArray{T,2}, lmax::Integer,
+                     EEip::SpectralVector{T}, EEjq::SpectralVector{T}, 
+                     EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
+                     W1, W2, W3, W4, W5, W6, W7, W8) where {T}
+
+    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
+    
+    @qthreads for ℓ₁ in 2:lmax
+        buffer = thread_buffers[Threads.threadid()]
+        for ℓ₂ in ℓ₁:lmax 
+            w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
+            buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
+            w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
+            wigner3j_f!(w, w3j²)  # deposit symbols into buffer
+            w3j².symbols .= w3j².symbols .^ 2  # square the symbols
+            C[ℓ₁, ℓ₂] = (
+                sqrt(EEip[ℓ₁] * EEip[ℓ₂] * EEjq[ℓ₁] * EEjq[ℓ₂]) * Ξ_EE(W1, w3j², ℓ₁, ℓ₂) + 
+                sqrt(EEiq[ℓ₁] * EEiq[ℓ₂] * EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W2, w3j², ℓ₁, ℓ₂) +
+                sqrt(EEip[ℓ₁] * EEip[ℓ₂]) * Ξ_EE(W3, w3j², ℓ₁, ℓ₂) +
+                sqrt(EEjq[ℓ₁] * EEjq[ℓ₂]) * Ξ_EE(W4, w3j², ℓ₁, ℓ₂) + 
+                sqrt(EEiq[ℓ₁] * EEiq[ℓ₂]) * Ξ_EE(W5, w3j², ℓ₁, ℓ₂) + 
+                sqrt(EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W6, w3j², ℓ₁, ℓ₂) + 
+                Ξ_EE(W7, w3j², ℓ₁, ℓ₂) + 
+                Ξ_EE(W8, w3j², ℓ₁, ℓ₂)
+            )
+
+            C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
+        end
+    end
+end
+
+
+
 
 
 """
@@ -231,68 +300,3 @@ function loop_covTT!(C::SpectralArray{T,2}, lmax::Integer,
     end
 end
 
-
-
-
-function compute_covmat_EE(workspace::SpectralWorkspace{T}, 
-             spectra, rescaling_coefficients, factorized_mcm_XY, factorized_mcm_ZW,
-             m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-             lmax=0) where {T <: Real}
-
-    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
-
-    lmax = iszero(lmax) ? workspace.lmax : lmax
-    i, j, p, q = workspace.field_names
-    W = workspace.W_spectra
-    r = rescaling_coefficients
-
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    loop_covEE!(C, lmax, 
-        spectra[EE,i,p], spectra[EE,j,q], spectra[EE,i,q], spectra[EE,j,p],
-        window_function_W!(workspace, r, ∅∅, ∅∅, i, p, PP, j, q, PP),
-        window_function_W!(workspace, r, ∅∅, ∅∅, i, q, PP, j, p, PP),
-        window_function_W!(workspace, r, ∅∅, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, r, ∅∅, PP, j, q, PP, i, p, PP),
-        window_function_W!(workspace, r, ∅∅, PP, i, q, PP, j, p, PP),
-        window_function_W!(workspace, r, ∅∅, PP, j, p, PP, i, q, PP),
-        window_function_W!(workspace, r, PP, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, r, PP, PP, i, q, PP, j, p, PP))
-
-    rdiv!(C.parent, factorized_mcm_ZW)
-    ldiv!(factorized_mcm_XY, C.parent)
-
-    return C
-end
-
-
-# inner loop 
-function loop_covEE!(C::SpectralArray{T,2}, lmax::Integer,
-                     EEip::SpectralVector{T}, EEjq::SpectralVector{T}, 
-                     EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
-                     W1, W2, W3, W4, W5, W6, W7, W8) where {T}
-
-    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
-    
-    @qthreads for ℓ₁ in 2:lmax
-        buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax 
-            w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
-            buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-            w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-            wigner3j_f!(w, w3j²)  # deposit symbols into buffer
-            w3j².symbols .= w3j².symbols .^ 2  # square the symbols
-            C[ℓ₁, ℓ₂] = (
-                sqrt(EEip[ℓ₁] * EEip[ℓ₂] * EEjq[ℓ₁] * EEjq[ℓ₂]) * Ξ_EE(W1, w3j², ℓ₁, ℓ₂) + 
-                sqrt(EEiq[ℓ₁] * EEiq[ℓ₂] * EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W2, w3j², ℓ₁, ℓ₂) +
-                sqrt(EEip[ℓ₁] * EEip[ℓ₂]) * Ξ_EE(W3, w3j², ℓ₁, ℓ₂) +
-                sqrt(EEjq[ℓ₁] * EEjq[ℓ₂]) * Ξ_EE(W4, w3j², ℓ₁, ℓ₂) + 
-                sqrt(EEiq[ℓ₁] * EEiq[ℓ₂]) * Ξ_EE(W5, w3j², ℓ₁, ℓ₂) + 
-                sqrt(EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W6, w3j², ℓ₁, ℓ₂) + 
-                Ξ_EE(W7, w3j², ℓ₁, ℓ₂) + 
-                Ξ_EE(W8, w3j², ℓ₁, ℓ₂)
-            )
-
-            C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
-        end
-    end
-end
