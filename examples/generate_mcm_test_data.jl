@@ -43,8 +43,8 @@ flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 # workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 # @time mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
 
-m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_beam, flat_beam)
-m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
 workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
 @time factorized_mcm = cholesky(Hermitian(mcm.parent));
@@ -81,7 +81,14 @@ using DelimitedFiles
 writedlm("test/mcm_EE_diag.txt", diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767])
 
 
+
+## OLD STUFF
+
+
+
+
 ##
+#######
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 theory = CSV.read(data_dir * "theory.csv"; limit=2000)
 

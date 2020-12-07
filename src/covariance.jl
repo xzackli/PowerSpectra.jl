@@ -55,35 +55,32 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
 
     for (i, name_i) in enumerate(names)
         for (j, name_j) in enumerate(names)
-
-
-            # OTHER PROJECTORS ARE DISABLED FOR SPEED TEMPORARILY 
             
             # Planck 2015 C.17 - C.20
-            # if ((∅∅, name_i, name_j, TT) ∉ keys(w))  # ∅∅ TT
-            #     map_buffer.pixels .= fields[i].maskT.pixels
-            #     map_buffer.pixels .*= fields[j].maskT.pixels
-            #     w[∅∅, name_i, name_j, TT] = map2alm(map_buffer)  # allocate new alms
-            # end
+            if ((∅∅, name_i, name_j, TT) ∉ keys(w))  # ∅∅ TT
+                map_buffer.pixels .= fields[i].maskT.pixels
+                map_buffer.pixels .*= fields[j].maskT.pixels
+                w[∅∅, name_i, name_j, TT] = map2alm(map_buffer)  # allocate new alms
+            end
 
-            # if ((∅∅, name_i, name_j, TP) ∉ keys(w))  # ∅∅ TP
-            #     map_buffer.pixels .= fields[i].maskT.pixels
-            #     map_buffer.pixels .*= fields[j].maskP.pixels
-            #     w[∅∅, name_i, name_j, TP] = map2alm(map_buffer)  # allocate new alms
-            # end
-            # if ((∅∅, name_i, name_j, PT) ∉ keys(w))  # ∅∅ TP
-            #     map_buffer.pixels .= fields[i].maskP.pixels
-            #     map_buffer.pixels .*= fields[j].maskT.pixels
-            #     w[∅∅, name_i, name_j, PT] = map2alm(map_buffer)  # allocate new alms
-            # end
+            if ((∅∅, name_i, name_j, TP) ∉ keys(w))  # ∅∅ TP
+                map_buffer.pixels .= fields[i].maskT.pixels
+                map_buffer.pixels .*= fields[j].maskP.pixels
+                w[∅∅, name_i, name_j, TP] = map2alm(map_buffer)  # allocate new alms
+            end
+            if ((∅∅, name_i, name_j, PT) ∉ keys(w))  # ∅∅ TP
+                map_buffer.pixels .= fields[i].maskP.pixels
+                map_buffer.pixels .*= fields[j].maskT.pixels
+                w[∅∅, name_i, name_j, PT] = map2alm(map_buffer)  # allocate new alms
+            end
 
             if name_i == name_j  # δᵢⱼ here, so we don't create arrays for this. C.21 - C.23
-                # if ((II, name_i, name_i, TT) ∉ keys(w))  # II TT
-                #     map_buffer.pixels .= fields[i].maskT.pixels
-                #     map_buffer.pixels .*= fields[j].maskT.pixels
-                #     map_buffer.pixels .*= fields[j].σ²II.pixels .* Ω_p
-                #     w[II, name_i, name_i, TT] = map2alm(map_buffer)
-                # end
+                if ((II, name_i, name_i, TT) ∉ keys(w))  # II TT
+                    map_buffer.pixels .= fields[i].maskT.pixels
+                    map_buffer.pixels .*= fields[j].maskT.pixels
+                    map_buffer.pixels .*= fields[j].σ²II.pixels .* Ω_p
+                    w[II, name_i, name_i, TT] = map2alm(map_buffer)
+                end
                 if ((QQ, name_i, name_i, PP) ∉ keys(w))  # QQ PP
                     map_buffer.pixels .= fields[i].maskP.pixels
                     map_buffer.pixels .*= fields[j].maskP.pixels
