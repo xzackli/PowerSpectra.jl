@@ -38,7 +38,7 @@ end
 
 
 """
-Projector function for EE. Goes into the mode-coupling matrix.
+Projector function for TE. Goes into the mode-coupling matrix.
 """
 function Ξ_TE(W_arr::SpectralVector{T, AA}, 
               w3j_00::WignerSymbolVector{T, Int}, 

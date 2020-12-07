@@ -7,4 +7,4 @@
 
 ## Notes
 
-- currently working on EE
+- currently working on TE
