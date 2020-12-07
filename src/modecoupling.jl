@@ -37,6 +37,25 @@ end
     ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
 
 
+"""
+Projector function for EE. Goes into the mode-coupling matrix.
+"""
+function Ξ_TE(W_arr::SpectralVector{T, AA}, 
+              w3j_00::WignerSymbolVector{T, Int}, 
+              w3j_22::WignerSymbolVector{T, Int}, 
+              ℓ₁::Int, ℓ₂::Int) where {T, AA}
+    Ξ = zero(T)
+    ℓ₃_start = max(firstindex(w3j_22), firstindex(w3j_00), firstindex(W_arr))
+    ℓ₃_end = min(lastindex(w3j_22), lastindex(w3j_00), lastindex(W_arr))
+    @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
+        Ξ += (2ℓ₃ + 1) * (1 + (-1)^(ℓ₁ + ℓ₂ + ℓ₃)) * w3j_00[ℓ₃] * w3j_22[ℓ₃] * W_arr[ℓ₃]
+    end
+    return Ξ / (8π)
+end
+Ξ_TE(W_arr::SpectralVector{T, AA}, w3j²_22::WignerSymbolVector{T, Int}, 
+    ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
+
+
 # inner MCM loop TT
 function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer, 
                       Vij::SpectralVector{T}) where {T}
