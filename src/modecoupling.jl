@@ -39,16 +39,17 @@ end
 
 """
 Projector function for TE. Goes into the mode-coupling matrix.
+
+Note that w3j_00_mul_22 refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 """
 function Ξ_TE(W_arr::SpectralVector{T, AA}, 
-              w3j_00::WignerSymbolVector{T, Int}, 
-              w3j_22::WignerSymbolVector{T, Int}, 
+              w3j_00_mul_22::WignerSymbolVector{T, Int}, 
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j_22), firstindex(w3j_00), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j_22), lastindex(w3j_00), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j_00_mul_22), firstindex(W_arr))
+    ℓ₃_end = min(lastindex(w3j_00_mul_22), lastindex(W_arr))
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * (1 + (-1)^(ℓ₁ + ℓ₂ + ℓ₃)) * w3j_00[ℓ₃] * w3j_22[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * (1 + (-1)^(ℓ₁ + ℓ₂ + ℓ₃)) * w3j_00_mul_22[ℓ₃] * W_arr[ℓ₃]
     end
     return Ξ / (8π)
 end
@@ -117,7 +118,7 @@ function compute_mcm_EE(workspace::SpectralWorkspace{T},
     
     lmax = iszero(lmax) ? workspace.lmax : lmax
     Vij = SpectralVector(alm2cl(workspace.masks[name_i, PP], workspace.masks[name_j, PP]))
-    workspace.V_spectra[TT, name_i, name_j] = Vij
+    workspace.V_spectra[PP, name_i, name_j] = Vij
     mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_EE!(mcm, lmax, Vij)
 end
