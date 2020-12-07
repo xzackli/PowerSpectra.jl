@@ -123,4 +123,3 @@ function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing
     end
     return P
 end
-
