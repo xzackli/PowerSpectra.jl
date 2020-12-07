@@ -45,3 +45,19 @@ function generate_correlated_noise(nside, σ, nltt)
     # alms
 end
 
+
+
+function get_ell_array(lmax)
+    nalm = numberOfAlms(lmax, lmax)
+    ell_alm_array = zeros(Int, nalm)
+    zero_alm = Alm(lmax, lmax, Zeros{Complex{Float64}}(nalm))
+
+    for l in 0:lmax
+        for m in 0:l 
+            index = almIndex(zero_alm, l, m)
+            ell_alm_array[index] = l
+        end
+    end
+    return ell_alm_array
+end
+

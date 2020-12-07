@@ -44,12 +44,14 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
     # generate coefficients w
     fields = [m_i, m_j, m_p, m_q]
     names = [m_i.name, m_j.name, m_p.name, m_q.name]
-
+    lmax = workspace.lmax
     map_buffer = Map{T, RingOrder}(zeros(T, size(m_i.maskT.pixels)))  # reuse pixel buffer
-    zero_alm = Alm(workspace.lmax, workspace.lmax, Zeros{Complex{T}}(numberOfAlms(workspace.lmax, workspace.lmax)))
+    zero_alm = Alm(lmax, lmax, Zeros{Complex{T}}(numberOfAlms(lmax, lmax)))
     N_pix = map_buffer.resolution.numOfPixels
     Ω_p = 4π / N_pix
     w = workspace.effective_weights
+
+    ell_array = get_ell_array(lmax)
 
     for (i, name_i) in enumerate(names)
         for (j, name_j) in enumerate(names)
@@ -63,11 +65,7 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
             #     map_buffer.pixels .*= fields[j].maskT.pixels
             #     w[∅∅, name_i, name_j, TT] = map2alm(map_buffer)  # allocate new alms
             # end
-            if ((∅∅, name_i, name_j, PP) ∉ keys(w))  # ∅∅ PP
-                map_buffer.pixels .= fields[i].maskP.pixels
-                map_buffer.pixels .*= fields[j].maskP.pixels
-                w[∅∅, name_i, name_j, PP] = map2alm(map_buffer)  # allocate new alms
-            end
+
             # if ((∅∅, name_i, name_j, TP) ∉ keys(w))  # ∅∅ TP
             #     map_buffer.pixels .= fields[i].maskT.pixels
             #     map_buffer.pixels .*= fields[j].maskP.pixels
@@ -103,7 +101,13 @@ function effective_weights_w!(workspace::SpectralWorkspace{T},
                 w[QQ, name_i, name_j, PP] = zero_alm
                 w[UU, name_i, name_j, PP] = zero_alm
             end
+            if ((∅∅, name_i, name_j, PP) ∉ keys(w))  # ∅∅ PP
+                map_buffer.pixels .= fields[i].maskP.pixels
+                map_buffer.pixels .*= fields[j].maskP.pixels
+                w[∅∅, name_i, name_j, PP] = map2alm(map_buffer)  # allocate new alms
+            end
         end
+
     end
 end
 
