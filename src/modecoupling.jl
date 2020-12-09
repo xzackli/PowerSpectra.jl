@@ -186,7 +186,7 @@ function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing
     for b in 1:nbins
         weights = weight_function_ℓ.(left_bins[b]:right_bins[b])
         norm = sum(weights)
-        P[b, left_bins[b]:right_bins[b]] .= weights ./ norm
+        P[b, left_bins[b]+1:right_bins[b]+1] .= weights ./ norm
     end
     return P
 end
