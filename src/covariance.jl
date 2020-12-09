@@ -226,7 +226,7 @@ end
 
 
 function compute_covmat_EE(workspace::SpectralWorkspace{T}, 
-             spectra, rescaling_coefficients, factorized_mcm_XY, factorized_mcm_ZW,
+             spectra, rescaling_coefficients, mcm_adj_XY, mcm_adj_ZW,
              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
              lmax=0) where {T <: Real}
 
@@ -256,8 +256,8 @@ function compute_covmat_EE(workspace::SpectralWorkspace{T},
         window_function_W!(workspace, PP, PP, i, p, PP, j, q, PP),
         window_function_W!(workspace, PP, PP, i, q, PP, j, p, PP))
 
-    rdiv!(C.parent, factorized_mcm_ZW)
-    ldiv!(factorized_mcm_XY, C.parent)
+    rdiv!(C.parent', mcm_adj_ZW)
+    rdiv!(C.parent, mcm_adj_XY)
 
     return C
 end

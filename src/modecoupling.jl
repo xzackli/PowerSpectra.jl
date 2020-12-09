@@ -64,19 +64,15 @@ function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer,
     
     @threads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax
+        for ℓ₂ in 0:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j²_00 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
             wigner3j_f!(w, w3j²_00)  # deposit symbols into buffer
             w3j²_00.symbols .= w3j²_00.symbols .^ 2  # square the symbols
-            m12 = (2ℓ₂ + 1) * Ξ_TT(Vij, w3j²_00, ℓ₁, ℓ₂)
-            mcm[ℓ₁, ℓ₂] = m12
-            mcm[ℓ₂, ℓ₁] = m12
+            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_TT(Vij, w3j²_00, ℓ₁, ℓ₂)
         end
     end
-    mcm[0,0] = one(T)
-    mcm[1,1] = one(T)
     return mcm
 end
 
@@ -97,15 +93,13 @@ function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer,
     
     @qthreads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax
+        for ℓ₂ in 0:lmax
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j²_22 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
             wigner3j_f!(w, w3j²_22)  # deposit symbols into buffer
             w3j²_22.symbols .= w3j²_22.symbols .^ 2  # square the symbols
-            m12 = (2ℓ₂ + 1) * Ξ_EE(Vij, w3j²_22, ℓ₁, ℓ₂)
-            mcm[ℓ₁, ℓ₂] = m12
-            mcm[ℓ₂, ℓ₁] = m12
+            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_EE(Vij, w3j²_22, ℓ₁, ℓ₂)
         end
     end
     # mcm[0,0] = one(T)
@@ -146,13 +140,9 @@ function loop_mcm_TE!(mcm::SpectralArray{T,2}, lmax::Integer,
 
             w3j_00_22 = w3j_00
             w3j_00_22.symbols .*= w3j_22.symbols
-            m12 = (2ℓ₂ + 1) * Ξ_TE(Vij, w3j_00_22, ℓ₁, ℓ₂)
-            mcm[ℓ₁, ℓ₂] = m12
-            mcm[ℓ₂, ℓ₁] = m12
+            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_TE(Vij, w3j_00_22, ℓ₁, ℓ₂)
         end
     end
-    mcm[0,0] = one(T)
-    mcm[1,1] = one(T)
     return mcm
 end
 
@@ -171,18 +161,20 @@ end
 
 
 function compute_spectra(map_1::Map{T}, map_2::Map{T}, 
-                         factorized_mcm::Cholesky{T,Array{T,2}},
+                         factorized_mcm,
                          Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
+    Cl_hat[1:2] .= 0.0
     ldiv!(factorized_mcm, Cl_hat)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end
 
 
 function compute_spectra(alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}}, 
-                         factorized_mcm::Cholesky{T,Array{T,2}},
+                         factorized_mcm,
                          Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(alm_1, alm_2)
+    Cl_hat[1:2] .= zero(T)
     ldiv!(factorized_mcm, Cl_hat)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end

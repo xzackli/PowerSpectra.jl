@@ -13,7 +13,7 @@ data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
 nside = 256
 lmax = 3 * nside - 1
 
-
+##
 mask_arr = zeros(hp.nside2npix(nside))
 θ, ϕ = hp.pix2ang(nside, 0:(hp.nside2npix(nside)-1))
 ϕ[ϕ .> π] .-= 2π
@@ -30,4 +30,19 @@ ps_mask = nmt.mask_apodization(ps_mask, 4.0, apotype="C2")
 mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) ) 
 mask.pixels .= mask_arr .* ps_mask
 
-saveToFITS(mask, "!test/example_mask.fits")
+saveToFITS(mask, "test/example_mask.fits")
+
+##
+
+using CSV 
+using DataFrames
+
+data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
+theory = CSV.File(data_dir * "theory.csv") |> DataFrame  
+m0 = hp.synfast(theory.cltt, nside=nside, verbose=false, pixwin=true, new=true)
+saveToFITS(Map{Float64, RingOrder}(m0), "test/example_map.fits")
+
+
+
+
+##
