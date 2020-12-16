@@ -62,9 +62,9 @@ function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer,
                       Vij::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2*lmax+1)
     
-    @threads for ℓ₁ in 0:lmax
+    @threads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in 0:lmax
+        for ℓ₂ in 2:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j²_00 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
@@ -73,6 +73,8 @@ function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer,
             mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_TT(Vij, w3j²_00, ℓ₁, ℓ₂)
         end
     end
+    mcm[0,0] = one(T)
+    mcm[1,1] = one(T)
     return mcm
 end
 
@@ -91,9 +93,10 @@ function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer,
                       Vij::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2*lmax+1)
     
-    @qthreads for ℓ₁ in 0:lmax
+    lmin = 2
+    @qthreads for ℓ₁ in lmin:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in 0:lmax
+        for ℓ₂ in lmin:lmax
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j²_22 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
@@ -102,8 +105,8 @@ function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer,
             mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_EE(Vij, w3j²_22, ℓ₁, ℓ₂)
         end
     end
-    # mcm[0,0] = one(T)
-    # mcm[1,1] = one(T)
+    mcm[0,0] = one(T)
+    mcm[1,1] = one(T)
     return mcm
 end
 
@@ -164,7 +167,7 @@ function compute_spectra(map_1::Map{T}, map_2::Map{T},
                          factorized_mcm,
                          Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
-    Cl_hat[1:2] .= 0.0
+    # Cl_hat[1:2] .= 0.0
     ldiv!(factorized_mcm, Cl_hat)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end

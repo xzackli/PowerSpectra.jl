@@ -154,8 +154,20 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 # Returns
 - `Symmetric{Array{T,2}}`: covariance
 """
-function compute_covmat_TT(workspace::SpectralWorkspace{T}, 
-             spectra, factorized_mcm_XY, factorized_mcm_ZW,
+function compute_coupled_covmat_TT(workspace::SpectralWorkspace{T}, 
+        spectra, mcm_adj_XY, mcm_adj_ZW,
+        m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
+        lmax=0) where {T <: Real}
+
+    C = compute_coupled_covmat_TT(workspace, spectra, rescaling_coefficients, m_i, m_j, m_p, m_q)
+    rdiv!(C.parent', mcm_adj_ZW)
+    rdiv!(C.parent, mcm_adj_XY)
+    return C
+end
+
+
+function compute_coupled_covmat_TT(workspace::SpectralWorkspace{T}, 
+            spectra, rescaling_coefficients, 
              m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
              lmax=0) where {T <: Real}
 
@@ -164,6 +176,11 @@ function compute_covmat_TT(workspace::SpectralWorkspace{T},
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
+
+    r_ℓ_ip = rescaling_coefficients[TT, i, p]
+    r_ℓ_jq = rescaling_coefficients[TT, j, q]
+    r_ℓ_iq = rescaling_coefficients[TT, i, q]
+    r_ℓ_jp = rescaling_coefficients[TT, j, p]
 
     C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTT!(C, lmax, 
@@ -176,11 +193,7 @@ function compute_covmat_TT(workspace::SpectralWorkspace{T},
         window_function_W!(workspace, ∅∅, TT, j, p, TT, i, q, TT),
         window_function_W!(workspace, TT, TT, i, p, TT, j, q, TT),
         window_function_W!(workspace, TT, TT, i, q, TT, j, p, TT))
-
-    rdiv!(C.parent, factorized_mcm_ZW)
-    ldiv!(factorized_mcm_XY, C.parent)
-
-    # beam_covTT!(C, m_i.beam, m_j.beam, m_p.beam, m_q.beam)
+        
     return C
 end
 
@@ -224,10 +237,10 @@ end
 
 
 function compute_covmat_EE(workspace::SpectralWorkspace{T}, 
-    spectra, rescaling_coefficients, 
-    mcm_adj_XY, mcm_adj_ZW,
-    m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-    lmax=0) where {T <: Real}
+        spectra, rescaling_coefficients, 
+        mcm_adj_XY, mcm_adj_ZW,
+        m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
+        lmax=0) where {T <: Real}
 
     C = compute_coupled_covmat_EE(workspace, spectra, rescaling_coefficients, m_i, m_j, m_p, m_q)
     rdiv!(C.parent', mcm_adj_ZW)

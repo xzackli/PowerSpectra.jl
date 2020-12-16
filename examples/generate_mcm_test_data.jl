@@ -33,7 +33,7 @@ m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mas
 m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
 workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-@time factorized_mcm = cholesky(Hermitian(mcm.parent));
+@time factorized_mcm = lu(mcm.parent);
 
 
 ##
@@ -83,7 +83,6 @@ cl_00 = nmt.compute_full_master(f_0, f_0, b)
 
 writedlm("test/example_TT_spectrum.txt", cl_00[1,:])
 
-##
 
 ## OLD STUFF
 
