@@ -21,6 +21,7 @@ export compute_mcm_TT, compute_spectra, compute_covmat_TT
 export Field, SpectralWorkspace, SpectralVector, SpectralArray
 export PolarizedField, PolarizedSpectralWorkspace
 export compute_mcm_EE, compute_covmat_EE
+export compute_mcm_TE
 export binning_matrix
 export generate_correlated_noise
 
