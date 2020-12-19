@@ -4,7 +4,7 @@ using Healpix
 using PyCall, PyPlot
 using CSV, DataFrames, LinearAlgebra
 using BenchmarkTools
-ENV["OMP_NUM_THREADS"] = 16
+ENV["OMP_NUM_THREADS"] = 6
 hp = pyimport("healpy")
 nmt = pyimport("pymaster")
 
@@ -24,14 +24,14 @@ gcf()
 
 
 ##
-# m_143_hm1 = Field("143_hm1", mask, flat_mask, flat_beam)
-# m_143_hm2 = Field("143_hm2", mask, flat_mask, flat_beam)
-# workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-# @time mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
+m_143_hm1_T = Field("143_hm1", mask, flat_mask, flat_beam)
+m_143_hm2_T = Field("143_hm2", mask, flat_mask, flat_beam)
+workspace_T = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+@time mcm_TT = compute_mcm_TT(workspace_T, "143_hm1", "143_hm2")
 
-m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+m_143_hm1_P = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m_143_hm2_P = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+workspace_P = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
 @time factorized_mcm = lu(mcm.parent);
 
@@ -45,6 +45,15 @@ b = nmt.NmtBin.from_nside_linear(nside, 1)
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_2, f_2, b)
 writedlm("test/mcm_EE_diag.txt", diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767])
+
+w = nmt.NmtWorkspace()
+@time w.compute_coupling_matrix(f_0, f_0, b)
+writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:lmax, 1:lmax])[3:767])
+
+w = nmt.NmtWorkspace()
+@time w.compute_coupling_matrix(f_0, f_2, b)
+writedlm("test/mcm_TE_diag.txt", diag(w.get_coupling_matrix()[1:lmax, 1:lmax])[3:767])
+
 # @time w.compute_coupling_matrix(f_0, f_0, b)
 
 ##
