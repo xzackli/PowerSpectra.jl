@@ -108,8 +108,9 @@ gcf()
 
 ##
 clf()
-ℓ₀ = 80
+ℓ₀ = 100
 plt.plot((ℓ₀ + 2):3nside, (diag(covar_EE_EE) ./ diag(C_EEEE.parent)[3:end])[ℓ₀:end])
+# ylim(0.999, 1.001)
 gcf()
 
 ##
