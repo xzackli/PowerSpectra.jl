@@ -23,9 +23,6 @@ using LinearAlgebra
     map1 = readMapFromFITS("test/example_map.fits", 1, Float64)
     Cl_hat = compute_spectra(map1 * mask, map1 * mask, factorized_mcm, flat_beam, flat_beam)
     reference_spectrum = readdlm("test/example_TT_spectrum.txt")
-    print(reference_spectrum[1:10], "\n")
-    print(Cl_hat[1:10])
-
 end
 
 ##
@@ -55,10 +52,16 @@ end
     workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
     @time mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
     @time factorized_mcm = lu(mcm.parent)
-
     reference = readdlm("test/mcm_TE_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
 
+    @time mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
+    @time factorized_mcm = lu(mcm.parent)
+    reference = readdlm("test/mcm_TE_diag.txt")
+    @test all(reference .≈ diag(mcm.parent)[3:767])
 end
 
+##
 
+
+##

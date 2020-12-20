@@ -12,16 +12,17 @@ import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_arra
     swap_triangular
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
-import LinearAlgebra: Cholesky, ldiv!, rdiv!, Hermitian
+import LinearAlgebra: ldiv!, rdiv!, Hermitian
 import Distributions: MvNormal
 using Random
 # import LoopVectorization: @avx
 
-export compute_mcm_TT, compute_spectra, compute_covmat_TT
+export compute_mcm_TT, compute_spectra, beam_cov
+export compute_covmat_TTTT, compute_covmat_EEEE
 export Field, SpectralWorkspace, SpectralVector, SpectralArray
 export PolarizedField, PolarizedSpectralWorkspace
-export compute_mcm_EE, compute_covmat_EE
-export compute_mcm_TE
+export compute_mcm_EE
+export compute_mcm_TE, compute_mcm_ET
 export binning_matrix
 export generate_correlated_noise
 

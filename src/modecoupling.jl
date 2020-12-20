@@ -165,6 +165,19 @@ function compute_mcm_TE(workspace::SpectralWorkspace{T},
     return loop_mcm_TE!(mcm, lmax, thread_buffers_0, thread_buffers_2, Vij)
 end
 
+function compute_mcm_ET(workspace::SpectralWorkspace{T}, 
+                     name_i::String, name_j::String; lmax::Int=0) where {T}
+    
+    lmax = iszero(lmax) ? workspace.lmax : lmax
+    thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
+    thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
+
+    Vij = SpectralVector(alm2cl(workspace.masks[name_i, PP], workspace.masks[name_j, TT]))
+    workspace.V_spectra[TP, name_i, name_j] = Vij
+    mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    return loop_mcm_TE!(mcm, lmax, thread_buffers_0, thread_buffers_2, Vij)
+end
+
 
 function compute_spectra(map_1::Map{T}, map_2::Map{T}, 
                          factorized_mcm,
