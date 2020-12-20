@@ -14,7 +14,7 @@ nmt = pyimport("pymaster")
 
 nside = 256
 map1 = readMapFromFITS("test/example_map.fits", 1, Float64)
-mask = readMapFromFITS("test/example_mask.fits", 1, Float64)
+mask = readMapFromFITS("test/example_mask_1.fits", 1, Float64)
 flat_beam = SpectralVector(ones(3*nside))
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)

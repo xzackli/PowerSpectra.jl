@@ -33,6 +33,27 @@ mask.pixels .= mask_arr .* ps_mask
 saveToFITS(mask, "test/example_mask.fits")
 
 ##
+mask_arr = zeros(hp.nside2npix(nside))
+θ, ϕ = hp.pix2ang(nside, 0:(hp.nside2npix(nside)-1))
+ϕ[ϕ .> π] .-= 2π
+mask_arr[
+    (θ .* (1 .+ 0.1 .* sin.(ϕ .* (2.1+rand()) .+ 0.1 .+ (rand()*0.1) )) .> 1.7) .|
+    (θ .* (1 .+ 0.1 .* sin.(ϕ .* (1 + rand()) .+ 0.1 .+ (rand()*0.1) )) .< 1.25)
+] .= 1.0
+mask_arr = nmt.mask_apodization(mask_arr, 20.0, apotype="C2")
+
+ps_mask = ones(hp.nside2npix(nside))
+ps_mask[ rand(length(mask_arr)) .> 0.9999 ] .= 0.0
+ps_mask = nmt.mask_apodization(ps_mask, 4.0, apotype="C2")
+
+mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) ) 
+mask.pixels .= mask_arr .* ps_mask
+
+saveToFITS(mask, "!test/example_mask_2.fits")
+
+clf(); hp.mollview(mask.pixels); gcf()
+
+##
 
 using CSV 
 using DataFrames

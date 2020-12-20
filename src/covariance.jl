@@ -115,9 +115,23 @@ function window_function_W!(workspace::SpectralWorkspace{T}, X, Y, i, j, α, p, 
         return workspace.W_spectra[(X, Y, i, j, α, p, q, β)]
     end
 
-    # PP turns into QQ and UU pair
-    wterms_X = (X == PP) ? (QQ, UU) : (X,)
-    wterms_Y = (Y == PP) ? (QQ, UU) : (Y,)
+    # TT turns into II
+    if X == TT
+        wterms_X = (II,)
+    elseif X == PP
+        wterms_X = (QQ, UU)
+    else
+        wterms_X = (X,)
+    end
+    
+    if Y == TT
+        wterms_Y = (II,)
+    elseif Y == PP
+        wterms_Y = (QQ, UU)
+    else
+        wterms_Y = (Y,)
+    end
+
     result = zeros(T, workspace.lmax+1)
 
     # Planck 2015 eq. C.11 - C.16
@@ -155,8 +169,8 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 - `Symmetric{Array{T,2}}`: covariance
 """
 function compute_covmat_TTTT(workspace::SpectralWorkspace{T}, 
-        spectra, mcm_adj_XY, mcm_adj_ZW,
-        m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
+        spectra, rescaling_coefficients, mcm_adj_XY, mcm_adj_ZW,
+        m_i::AbstractField{T}, m_j::AbstractField{T}, m_p::AbstractField{T}, m_q::AbstractField{T};
         lmax=0) where {T <: Real}
 
     C = compute_coupled_covmat_TTTT(workspace, spectra, rescaling_coefficients, m_i, m_j, m_p, m_q)
@@ -168,7 +182,7 @@ end
 
 function compute_coupled_covmat_TTTT(workspace::SpectralWorkspace{T}, 
             spectra, rescaling_coefficients, 
-             m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
+             m_i::AbstractField{T}, m_j::AbstractField{T}, m_p::AbstractField{T}, m_q::AbstractField{T};
              lmax=0) where {T <: Real}
 
     effective_weights_w!(workspace, m_i, m_j, m_p, m_q)

@@ -17,7 +17,7 @@ flat_beam = SpectralVector(ones(3*nside))
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 
 
-mask = readMapFromFITS("test/example_mask.fits", 1, Float64)
+mask = readMapFromFITS("test/example_mask_1.fits", 1, Float64)
 clf()
 hp.mollview(mask.pixels, title="Simple Mask")
 gcf()

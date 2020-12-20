@@ -27,7 +27,7 @@ m_143_hm1 = PolarizedField("143_hm1", mask1, mask1, zero_var, zero_var, zero_var
 m_143_hm2 = PolarizedField("143_hm2", mask2, mask2, zero_var, zero_var, zero_var, beam2, beam2)
 workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-@time factorized_mcm = cholesky(Hermitian(mcm.parent));
+@time factorized_mcm = lu(mcm.parent);
 
 ##
 import AngularPowerSpectra: EE, PP, QQ, UU
