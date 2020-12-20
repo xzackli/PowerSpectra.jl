@@ -130,7 +130,6 @@ function loop_mcm_TE!(mcm::SpectralArray{T,2}, lmax::Integer,
     @threads for ℓ₁ in 2:lmax
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
-        # @show buffer0
 
         for ℓ₂ in ℓ₁:lmax
             w00 = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
