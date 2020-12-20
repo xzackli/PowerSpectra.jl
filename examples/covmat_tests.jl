@@ -36,20 +36,22 @@ cw.compute_coupling_coefficients(f2_1, f2_2, f2_1, f2_2)
 n_ell = length(b.get_effective_ells())
 cl_tt = theory.cltt
 cl_ee = theory.clee
+nl_ee = noise.nlee
 zero_cl = zeros(length(theory.clee))
 cl_bb = theory.clbb
+
 @time covar_22_22 = nmt.gaussian_covariance(cw, 2, 2, 2, 2,  # Spins of the 4 fields
-                                      [cl_ee .+ noise.nlee, zero_cl,
-                                      zero_cl, zero_cl],  # EE, EB, BE, BB
+                                      [cl_ee .+ nl_ee, zero_cl,
+                                      zero_cl, nl_ee],  # EE, EB, BE, BB
                                       [cl_ee, zero_cl,
                                       zero_cl, zero_cl],  # EE, EB, BE, BB
                                       [cl_ee, zero_cl,
                                       zero_cl, zero_cl],  # EE, EB, BE, BB
-                                      [cl_ee .+ noise.nlee, zero_cl,
-                                      zero_cl, zero_cl],  # EE, EB, BE, BB
-                                      w22, wb=w22)
+                                      [cl_ee .+ nl_ee, zero_cl,
+                                      zero_cl, nl_ee],  # EE, EB, BE, BB
+                                      w22, wb=w22, coupled=true)
 np = pyimport("numpy")
-cov = np.reshape(covar_22_22, (n_ell, 4, n_ell, 4))
+cov = np.reshape(covar_22_22, (3nside, 4, 3nside, 4))
 covar_EE_EE = cov[:, 1, :, 1]
 
 
@@ -97,21 +99,46 @@ m_143_hm2 = PolarizedField("143_hm2", mask2, mask2, zero_var, zero_var, zero_var
 workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 @time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
 @time factorized_mcm = lu(mcm.parent');
-@time C_EEEE = compute_covmat_EEEE(workspace, spectra, r_coeff, factorized_mcm, factorized_mcm,
+@time C_EEEE = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff,
                          m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
+
 ##
 clf()
 plt.plot(diag(covar_EE_EE))
-plt.plot(diag(C_EEEE.parent)[3:end], "-")
+plt.plot(diag(C_EEEE.parent), "-")
 yscale("log")
+plt.xlim(0,40)
 gcf()
 
 ##
 clf()
-ℓ₀ = 100
-plt.plot((ℓ₀ + 2):3nside, (diag(covar_EE_EE) ./ diag(C_EEEE.parent)[3:end])[ℓ₀:end])
+ℓ₀ = 15
+plt.plot((ℓ₀):3nside, -(diag(C_EEEE.parent) .- diag(covar_EE_EE))[ℓ₀:end])
+plt.plot()
 # ylim(0.999, 1.001)
+# yscale("log")
 gcf()
+
+
+##
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## TT TEST
+
 
 ##
 b = nmt.NmtBin.from_nside_linear(nside, 1)

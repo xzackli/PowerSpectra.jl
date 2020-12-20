@@ -310,7 +310,7 @@ function loop_covEEEE!(C::SpectralArray{T,2}, lmax::Integer,
     @threads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax 
-            w = WignerF(T, ℓ₁, ℓ₂, 2, -2)  # set up the wigner recurrence
+            w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
             wigner3j_f!(w, w3j²)  # deposit symbols into buffer
