@@ -27,10 +27,10 @@ ps_mask = ones(hp.nside2npix(nside))
 ps_mask[ rand(length(mask_arr)) .> 0.9999 ] .= 0.0
 ps_mask = nmt.mask_apodization(ps_mask, 4.0, apotype="C2")
 
-mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) ) 
+mask = Map{Float64, RingOrder}(mask_arr) 
+saveToFITS(mask, "test/mask1_P.fits")
 mask.pixels .= mask_arr .* ps_mask
-
-saveToFITS(mask, "test/example_mask.fits")
+saveToFITS(mask, "test/mask1_T.fits")
 
 ##
 mask_arr = zeros(hp.nside2npix(nside))
@@ -46,10 +46,10 @@ ps_mask = ones(hp.nside2npix(nside))
 ps_mask[ rand(length(mask_arr)) .> 0.9999 ] .= 0.0
 ps_mask = nmt.mask_apodization(ps_mask, 4.0, apotype="C2")
 
-mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) ) 
+mask = Map{Float64, RingOrder}(mask_arr) 
+saveToFITS(mask, "test/mask2_P.fits")
 mask.pixels .= mask_arr .* ps_mask
-
-saveToFITS(mask, "!test/example_mask_2.fits")
+saveToFITS(mask, "test/mask2_T.fits")
 
 clf(); hp.mollview(mask.pixels); gcf()
 
