@@ -50,15 +50,41 @@ cl_bb = theory.clbb
                                       [cl_ee .+ nl_ee, zero_cl,
                                       zero_cl, nl_ee],  # EE, EB, BE, BB
                                       w22, wb=w22, coupled=true)
-np = pyimport("numpy")
 cov = np.reshape(covar_22_22, (3nside, 4, 3nside, 4))
-covar_EE_EE = cov[:, 1, :, 1]
+covar_coupled_EEEE = cov[:, 1, :, 1]
+
+##
+@time covar_22_22 = nmt.gaussian_covariance(cw, 2, 2, 2, 2,  # Spins of the 4 fields
+                                      [cl_ee .+ nl_ee, zero_cl,
+                                      zero_cl, nl_ee],  # EE, EB, BE, BB
+                                      [cl_ee, zero_cl,
+                                      zero_cl, zero_cl],  # EE, EB, BE, BB
+                                      [cl_ee, zero_cl,
+                                      zero_cl, zero_cl],  # EE, EB, BE, BB
+                                      [cl_ee .+ nl_ee, zero_cl,
+                                      zero_cl, nl_ee],  # EE, EB, BE, BB
+                                      w22, wb=w22, coupled=false)
+covar_EE_EE = (np.reshape(covar_22_22, (n_ell, 4, n_ell, 4)))[:, 1, :, 1]
+
+##
+mcm_nmt = w22.get_coupling_matrix()[1:4:end, 1:4:end];
+
+##
+
 
 
 ##
 clf()
-plt.plot(diag(covar_EE_EE))
+bespoke = (mcm_nmt[3:end, 3:end]) * covar_EE_EE * (mcm_nmt[3:end, 3:end]')
+plt.plot(diag(covar_coupled_EEEE)[3:end])
+plt.plot(diag(bespoke))
+xlim(0, 10)
 yscale("log")
+gcf()
+
+##
+clf()
+plt.plot( (diag(bespoke) ./ (diag(covar_coupled_EEEE)[3:end]))[30:end]  )
 gcf()
 
 ##
@@ -104,7 +130,7 @@ workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm
 
 ##
 clf()
-plt.plot(diag(covar_EE_EE))
+plt.plot(diag(covar_coupled_EEEE))
 plt.plot(diag(C_EEEE.parent), "-")
 yscale("log")
 plt.xlim(0,40)
@@ -112,8 +138,8 @@ gcf()
 
 ##
 clf()
-ℓ₀ = 15
-plt.plot((ℓ₀):3nside, -(diag(C_EEEE.parent) .- diag(covar_EE_EE))[ℓ₀:end])
+ℓ₀ = 11
+plt.plot((ℓ₀):3nside, -(diag(C_EEEE.parent) .- diag(covar_coupled_EEEE))[ℓ₀:end])
 plt.plot()
 # ylim(0.999, 1.001)
 # yscale("log")
