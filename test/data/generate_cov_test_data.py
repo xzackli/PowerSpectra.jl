@@ -23,8 +23,8 @@ mask2_P = hp.read_map("mask2_P.fits", verbose=False)
 # Let's now create a fictitious theoretical power spectrum to generate
 # Gaussian realizations:
 larr = np.arange(3*nside)
-theory = ascii.read("../notebooks/data/theory.csv")
-noise = ascii.read("../notebooks/data/noise.csv")
+theory = ascii.read("theory.csv")
+noise = ascii.read("noise.csv")
 cl_tt = theory["cltt"]
 cl_ee = theory["clee"]
 cl_bb = 0*cl_tt
@@ -73,10 +73,10 @@ n_ell = 3 * nside
 print("Covariance")
 # First we generate a NmtCovarianceWorkspace object to precompute
 # and store the necessary coupling coefficients
-cw = nmt.NmtCovarianceWorkspace()
 # This is the time-consuming operation
 # Note that you only need to do this once,
 # regardless of spin
+cw = nmt.NmtCovarianceWorkspace()
 cw.compute_coupling_coefficients(f0_1, f0_2, f0_1, f0_2)
 covar_00_00 = nmt.gaussian_covariance(cw,
                                       0, 0, 0, 0,  # Spins of the 4 fields
@@ -91,6 +91,7 @@ np.save("covar_TT_TT", covar_TT_TT)
 
 
 
+cw = nmt.NmtCovarianceWorkspace()
 cw.compute_coupling_coefficients(f0_1, f0_2, f0_1, f2_2)
 covar_00_02 = nmt.gaussian_covariance(cw, 0, 0, 0, 2,  # Spins of the 4 fields
                                       [cl_tt + nl_tt],  # TT
@@ -103,6 +104,7 @@ covar_TT_TE = covar_00_02[:, 0, :, 0]
 np.save("covar_TT_TE", covar_TT_TE)
 
 
+cw = nmt.NmtCovarianceWorkspace()
 cw.compute_coupling_coefficients(f0_1, f2_2, f0_1, f2_2)
 covar_02_02 = nmt.gaussian_covariance(cw, 0, 2, 0, 2,  # Spins of the 4 fields
                                       [cl_tt + nl_tt],  # TT
@@ -119,6 +121,7 @@ covar_TB_TB = covar_02_02[:, 1, :, 1]
 np.save("covar_TE_TE", covar_TE_TE)
 
 
+cw = nmt.NmtCovarianceWorkspace()
 cw.compute_coupling_coefficients(f0_1, f0_2, f2_1, f2_2)
 covar_00_22 = nmt.gaussian_covariance(cw, 0, 0, 2, 2,  # Spins of the 4 fields
                                       [cl_te, cl_tb],  # TE, TB
@@ -133,6 +136,8 @@ covar_TT_BE = covar_00_22[:, 0, :, 2]
 covar_TT_BB = covar_00_22[:, 0, :, 3]
 np.save("covar_TT_EE", covar_TT_EE)
 
+
+cw = nmt.NmtCovarianceWorkspace()
 cw.compute_coupling_coefficients(f0_1, f2_2, f2_1, f2_2)
 covar_02_22 = nmt.gaussian_covariance(cw, 0, 2, 2, 2,  # Spins of the 4 fields
                                       [cl_te, cl_tb],  # TE, TB
@@ -154,6 +159,7 @@ covar_TB_BB = covar_02_22[:, 1, :, 3]
 np.save("covar_TE_EE", covar_TE_EE)
 
 
+cw = nmt.NmtCovarianceWorkspace()
 cw.compute_coupling_coefficients(f2_1, f2_2, f2_1, f2_2)
 covar_22_22 = nmt.gaussian_covariance(cw, 2, 2, 2, 2,  # Spins of the 4 fields
                                       [cl_ee + nl_ee, cl_eb,

@@ -5,170 +5,164 @@ using Healpix
 using PyCall, PyPlot
 using CSV, DataFrames, LinearAlgebra
 using BenchmarkTools, DelimitedFiles
+using NPZ
 hp = pyimport("healpy")
 nmt = pyimport("pymaster")
 np = pyimport("numpy")
 
 nside = 256
-mask1_T = readMapFromFITS("test/mask1_T.fits", 1, Float64)
-mask2_T = readMapFromFITS("test/mask2_T.fits", 1, Float64)
-mask1_P = readMapFromFITS("test/mask1_P.fits", 1, Float64)
-mask2_P = readMapFromFITS("test/mask2_P.fits", 1, Float64)
-zero_var = Map{Float64, RingOrder}(zeros(nside2npix(nside)))
+mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64) 
+mask2_T = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
+
+# mask2_T.pixels .= 0.9
+mask1_P = deepcopy(mask1_T)#readMapFromFITS("test/data/mask1_P.fits", 1, Float64)
+# mask1_P.pixels .= 0.6
+mask2_P = deepcopy(mask1_T)#readMapFromFITS("test/data/mask2_P.fits", 1, Float64)
+# mask2_P.pixels .= 0.7
+var = Map{Float64, RingOrder}(ones(nside2npix(nside)))
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 
-
-Bl1 = CSV.read("notebooks/data/beam1.csv", DataFrame).Bl
-Bl2 = CSV.read("notebooks/data/beam2.csv", DataFrame).Bl
-beam1 = SpectralVector(Bl1 .* hp.pixwin(nside))
-beam2 = SpectralVector(Bl2 .* hp.pixwin(nside))
-theory = CSV.read("notebooks/data/theory.csv", DataFrame)
-noise = CSV.read("notebooks/data/noise.csv", DataFrame)
-
-# ##
-# f2_1 = nmt.NmtField(mask1.pixels, [flat_mask.pixels, flat_mask.pixels])
-# f2_2 = nmt.NmtField(mask2.pixels, [flat_mask.pixels, flat_mask.pixels])
-
-# b = nmt.NmtBin.from_nside_linear(nside, 1)
-# w22 = nmt.NmtWorkspace()
-# w22.compute_coupling_matrix(f2_1, f2_2, b)
-
-# cw = nmt.NmtCovarianceWorkspace()
-# cw.compute_coupling_coefficients(f2_1, f2_2, f2_1, f2_2)
-# n_ell = length(b.get_effective_ells())
-# cl_tt = theory.cltt
-# cl_ee = theory.clee
-# nl_ee = noise.nlee
-# zero_cl = zeros(length(theory.clee))
-# cl_bb = theory.clbb
-
-# @time covar_22_22 = nmt.gaussian_covariance(cw, 2, 2, 2, 2,  # Spins of the 4 fields
-#                                       [cl_ee .+ nl_ee, zero_cl,
-#                                       zero_cl, nl_ee],  # EE, EB, BE, BB
-#                                       [cl_ee, zero_cl,
-#                                       zero_cl, zero_cl],  # EE, EB, BE, BB
-#                                       [cl_ee, zero_cl,
-#                                       zero_cl, zero_cl],  # EE, EB, BE, BB
-#                                       [cl_ee .+ nl_ee, zero_cl,
-#                                       zero_cl, nl_ee],  # EE, EB, BE, BB
-#                                       w22, wb=w22, coupled=true)
-# cov = np.reshape(covar_22_22, (3nside, 4, 3nside, 4))
-# covar_coupled_EEEE = (np.reshape(covar_22_22, (3nside, 4, 3nside, 4)))[:, 1, :, 1]
-
-##
+beam1 = SpectralVector(ones(3nside))
+beam2 = SpectralVector(ones(3nside))
+theory = CSV.read("test/data/theory.csv", DataFrame)
+noise = CSV.read("test/data/noise.csv", DataFrame)
 
 
-##
+f0_1 = nmt.NmtField(mask1_T.pixels, [flat_mask.pixels])
+f2_1 = nmt.NmtField(mask1_P.pixels, [flat_mask.pixels, flat_mask.pixels])
+f2_2 = nmt.NmtField(mask2_P.pixels, [flat_mask.pixels, flat_mask.pixels])
 
-# ##
-# @time covar_22_22 = nmt.gaussian_covariance(cw, 2, 2, 2, 2,  # Spins of the 4 fields
-#                                       [cl_ee .+ nl_ee, zero_cl,
-#                                       zero_cl, nl_ee],  # EE, EB, BE, BB
-#                                       [cl_ee, zero_cl,
-#                                       zero_cl, zero_cl],  # EE, EB, BE, BB
-#                                       [cl_ee, zero_cl,
-#                                       zero_cl, zero_cl],  # EE, EB, BE, BB
-#                                       [cl_ee .+ nl_ee, zero_cl,
-#                                       zero_cl, nl_ee],  # EE, EB, BE, BB
-#                                       w22, wb=w22, coupled=false)
-# covar_EE_EE = (np.reshape(covar_22_22, (n_ell, 4, n_ell, 4)))[:, 1, :, 1]
+b = nmt.NmtBin.from_nside_linear(nside, 1)
+w02 = nmt.NmtWorkspace()
+w02.compute_coupling_matrix(f0_1, f2_2, b)
+w22 = nmt.NmtWorkspace()
+w22.compute_coupling_matrix(f2_1, f2_2, b)
 
-# ##
-# mcm_nmt = w22.get_coupling_matrix()[1:4:end, 1:4:end];
-
-# ##
-
+cw = nmt.NmtCovarianceWorkspace()
+cw.compute_coupling_coefficients(f0_1, f2_2, f2_1, f2_2)
+n_ell = 3*nside
+cl_tt = theory.cltt
+cl_te = theory.clte
+cl_ee = theory.clee
+nl_ee = noise.nlee
+zero_cl = zeros(length(theory.clee))
+cl_bb = zero_cl
+cl_tb = zero_cl
 
 
-# ##
-# clf()
-# bespoke = (mcm_nmt[3:end, 3:end]) * covar_EE_EE * (mcm_nmt[3:end, 3:end]')
-# plt.plot(diag(covar_coupled_EEEE)[3:end])
-# plt.plot(diag(bespoke))
-# xlim(0, 10)
-# yscale("log")
-# gcf()
+@time covar_02_22 = nmt.gaussian_covariance(cw, 0, 2, 2, 2,  # Spins of the 4 fields
+                                      [cl_te, cl_tb],
+                                      [cl_te, cl_tb],
+                                      [cl_ee, cl_te,
+                                      cl_te, cl_bb],  # EE, EB, BE, BB
+                                      [cl_ee .+ nl_ee, cl_te,
+                                      cl_te, cl_bb],  # EE, EB, BE, BB
+                                      w02, wb=w22, coupled=true)
+covar_coupled_TEEE = (np.reshape(covar_02_22, (n_ell, 2, n_ell, 4)))[:, 1, :, 1]
 
-# ##
-# clf()
-# plt.plot( (diag(bespoke) ./ (diag(covar_coupled_EEEE)[3:end]))[30:end]  )
-# gcf()
 
-##
 import AngularPowerSpectra: TT, TE, EE, PP, QQ, UU
 import DataStructures: DefaultDict
 
+N_white = 4π / nside2npix(nside)
 identity_spectrum = SpectralVector(ones(3nside));
-r_coeff = DefaultDict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
-    identity_spectrum
-)
 
 cltt = SpectralVector(convert(Vector, theory.cltt))
 clte = SpectralVector(convert(Vector, theory.clte))
 clee = SpectralVector(convert(Vector, theory.clee))
-nlee = SpectralVector(convert(Vector, noise.nlee))
 nltt = SpectralVector(convert(Vector, noise.nltt))
+nlee = SpectralVector(convert(Vector, noise.nlee))
+
+r_coeff = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
+    (TT, "143_hm1", "143_hm1") => sqrt.(nltt ./ N_white),
+    (TT, "143_hm1", "143_hm2") => identity_spectrum,
+    (TT, "143_hm2", "143_hm1") => identity_spectrum,
+    (TT, "143_hm2", "143_hm2") => sqrt.(nltt ./ N_white),
+
+    (EE, "143_hm1", "143_hm1") => sqrt.(nlee ./ N_white),
+    (EE, "143_hm1", "143_hm2") => identity_spectrum,
+    (EE, "143_hm2", "143_hm1") => identity_spectrum,
+    (EE, "143_hm2", "143_hm2") => sqrt.(nlee ./ N_white)
+)
 
 spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
-    (EE, "143_hm1", "143_hm1") => clee .+ nlee,
+    (TT, "143_hm1", "143_hm1") => cltt,
+    (TT, "143_hm1", "143_hm2") => cltt,
+    (TT, "143_hm2", "143_hm1") => cltt,
+    (TT, "143_hm2", "143_hm2") => cltt,
+
+    (EE, "143_hm1", "143_hm1") => clee,
     (EE, "143_hm1", "143_hm2") => clee,
     (EE, "143_hm2", "143_hm1") => clee,
-    (EE, "143_hm2", "143_hm2") => clee .+ nlee,
+    (EE, "143_hm2", "143_hm2") => clee,
     
     (TE, "143_hm1", "143_hm1") => clte,
     (TE, "143_hm1", "143_hm2") => clte,
     (TE, "143_hm2", "143_hm1") => clte,
     (TE, "143_hm2", "143_hm2") => clte,
-
-    (TT, "143_hm1", "143_hm1") => cltt .+ nltt,
-    (TT, "143_hm1", "143_hm2") => cltt,
-    (TT, "143_hm2", "143_hm1") => cltt,
-    (TT, "143_hm2", "143_hm2") => cltt .+ nltt
 )
 
-##
-m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, zero_var, zero_var, zero_var, beam1, beam1)
-m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, zero_var, zero_var, zero_var, beam2, beam2)
+
+m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, var, var, var, beam1, beam1)
+m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, var, var, var, beam2, beam2)
 workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-@time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-@time factorized_mcm = lu(mcm.parent');
-@time C_EEEE = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff,
+@time C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff,
                          m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
+reference_covar = covar_coupled_TEEE
 
-##
-using NPZ
-reference_covar_EE_EE = npzread("test/covar_EE_EE.npy")
-
-using Test
-@test all((diag(C_EEEE.parent) .≈ diag(reference_covar_EE_EE))[3:end])
-
-##
-clf()
-plt.plot(diag(reference_covar_EE_EE), "-")
-plt.plot(diag(C_EEEE.parent), "--")
-yscale("log")
-gcf()
-
-
-##
-@time C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff,
-                         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-reference_covar = npzread("test/covar_TT_TE.npy")
 
 clf()
-plt.plot(diag(reference_covar)[3:end])
-plt.plot(diag(C.parent)[3:end], "-")
-yscale("log")
-plt.xlim(0,40)
-gcf()
-
-##
-clf()
-plt.plot( (diag(C_TETE.parent) ./ diag(reference_covar_TE_TE) .- 1 )[3:end])
+plt.plot( (diag(C.parent) ./ diag(reference_covar) )[30:end])
 plt.plot()
-# ylim(0.999, 1.001)
+ylim(0.99, 1.01)
 # yscale("log")
 gcf()
+
+##
+clf()
+plt.plot(
+    diag(reference_covar)[3:end],
+    "-")
+plt.plot(
+    diag(C.parent)[3:end], 
+    "--")
+yscale("log")
+# plt.xlim(0,40)
+
+gcf()
+
+
+
+##
+
+# @time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
+# @time mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
+# @time factorized_mcm = lu(mcm.parent');
+# @time C_EEEE = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff,
+#                          m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
+
+##
+# using NPZ
+# reference_covar_EE_EE = npzread("test/data/covar_TE_EE.npy")
+
+# using Test
+# @test all((diag(C_EEEE.parent) .≈ diag(reference_covar_EE_EE))[3:end])
+
+# ##
+# clf()
+# plt.plot(diag(reference_covar_EE_EE), "-")
+# plt.plot(diag(C_EEEE.parent), "--")
+# yscale("log")
+# gcf()
+
+
+##
+
+
+##
+
+
+##
 
 
 
