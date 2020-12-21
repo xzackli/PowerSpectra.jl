@@ -229,7 +229,7 @@ function loop_covTTTT!(C::SpectralArray{T,2}, lmax::Integer,
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
-    @threads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
@@ -310,7 +310,7 @@ function loop_covEEEE!(C::SpectralArray{T,2}, lmax::Integer,
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
-    @threads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax 
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
@@ -372,7 +372,7 @@ function loop_covTTTE!(C::SpectralArray{T,2}, lmax::Integer,
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
-    @threads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax 
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
@@ -432,7 +432,7 @@ function loop_covTETE!(C::SpectralArray{T,2}, lmax::Integer,
     thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
     
-    @threads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
 
@@ -513,19 +513,9 @@ function loop_covTEEE!(C::SpectralArray{T,2}, lmax::Integer,
                      r_EE_jq::SpectralVector{T}, r_EE_jp::SpectralVector{T}, 
                      W1, W2, W3, W4) where {T}
 
-    # thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
-    # @threads for ℓ₁ in 0:lmax
-    #     buffer = thread_buffers[Threads.threadid()]
-    #     for ℓ₂ in ℓ₁:lmax 
-    #         w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-    #         buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-    #         w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-    #         wigner3j_f!(w, w3j²)  # deposit symbols into buffer
-    #         w3j².symbols .= w3j².symbols .^ 2  # square the symbols
-
     thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
-    @threads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax 
@@ -564,7 +554,7 @@ function loop_covTEEE_planck!(C::SpectralArray{T,2}, lmax::Integer,
                      W1, W2, W3, W4) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
-    @threads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 0:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax 
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
@@ -616,7 +606,7 @@ function loop_covTTEE!(C::SpectralArray{T,2}, lmax::Integer,
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
-    @threads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax 
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence

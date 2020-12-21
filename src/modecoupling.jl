@@ -62,7 +62,7 @@ function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer,
                       Vij::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2*lmax+1)
     
-    @threads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in 2:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
@@ -127,7 +127,7 @@ function loop_mcm_TE!(mcm::SpectralArray{T,2}, lmax::Integer,
                       thread_buffers_0, thread_buffers_2,
                       Vij::SpectralVector{T}) where {T}
     
-    @threads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
 
