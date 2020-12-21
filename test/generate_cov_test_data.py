@@ -89,6 +89,20 @@ covar_00_00 = nmt.gaussian_covariance(cw,
 covar_TT_TT = covar_00_00[:, 0, :, 0]
 np.save("covar_TT_TT", covar_TT_TT)
 
+
+
+cw.compute_coupling_coefficients(f0_1, f0_2, f0_1, f2_2)
+covar_00_02 = nmt.gaussian_covariance(cw, 0, 0, 0, 2,  # Spins of the 4 fields
+                                      [cl_tt + nl_tt],  # TT
+                                      [cl_te, cl_tb],  # TE, TB
+                                      [cl_tt],  # TT
+                                      [cl_te, cl_tb],  # TE, TB
+                                      w00, wb=w02, coupled=True).reshape(
+                                          [n_ell, 1, n_ell, 2])
+covar_TT_TE = covar_00_02[:, 0, :, 0]
+np.save("covar_TT_TE", covar_TT_TE)
+
+
 cw.compute_coupling_coefficients(f0_1, f2_2, f0_1, f2_2)
 covar_02_02 = nmt.gaussian_covariance(cw, 0, 2, 0, 2,  # Spins of the 4 fields
                                       [cl_tt + nl_tt],  # TT
