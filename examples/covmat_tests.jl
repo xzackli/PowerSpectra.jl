@@ -95,7 +95,7 @@ noise = CSV.read("notebooks/data/noise.csv", DataFrame)
 # gcf()
 
 ##
-import AngularPowerSpectra: TT, EE, PP, QQ, UU
+import AngularPowerSpectra: TT, TE, EE, PP, QQ, UU
 import DataStructures: DefaultDict
 
 identity_spectrum = SpectralVector(ones(3nside));
@@ -104,6 +104,7 @@ r_coeff = DefaultDict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector
 )
 
 cltt = SpectralVector(convert(Vector, theory.cltt))
+clte = SpectralVector(convert(Vector, theory.clte))
 clee = SpectralVector(convert(Vector, theory.clee))
 nlee = SpectralVector(convert(Vector, noise.nlee))
 nltt = SpectralVector(convert(Vector, noise.nltt))
@@ -114,6 +115,11 @@ spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float6
     (EE, "143_hm2", "143_hm1") => clee,
     (EE, "143_hm2", "143_hm2") => clee .+ nlee,
     
+    (TE, "143_hm1", "143_hm1") => clte,
+    (TE, "143_hm1", "143_hm2") => clte,
+    (TE, "143_hm2", "143_hm1") => clte,
+    (TE, "143_hm2", "143_hm2") => clte,
+
     (TT, "143_hm1", "143_hm1") => cltt .+ nltt,
     (TT, "143_hm1", "143_hm2") => cltt,
     (TT, "143_hm2", "143_hm1") => cltt,
@@ -134,7 +140,7 @@ using NPZ
 reference_covar_EE_EE = npzread("test/covar_EE_EE.npy")
 
 using Test
-@test all(diag(C_EEEE.parent) .≈ diag(reference_covar_EE_EE))
+@test all((diag(C_EEEE.parent) .≈ diag(reference_covar_EE_EE))[3:end])
 
 ##
 clf()
@@ -145,14 +151,26 @@ gcf()
 
 
 ##
-# clf()
-# plt.plot(diag(covar_coupled_EEEE))
-# plt.plot(diag(C_EEEE.parent), "-")
-# yscale("log")
-# plt.xlim(0,40)
-# gcf()
+@time C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff,
+                         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
+reference_covar = npzread("test/covar_TT_TE.npy")
+
+clf()
+plt.plot(diag(reference_covar)[3:end])
+plt.plot(diag(C.parent)[3:end], "-")
+yscale("log")
+plt.xlim(0,40)
+gcf()
 
 ##
+clf()
+plt.plot( (diag(C_TETE.parent) ./ diag(reference_covar_TE_TE) .- 1 )[3:end])
+plt.plot()
+# ylim(0.999, 1.001)
+# yscale("log")
+gcf()
+
+
 
 ##
 clf()
