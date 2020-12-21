@@ -8,4 +8,4 @@
 ## Notes
 
 * Computes TT, TE, EE mode-coupling matrices.
-* Computes TTTT, TTTE, TTEE, TEEEE, EEEE covariance matrices based on Efsthathiou+06, or Planck XI 2015.
+* Computes TTTT, TTTE, TTEE, TEEEE, EEEE analytic covariance matrices (Efsthathiou+06, Planck XI 2015).

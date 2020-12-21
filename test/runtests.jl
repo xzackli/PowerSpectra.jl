@@ -66,7 +66,7 @@ end
 
 ##
 
-@testset "Covariance Matrix Homogenous Noise" begin
+@testset "Covariance Matrix in the Isotropic Noise Limit" begin
     nside = 256
     mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
     mask2_T = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
