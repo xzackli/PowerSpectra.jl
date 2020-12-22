@@ -17,8 +17,8 @@ import AngularPowerSpectra: TT, TE, EE
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-    @time mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
-    @time factorized_mcm = lu(mcm.parent)
+    mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
+    factorized_mcm = lu(mcm.parent)
 
     reference = readdlm("test/data/mcm_TT_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
@@ -26,6 +26,7 @@ import AngularPowerSpectra: TT, TE, EE
     map1 = readMapFromFITS("test/data/example_map.fits", 1, Float64)
     Cl_hat = compute_spectra(map1 * mask, map1 * mask, factorized_mcm, flat_beam, flat_beam)
     reference_spectrum = readdlm("test/data/example_TT_spectrum.txt")
+    @test all(reference_spectrum .≈ Cl_hat[3:end])
 end
 
 ##
@@ -37,8 +38,8 @@ end
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-    @time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-    @time factorized_mcm = lu(mcm.parent)
+    mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
+    factorized_mcm = lu(mcm.parent)
 
     reference = readdlm("test/data/mcm_EE_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
@@ -53,13 +54,13 @@ end
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-    @time mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
-    @time factorized_mcm = lu(mcm.parent)
+    mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
+    factorized_mcm = lu(mcm.parent)
     reference = readdlm("test/data/mcm_TE_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
 
-    @time mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
-    @time factorized_mcm = lu(mcm.parent)
+    mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
+    factorized_mcm = lu(mcm.parent)
     reference = readdlm("test/data/mcm_TE_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
 end
@@ -120,32 +121,32 @@ end
     m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
     workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 
-    @time C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff,
+    C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("test/data/covar_TT_TT.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
-    @time C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff,
+    C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("test/data/covar_TT_TE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
-    @time C = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff,
+    C = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("test/data/covar_TE_TE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
-    @time C = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff,
+    C = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("test/data/covar_TT_EE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
-    @time C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff,
+    C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("test/data/covar_TE_EE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
-    @time C = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff,
+    C = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("test/data/covar_EE_EE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
