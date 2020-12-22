@@ -71,12 +71,12 @@ w22 = nmt.NmtWorkspace()
 w22.compute_coupling_matrix(f2_1, f2_2, b)
 n_ell = 3 * nside
 
-np.save("mcm00", w00.get_coupling_matrix())
-np.save("mcm02", w02.get_coupling_matrix())
-np.save("mcm20", w20.get_coupling_matrix())
-np.save("mcm22", w22.get_coupling_matrix())
-import sys
-sys.exit()
+np.save("mcmTT", w00.get_coupling_matrix().reshape([3*nside, 1, 3*nside, 1])[:, 0, :, 0])
+np.save("mcmTE", w02.get_coupling_matrix().reshape([3*nside, 2, 3*nside, 2])[:, 0, :, 0])
+np.save("mcmET", w20.get_coupling_matrix().reshape([3*nside, 2, 3*nside, 2])[:, 0, :, 0])
+np.save("mcmEE", w22.get_coupling_matrix().reshape([3*nside, 4, 3*nside, 4])[:, 0, :, 0])
+# import sys
+# sys.exit()
 
 # Let's now compute the Gaussian estimate of the covariance!
 print("Covariance")

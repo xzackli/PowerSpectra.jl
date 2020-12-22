@@ -29,36 +29,48 @@ noise = CSV.read("test/data/noise.csv", DataFrame)
 
 
 f0_1 = nmt.NmtField(mask1_T.pixels, [flat_mask.pixels])
+f0_2 = nmt.NmtField(mask2_T.pixels, [flat_mask.pixels])
 f2_1 = nmt.NmtField(mask1_P.pixels, [flat_mask.pixels, flat_mask.pixels])
 f2_2 = nmt.NmtField(mask2_P.pixels, [flat_mask.pixels, flat_mask.pixels])
 
 b = nmt.NmtBin.from_nside_linear(nside, 1)
+w00 = nmt.NmtWorkspace()
+w00.compute_coupling_matrix(f0_1, f0_2, b)
 w02 = nmt.NmtWorkspace()
 w02.compute_coupling_matrix(f0_1, f2_2, b)
 w22 = nmt.NmtWorkspace()
 w22.compute_coupling_matrix(f2_1, f2_2, b)
 
 cw = nmt.NmtCovarianceWorkspace()
-cw.compute_coupling_coefficients(f0_1, f2_2, f2_1, f2_2)
+cw.compute_coupling_coefficients(f0_1, f0_2, f0_1, f0_2)
 n_ell = 3*nside
 cl_tt = theory.cltt
 cl_te = theory.clte
 cl_ee = theory.clee
 nl_ee = noise.nlee
+nl_tt = noise.nltt
 zero_cl = zeros(length(theory.clee))
 cl_bb = zero_cl
 cl_tb = zero_cl
 
 
-@time covar_02_22 = nmt.gaussian_covariance(cw, 0, 2, 2, 2,  # Spins of the 4 fields
-                                      [cl_te, cl_tb],
-                                      [cl_te, cl_tb],
-                                      [cl_ee, cl_te,
-                                      cl_te, cl_bb],  # EE, EB, BE, BB
-                                      [cl_ee .+ nl_ee, cl_te,
-                                      cl_te, cl_bb],  # EE, EB, BE, BB
-                                      w02, wb=w22, coupled=true)
-covar_coupled_TEEE = (np.reshape(covar_02_22, (n_ell, 2, n_ell, 4)))[:, 1, :, 1]
+@time covar_00_00 = nmt.gaussian_covariance(cw, 0, 0, 0, 0,  # Spins of the 4 fields
+                                      [cl_tt .+ nl_tt],
+                                      [cl_tt],
+                                      [cl_tt],
+                                      [cl_tt .+ nl_tt],
+                                      w00, wb=w00, coupled=true)
+covar_coupled_TTTT = (np.reshape(covar_00_00, (n_ell, 1, n_ell, 1)))[:, 1, :, 1]
+
+# @time covar_02_22 = nmt.gaussian_covariance(cw, 0, 2, 2, 2,  # Spins of the 4 fields
+#                                       [cl_te, cl_tb],
+#                                       [cl_te, cl_tb],
+#                                       [cl_ee, cl_te,
+#                                       cl_te, cl_bb],  # EE, EB, BE, BB
+#                                       [cl_ee .+ nl_ee, cl_te,
+#                                       cl_te, cl_bb],  # EE, EB, BE, BB
+#                                       w02, wb=w22, coupled=true)
+# covar_coupled_TEEE = (np.reshape(covar_02_22, (n_ell, 2, n_ell, 4)))[:, 1, :, 1]
 
 
 import AngularPowerSpectra: TT, TE, EE, PP, QQ, UU
@@ -106,9 +118,9 @@ spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float6
 m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, var, var, var, beam1, beam1)
 m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, var, var, var, beam2, beam2)
 workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-@time C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff,
+@time C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff,
                          m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-reference_covar = covar_coupled_TEEE
+reference_covar = covar_coupled_TTTT
 
 
 clf()
@@ -120,17 +132,31 @@ gcf()
 
 ##
 clf()
-plt.plot(
-    diag(reference_covar)[3:end],
-    "-")
-plt.plot(
-    diag(C.parent)[3:end], 
-    "--")
-yscale("log")
-# plt.xlim(0,40)
+for k in [0, 10, 20, 30, 40, 50]
 
+    plt.plot(
+        diag(reference_covar[3:2nside,3:2nside],k)
+        ./
+        diag(C.parent[3:2nside, 3:2nside],k), 
+        "-", label=k)
+end
+legend()
+ylim(0.9, 1.1)
 gcf()
 
+##
+clf()
+k = 50
+plt.plot(
+    diag(reference_covar[3:2nside,3:2nside],k),
+    "-")
+plt.plot(
+    diag(C.parent[3:2nside, 3:2nside],k), 
+    "--")
+yscale("log")
+gcf()
+
+##
 
 
 ##

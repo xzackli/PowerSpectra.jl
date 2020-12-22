@@ -30,7 +30,7 @@ import AngularPowerSpectra: TT, TE, EE
 end
 
 ##
-@testset "Mode Coupling Matrix EE" begin
+@testset "Mode Coupling Matrix Diag EE" begin
     nside = 256
     mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
@@ -46,7 +46,7 @@ end
 end
 
 ##
-@testset "Mode Coupling Matrix TE" begin
+@testset "Mode Coupling Matrix Diag TE/ET" begin
     nside = 256
     mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
@@ -66,8 +66,82 @@ end
 end
 
 ##
+@testset "Mode Coupling Matrix Diag TE/ET" begin
+    nside = 256
+    mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64)
+    flat_beam = SpectralVector(ones(3*nside))
+    flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+    mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
+    factorized_mcm = lu(mcm.parent)
+    reference = readdlm("test/data/mcm_TE_diag.txt")
+    @test all(reference .≈ diag(mcm.parent)[3:767])
 
-@testset "Covariance Matrix in the Isotropic Noise Limit" begin
+    mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
+    factorized_mcm = lu(mcm.parent)
+    reference = readdlm("test/data/mcm_TE_diag.txt")
+    @test all(reference .≈ diag(mcm.parent)[3:767])
+end
+
+##
+@testset "Full Non-Trivial MCM" begin
+    nside = 256
+    mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
+    mask2_T = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
+    mask1_P = readMapFromFITS("test/data/mask1_P.fits", 1, Float64)
+    mask2_P = readMapFromFITS("test/data/mask2_P.fits", 1, Float64)
+    unit_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    unit_beam = SpectralVector(ones(3*nside))
+    m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
+    m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
+    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+
+    mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
+    reference_mcm = npzread("test/data/mcmTT.npy")
+    @test all(isapprox(mcm.parent[3:end, 3:end], reference_mcm[3:end, 3:end], atol=1e-11))
+
+    mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
+    reference_mcm = npzread("test/data/mcmTE.npy")
+    for k in 0:3nside
+        @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
+    end
+
+    mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
+    reference_mcm = npzread("test/data/mcmET.npy")
+
+    for k in 0:3nside
+        @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
+    end
+
+    mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
+    reference_mcm = npzread("test/data/mcmEE.npy")
+    for k in 0:3nside
+        @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
+    end
+end
+
+##
+clf()
+k = 40
+plot(diag(mcm.parent[3:end, 3:end], k), "-")
+plot(diag(reference_mcm[3:end, 3:end], k), "-", lw=1.5, alpha=0.5)
+# plot(, "--")
+# yscale("log")
+gcf()
+
+
+##
+clf()
+plot(diag(mcm.parent[3:end, 3:end], 0) ./ diag(reference_mcm[3:end, 3:end], 0), "-")
+# plot(, "--")
+# yscale("log")
+gcf()
+
+##
+
+@testset "Covariance Matrix Diagonal in the Isotropic Noise Limit" begin
     nside = 256
     mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
     mask2_T = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
