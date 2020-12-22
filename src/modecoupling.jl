@@ -28,10 +28,13 @@ function Ξ_EE(W_arr::SpectralVector{T, AA},
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²_22), firstindex(W_arr))
     ℓ₃_end = min(lastindex(w3j²_22), lastindex(W_arr))
-    @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * (1 + (-1)^(ℓ₁ + ℓ₂ + ℓ₃))^2 * w3j²_22[ℓ₃] * W_arr[ℓ₃]
+    if isodd(ℓ₁ + ℓ₂ + ℓ₃_start)
+        ℓ₃_start += 1
     end
-    return Ξ / (16π)
+    @inbounds @simd for ℓ₃ ∈ ℓ₃_start:2:ℓ₃_end
+        Ξ += (2ℓ₃ + 1) * w3j²_22[ℓ₃] * W_arr[ℓ₃]
+    end
+    return Ξ / (4π)
 end
 Ξ_EE(W_arr::SpectralVector{T, AA}, w3j²_22::WignerSymbolVector{T, Int}, 
     ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
@@ -48,10 +51,13 @@ function Ξ_TE(W_arr::SpectralVector{T, AA},
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j_00_mul_22), firstindex(W_arr))
     ℓ₃_end = min(lastindex(w3j_00_mul_22), lastindex(W_arr))
-    @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * (1 + (-1)^(ℓ₁ + ℓ₂ + ℓ₃)) * w3j_00_mul_22[ℓ₃] * W_arr[ℓ₃]
+    if isodd(ℓ₁ + ℓ₂ + ℓ₃_start)
+        ℓ₃_start += 1
     end
-    return Ξ / (8π)
+    @inbounds @simd for ℓ₃ ∈ ℓ₃_start:2:ℓ₃_end
+        Ξ += (2ℓ₃ + 1) * w3j_00_mul_22[ℓ₃] * W_arr[ℓ₃]
+    end
+    return Ξ / (4π)
 end
 Ξ_TE(W_arr::SpectralVector{T, AA}, w3j²_22::WignerSymbolVector{T, Int}, 
     ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
@@ -64,13 +70,15 @@ function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer,
     
     @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in 2:lmax
+        for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j²_00 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
             wigner3j_f!(w, w3j²_00)  # deposit symbols into buffer
             w3j²_00.symbols .= w3j²_00.symbols .^ 2  # square the symbols
-            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_TT(Vij, w3j²_00, ℓ₁, ℓ₂)
+            Ξ = Ξ_TT(Vij, w3j²_00, ℓ₁, ℓ₂)
+            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            mcm[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
     mcm[0,0] = one(T)
@@ -96,13 +104,15 @@ function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer,
     lmin = 2
     @qthreads for ℓ₁ in lmin:lmax
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in lmin:lmax
+        for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j²_22 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
             wigner3j_f!(w, w3j²_22)  # deposit symbols into buffer
             w3j²_22.symbols .= w3j²_22.symbols .^ 2  # square the symbols
-            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_EE(Vij, w3j²_22, ℓ₁, ℓ₂)
+            Ξ = Ξ_EE(Vij, w3j²_22, ℓ₁, ℓ₂)
+            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            mcm[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
     mcm[0,0] = one(T)
@@ -134,8 +144,8 @@ function loop_mcm_TE!(mcm::SpectralArray{T,2}, lmax::Integer,
         for ℓ₂ in ℓ₁:lmax
             w00 = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             w22 = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-            buffer_view_0 = view(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
-            buffer_view_2 = view(buffer2, 1:(w22.nₘₐₓ - w22.nₘᵢₙ + 1))  # preallocated buffer
+            buffer_view_0 = uview(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
+            buffer_view_2 = uview(buffer2, 1:(w22.nₘₐₓ - w22.nₘᵢₙ + 1))  # preallocated buffer
             w3j_00 = WignerSymbolVector(buffer_view_0, w00.nₘᵢₙ:w00.nₘₐₓ)
             w3j_22 = WignerSymbolVector(buffer_view_2, w22.nₘᵢₙ:w22.nₘₐₓ)
             wigner3j_f!(w00, w3j_00)  # deposit symbols into buffer
@@ -143,7 +153,10 @@ function loop_mcm_TE!(mcm::SpectralArray{T,2}, lmax::Integer,
 
             w3j_00_22 = w3j_00
             w3j_00_22.symbols .*= w3j_22.symbols
-            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ_TE(Vij, w3j_00_22, ℓ₁, ℓ₂)
+            Ξ = Ξ_TE(Vij, w3j_00_22, ℓ₁, ℓ₂)
+            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            mcm[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
+
         end
     end
     mcm[0,0] = one(T)

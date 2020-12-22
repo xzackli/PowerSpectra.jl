@@ -66,26 +66,6 @@ end
 end
 
 ##
-@testset "Mode Coupling Matrix Diag TE/ET" begin
-    nside = 256
-    mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64)
-    flat_beam = SpectralVector(ones(3*nside))
-    flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-    mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
-    factorized_mcm = lu(mcm.parent)
-    reference = readdlm("test/data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(mcm.parent)[3:767])
-
-    mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
-    factorized_mcm = lu(mcm.parent)
-    reference = readdlm("test/data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(mcm.parent)[3:767])
-end
-
-##
 @testset "Full Non-Trivial MCM" begin
     nside = 256
     mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
@@ -121,23 +101,6 @@ end
         @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
     end
 end
-
-##
-clf()
-k = 40
-plot(diag(mcm.parent[3:end, 3:end], k), "-")
-plot(diag(reference_mcm[3:end, 3:end], k), "-", lw=1.5, alpha=0.5)
-# plot(, "--")
-# yscale("log")
-gcf()
-
-
-##
-clf()
-plot(diag(mcm.parent[3:end, 3:end], 0) ./ diag(reference_mcm[3:end, 3:end], 0), "-")
-# plot(, "--")
-# yscale("log")
-gcf()
 
 ##
 
