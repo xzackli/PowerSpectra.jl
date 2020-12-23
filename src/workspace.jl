@@ -40,7 +40,6 @@ struct SpectralWorkspace{T <: Real}
 
     # for mode coupling matrices
     masks::Dict{Tuple{String, MapType}, Alm{Complex{T}}}
-    V_spectra::ThreadSafeDict{VIndex, SpectralVector{T}}
 
     # for covariances
     effective_weights::ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}
@@ -66,7 +65,6 @@ function SpectralWorkspace(m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Fie
         field_names,
         lmax,
         masks,
-        ThreadSafeDict{VIndex, SpectralVector{T}}(),
         ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
         ThreadSafeDict{WIndex, SpectralVector{T}}()
     )
@@ -98,7 +96,6 @@ function PolarizedSpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{
         field_names,
         lmax,
         masks,
-        ThreadSafeDict{VIndex, SpectralVector{T}}(),
         ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
         ThreadSafeDict{WIndex, SpectralVector{T}}()
     )
