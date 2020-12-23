@@ -16,7 +16,7 @@ import AngularPowerSpectra: TT, TE, EE
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
     mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
     factorized_mcm = lu(mcm.parent)
 
@@ -37,7 +37,7 @@ end
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
     mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
     factorized_mcm = lu(mcm.parent)
 
@@ -53,7 +53,7 @@ end
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
     mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
     factorized_mcm = lu(mcm.parent)
     reference = readdlm("test/data/mcm_TE_diag.txt")
@@ -76,7 +76,7 @@ end
     unit_beam = SpectralVector(ones(3*nside))
     m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
     m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
-    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
 
     mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
     reference_mcm = npzread("test/data/mcmTT.npy")
