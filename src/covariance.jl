@@ -152,6 +152,13 @@ function window_function_W!(workspace::SpectralWorkspace{T}, X, Y, i, j, α, p, 
 end
 
 
+function beam_cov!(C, Bl_i, Bl_j, Bl_p, Bl_q)
+    for ℓ ∈ axes(C,1), ℓp ∈ axes(C,2)
+        C[ℓ, ℓp] *= 1.0 / (Bl_i[ℓ] * Bl_j[ℓ] * Bl_p[ℓp] * Bl_q[ℓp])
+    end
+end
+
+
 """
     cov(workspace::CovarianceWorkspace{T}, m_i::Field{T}, m_j::Field{T}, 
         m_p::Field{T}=m_i, m_q::Field{T}=m_j; band=5) where {T <: Real}
@@ -213,12 +220,6 @@ function compute_coupled_covmat_TTTT(workspace::SpectralWorkspace{T},
 end
 
 
-function beam_cov!(C, Bl_i, Bl_j, Bl_p, Bl_q)
-    for ℓ ∈ axes(C,1), ℓp ∈ axes(C,2)
-        C[ℓ, ℓp] *= 1.0 / (Bl_i[ℓ] * Bl_j[ℓ] * Bl_p[ℓp] * Bl_q[ℓp])
-    end
-end
-
 # inner loop 
 function loop_covTTTT!(C::SpectralArray{T,2}, lmax::Integer, 
                      TTip::SpectralVector{T}, TTjq::SpectralVector{T}, 
@@ -245,8 +246,7 @@ function loop_covTTTT!(C::SpectralArray{T,2}, lmax::Integer,
                 sqrt(TTiq[ℓ₁] * TTiq[ℓ₂]) * Ξ_TT(W5, w3j², ℓ₁, ℓ₂) * r_ℓ_jp[ℓ₁] * r_ℓ_jp[ℓ₂]  + 
                 sqrt(TTjp[ℓ₁] * TTjp[ℓ₂]) * Ξ_TT(W6, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_iq[ℓ₂]  + 
                 Ξ_TT(W7, w3j², ℓ₁, ℓ₂) * r_ℓ_ip[ℓ₁] * r_ℓ_jq[ℓ₁] * r_ℓ_ip[ℓ₂] * r_ℓ_jq[ℓ₂] + 
-                Ξ_TT(W8, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_jp[ℓ₁] * r_ℓ_iq[ℓ₂] * r_ℓ_jp[ℓ₂]
-            )
+                Ξ_TT(W8, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_jp[ℓ₁] * r_ℓ_iq[ℓ₂] * r_ℓ_jp[ℓ₂])
             C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
         end
     end
@@ -287,12 +287,10 @@ function compute_coupled_covmat_EEEE(workspace::SpectralWorkspace{T},
         r_ℓ_ip, r_ℓ_jq, r_ℓ_iq, r_ℓ_jp,
         window_function_W!(workspace, ∅∅, ∅∅, i, p, PP, j, q, PP),
         window_function_W!(workspace, ∅∅, ∅∅, i, q, PP, j, p, PP),
-
         window_function_W!(workspace, ∅∅, PP, i, p, PP, j, q, PP),
         window_function_W!(workspace, ∅∅, PP, j, q, PP, i, p, PP),
         window_function_W!(workspace, ∅∅, PP, i, q, PP, j, p, PP),
         window_function_W!(workspace, ∅∅, PP, j, p, PP, i, q, PP),
-
         window_function_W!(workspace, PP, PP, i, p, PP, j, q, PP),
         window_function_W!(workspace, PP, PP, i, q, PP, j, p, PP))
 
@@ -326,8 +324,7 @@ function loop_covEEEE!(C::SpectralArray{T,2}, lmax::Integer,
                 sqrt(EEiq[ℓ₁] * EEiq[ℓ₂]) * Ξ_EE(W5, w3j², ℓ₁, ℓ₂) * r_ℓ_jp[ℓ₁] * r_ℓ_jp[ℓ₂]  + 
                 sqrt(EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W6, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_iq[ℓ₂]  + 
                 Ξ_EE(W7, w3j², ℓ₁, ℓ₂) * r_ℓ_ip[ℓ₁] * r_ℓ_jq[ℓ₁] * r_ℓ_ip[ℓ₂] * r_ℓ_jq[ℓ₂] + 
-                Ξ_EE(W8, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_jp[ℓ₁] * r_ℓ_iq[ℓ₂] * r_ℓ_jp[ℓ₂]
-            )
+                Ξ_EE(W8, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_jp[ℓ₁] * r_ℓ_iq[ℓ₂] * r_ℓ_jp[ℓ₂])
 
             C[ℓ₂, ℓ₁] = C[ℓ₁, ℓ₂]
         end
@@ -356,8 +353,7 @@ function compute_coupled_covmat_TTTE(workspace::SpectralWorkspace{T},
         window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, TP),
         window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, TT),
         window_function_W!(workspace, ∅∅, TT, j, q, TP, i, p, TT),
-        window_function_W!(workspace, ∅∅, TT, i, q, TP, j, p, TT)
-    )
+        window_function_W!(workspace, ∅∅, TT, i, q, TP, j, p, TT))
 
     return C
 end
@@ -415,8 +411,7 @@ function compute_coupled_covmat_TETE(workspace::SpectralWorkspace{T},
         window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, PT),
         window_function_W!(workspace, ∅∅, PP, i, p, TT, j, q, PP),
         window_function_W!(workspace, ∅∅, TT, j, q, PP, i, p, TT),
-        window_function_W!(workspace, TT, PP, i, p, TT, j, q, PP)
-    )
+        window_function_W!(workspace, TT, PP, i, p, TT, j, q, PP))
 
     return C
 end
@@ -439,8 +434,8 @@ function loop_covTETE!(C::SpectralArray{T,2}, lmax::Integer,
         for ℓ₂ in ℓ₁:lmax 
             w00 = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             w22 = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-            buffer_view_0 = view(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
-            buffer_view_2 = view(buffer2, 1:(w22.nₘₐₓ - w22.nₘᵢₙ + 1))  # preallocated buffer
+            buffer_view_0 = uview(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
+            buffer_view_2 = uview(buffer2, 1:(w22.nₘₐₓ - w22.nₘᵢₙ + 1))  # preallocated buffer
             w3j_00 = WignerSymbolVector(buffer_view_0, w00.nₘᵢₙ:w00.nₘₐₓ)
             w3j_22 = WignerSymbolVector(buffer_view_2, w22.nₘᵢₙ:w22.nₘₐₓ)
             wigner3j_f!(w00, w3j_00)  # deposit symbols into buffer
@@ -521,8 +516,8 @@ function loop_covTEEE!(C::SpectralArray{T,2}, lmax::Integer,
         for ℓ₂ in ℓ₁:lmax 
             w00 = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             w22 = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-            buffer_view_0 = view(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
-            buffer_view_2 = view(buffer2, 1:(w22.nₘₐₓ - w22.nₘᵢₙ + 1))  # preallocated buffer
+            buffer_view_0 = uview(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
+            buffer_view_2 = uview(buffer2, 1:(w22.nₘₐₓ - w22.nₘᵢₙ + 1))  # preallocated buffer
             w3j_00 = WignerSymbolVector(buffer_view_0, w00.nₘᵢₙ:w00.nₘₐₓ)
             w3j_22 = WignerSymbolVector(buffer_view_2, w22.nₘᵢₙ:w22.nₘₐₓ)
             wigner3j_f!(w00, w3j_00)  # deposit symbols into buffer
