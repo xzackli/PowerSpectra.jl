@@ -156,7 +156,7 @@ end
 
     m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_var, unit_var, unit_var, beam1, beam1)
     m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
-    workspace = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+    workspace = CovarianceWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
 
     C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);

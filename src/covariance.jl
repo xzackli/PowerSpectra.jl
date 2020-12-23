@@ -1,165 +1,5 @@
 
 """
-Compute all effective weight map coefficients and store them in the workspace.
-"""
-function effective_weights_w!(workspace::SpectralWorkspace{T},
-                         m_i::Field{T}, m_j::Field{T}, 
-                         m_p::Field{T}, m_q::Field{T}) where {T <: Real}
-    # generate coefficients w
-    fields = Field{T}[m_i, m_j, m_p, m_q]
-    names = [m_i.name, m_j.name, m_p.name, m_q.name]
-
-    map_buffer = Map{T, RingOrder}(zeros(T, size(m_i.maskT.pixels)))  # reuse pixel buffer
-
-    # XX, i, j, YY
-    w = workspace.effective_weights
-
-    for (i, name_i) in enumerate(names)
-        for (j, name_j) in enumerate(names)
-            if ((∅∅, name_i, name_j, TT) ∉ keys(w))
-                map_buffer.pixels .= fields[i].maskT.pixels
-                map_buffer.pixels .*= fields[j].maskT.pixels
-                w[∅∅, name_i, name_j, TT] = map2alm(map_buffer)  # allocate new alms
-            end
-
-            if i == j  # δᵢⱼ here, so we don't create arrays for this
-                if ((II, name_i, name_i, TT) ∉ keys(w))
-                    map_buffer.pixels .= fields[i].maskT.pixels
-                    map_buffer.pixels .*= fields[j].maskT.pixels
-                    map_buffer.pixels .*= fields[j].σ²II.pixels
-                    w[II, name_i, name_i, TT] = map2alm(map_buffer)
-                end
-            end
-        end
-    end
-end
-
-
-"""
-Compute all effective weight map coefficients and store them in the workspace.
-"""
-function effective_weights_w!(workspace::SpectralWorkspace{T},
-                              m_i::PolarizedField{T}, m_j::PolarizedField{T}, 
-                              m_p::PolarizedField{T}, m_q::PolarizedField{T}) where {T <: Real}
-    # generate coefficients w
-    fields = [m_i, m_j, m_p, m_q]
-    names = [m_i.name, m_j.name, m_p.name, m_q.name]
-    lmax = workspace.lmax
-    map_buffer = Map{T, RingOrder}(zeros(T, size(m_i.maskT.pixels)))  # reuse pixel buffer
-    zero_alm = Alm(lmax, lmax, Zeros{Complex{T}}(numberOfAlms(lmax, lmax)))
-    N_pix = map_buffer.resolution.numOfPixels
-    Ω_p = 4π / N_pix
-    w = workspace.effective_weights
-
-    ell_array = get_ell_array(lmax)
-
-    for (i, name_i) in enumerate(names)
-        for (j, name_j) in enumerate(names)
-            
-            # Planck 2015 C.17 - C.20
-            if ((∅∅, name_i, name_j, TT) ∉ keys(w))  # ∅∅ TT
-                map_buffer.pixels .= fields[i].maskT.pixels
-                map_buffer.pixels .*= fields[j].maskT.pixels
-                w[∅∅, name_i, name_j, TT] = map2alm(map_buffer)  # allocate new alms
-            end
-
-            if ((∅∅, name_i, name_j, TP) ∉ keys(w))  # ∅∅ TP
-                map_buffer.pixels .= fields[i].maskT.pixels
-                map_buffer.pixels .*= fields[j].maskP.pixels
-                w[∅∅, name_i, name_j, TP] = map2alm(map_buffer)  # allocate new alms
-            end
-            if ((∅∅, name_i, name_j, PT) ∉ keys(w))  # ∅∅ PT
-                map_buffer.pixels .= fields[i].maskP.pixels
-                map_buffer.pixels .*= fields[j].maskT.pixels
-                w[∅∅, name_i, name_j, PT] = map2alm(map_buffer)  # allocate new alms
-            end
-            if ((∅∅, name_i, name_j, PP) ∉ keys(w))  # ∅∅ PP
-                map_buffer.pixels .= fields[i].maskP.pixels
-                map_buffer.pixels .*= fields[j].maskP.pixels
-                w[∅∅, name_i, name_j, PP] = map2alm(map_buffer)  # allocate new alms
-            end
-
-            if name_i == name_j  # δᵢⱼ here, so we don't create arrays for this. C.21 - C.23
-                if ((II, name_i, name_i, TT) ∉ keys(w))  # II TT
-                    map_buffer.pixels .= fields[i].maskT.pixels
-                    map_buffer.pixels .*= fields[j].maskT.pixels
-                    map_buffer.pixels .*= fields[j].σ²II.pixels .* Ω_p
-                    w[II, name_i, name_i, TT] = map2alm(map_buffer)
-                end
-                if ((QQ, name_i, name_i, PP) ∉ keys(w))  # QQ PP
-                    map_buffer.pixels .= fields[i].maskP.pixels
-                    map_buffer.pixels .*= fields[j].maskP.pixels
-                    map_buffer.pixels .*= fields[j].σ²QQ.pixels .* Ω_p
-                    w[QQ, name_i, name_i, PP] = map2alm(map_buffer)
-                end
-                if ((UU, name_i, name_i, PP) ∉ keys(w))  # UU PP
-                    map_buffer.pixels .= fields[i].maskP.pixels
-                    map_buffer.pixels .*= fields[j].maskP.pixels
-                    map_buffer.pixels .*= fields[j].σ²UU.pixels .* Ω_p
-                    w[UU, name_i, name_i, PP] = map2alm(map_buffer)
-                end
-            else
-                w[II, name_i, name_j, TT] = zero_alm
-                w[QQ, name_i, name_j, PP] = zero_alm
-                w[UU, name_i, name_j, PP] = zero_alm
-            end
-        end
-
-    end
-end
-
-
-function window_function_W!(workspace::SpectralWorkspace{T}, X, Y, i, j, α, p, q, β) where {T}
-    # check if it's already computed
-    if (X, Y, i, j, α, p, q, β) in keys(workspace.W_spectra)
-        return workspace.W_spectra[(X, Y, i, j, α, p, q, β)]
-    end
-
-    # TT turns into II
-    if X == TT
-        wterms_X = (II,)
-    elseif X == PP
-        wterms_X = (QQ, UU)
-    else
-        wterms_X = (X,)
-    end
-    
-    if Y == TT
-        wterms_Y = (II,)
-    elseif Y == PP
-        wterms_Y = (QQ, UU)
-    else
-        wterms_Y = (Y,)
-    end
-
-    result = zeros(T, workspace.lmax+1)
-
-    # Planck 2015 eq. C.11 - C.16
-    for wX in wterms_X
-        for wY in wterms_Y
-            result .+= alm2cl(
-                workspace.effective_weights[wX, i, j, α], 
-                workspace.effective_weights[wY, p, q, β])
-        end
-    end
-    norm = one(T) / (length(wterms_X) * length(wterms_Y))
-
-    result .*= norm
-    result = SpectralVector(result)
-
-    workspace.W_spectra[X, Y, i, j, α, p, q, β] = result
-    return result
-end
-
-
-function beam_cov!(C, Bl_i, Bl_j, Bl_p, Bl_q)
-    for ℓ ∈ axes(C,1), ℓp ∈ axes(C,2)
-        C[ℓ, ℓp] *= 1.0 / (Bl_i[ℓ] * Bl_j[ℓ] * Bl_p[ℓp] * Bl_q[ℓp])
-    end
-end
-
-
-"""
     cov(workspace::CovarianceWorkspace{T}, m_i::Field{T}, m_j::Field{T}, 
         m_p::Field{T}=m_i, m_q::Field{T}=m_j; band=5) where {T <: Real}
 
@@ -175,7 +15,7 @@ Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperat
 # Returns
 - `Symmetric{Array{T,2}}`: covariance
 """
-function compute_covmat_TTTT(workspace::SpectralWorkspace{T}, 
+function compute_covmat_TTTT(workspace::CovarianceWorkspace{T}, 
         spectra, rescaling_coefficients, mcm_adj_XY, mcm_adj_ZW,
         m_i::AbstractField{T}, m_j::AbstractField{T}, m_p::AbstractField{T}, m_q::AbstractField{T};
         lmax=0) where {T <: Real}
@@ -187,16 +27,13 @@ function compute_covmat_TTTT(workspace::SpectralWorkspace{T},
 end
 
 
-function compute_coupled_covmat_TTTT(workspace::SpectralWorkspace{T}, 
+function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, 
             spectra, rescaling_coefficients, 
              m_i::AbstractField{T}, m_j::AbstractField{T}, m_p::AbstractField{T}, m_q::AbstractField{T};
              lmax=0) where {T <: Real}
 
-    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
-
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
-    W = workspace.W_spectra
 
     r_ℓ_ip = rescaling_coefficients[TT, i, p]
     r_ℓ_jq = rescaling_coefficients[TT, j, q]
@@ -253,7 +90,7 @@ function loop_covTTTT!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_covmat_EEEE(workspace::SpectralWorkspace{T}, 
+function compute_covmat_EEEE(workspace::CovarianceWorkspace{T}, 
         spectra, rescaling_coefficients, 
         mcm_adj_XY, mcm_adj_ZW,
         m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
@@ -265,16 +102,13 @@ function compute_covmat_EEEE(workspace::SpectralWorkspace{T},
     return C
 end
 
-function compute_coupled_covmat_EEEE(workspace::SpectralWorkspace{T}, 
+function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, 
              spectra, rescaling_coefficients, 
              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
              lmax=0) where {T <: Real}
 
-    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
-
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
-    W = workspace.W_spectra
 
     r_ℓ_ip = rescaling_coefficients[EE, i, p]
     r_ℓ_jq = rescaling_coefficients[EE, j, q]
@@ -332,12 +166,10 @@ function loop_covEEEE!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TTTE(workspace::SpectralWorkspace{T}, 
+function compute_coupled_covmat_TTTE(workspace::CovarianceWorkspace{T}, 
              spectra, rescaling_coefficients, 
              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
              lmax=0) where {T <: Real}
-
-    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -389,12 +221,10 @@ function loop_covTTTE!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TETE(workspace::SpectralWorkspace{T}, 
+function compute_coupled_covmat_TETE(workspace::CovarianceWorkspace{T}, 
              spectra, rescaling_coefficients, 
              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
              lmax=0) where {T <: Real}
-
-    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -463,12 +293,10 @@ end
 
 
 
-function compute_coupled_covmat_TEEE(workspace::SpectralWorkspace{T}, 
+function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, 
              spectra, rescaling_coefficients, 
              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
              lmax=0, planck=false) where {T <: Real}
-
-    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -571,12 +399,10 @@ end
 
 
 
-function compute_coupled_covmat_TTEE(workspace::SpectralWorkspace{T}, 
+function compute_coupled_covmat_TTEE(workspace::CovarianceWorkspace{T}, 
              spectra, rescaling_coefficients, 
              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
              lmax=0) where {T <: Real}
-
-    effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names

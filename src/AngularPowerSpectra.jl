@@ -20,7 +20,8 @@ import LoopVectorization: @avx
 export compute_mcm_TT, compute_spectra, beam_cov
 export compute_covmat_TTTT, compute_covmat_EEEE
 export Field, SpectralWorkspace, SpectralVector, SpectralArray
-export PolarizedField, PolarizedSpectralWorkspace
+export PolarizedField
+export CovarianceWorkspace
 export compute_mcm_EE
 export compute_mcm_TE, compute_mcm_ET
 export binning_matrix

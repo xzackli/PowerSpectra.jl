@@ -28,6 +28,19 @@ end
 
 @enum MapType ∅∅ II QQ UU TT PP TP PT TE ET EE
 
+# converts i.e. TP => (TT, PP)
+function split_maptype(XY::MapType)
+    if XY == TT
+        return TT, TT
+    elseif XY == PP
+        return PP, PP
+    elseif XY == TP
+        return TT, PP
+    elseif XY == PT
+        return PP, TT
+    end
+end
+
 # index for the mask spectra V
 const VIndex = Tuple{MapType, String, String}
 
@@ -63,13 +76,109 @@ end
 struct CovarianceWorkspace{T <: Real}
     field_names::NTuple{4, String}
     lmax::Int
-
-    # for mode coupling matrices
-    mask_alm::Dict{Tuple{String, MapType}, Alm{Complex{T}}}
-
-    # for covariances
+    mask_p::Dict{Tuple{String, MapType}, Map{T,RingOrder}}
+    weight_p::Dict{Tuple{String, MapType}, Map{T,RingOrder}}
     effective_weights::ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}
     W_spectra::ThreadSafeDict{WIndex, SpectralVector{T}}
+end
+
+
+function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}, 
+                             m_p::PolarizedField{T}, m_q::PolarizedField{T}; lmax::Int=0) where {T}
+    field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
+    lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
+    mask_p = Dict{Tuple{String, MapType},Map{T,RingOrder}}(
+        (m_i.name, TT) => m_i.maskT, (m_j.name, TT) => m_j.maskT, 
+        (m_p.name, TT) => m_p.maskT, (m_q.name, TT) => m_q.maskT,
+        (m_i.name, PP) => m_i.maskP, (m_j.name, PP) => m_j.maskP, 
+        (m_p.name, PP) => m_p.maskP, (m_q.name, PP) => m_q.maskP)
+    weight_p = Dict{Tuple{String, MapType},Map{T,RingOrder}}(
+        (m_i.name, II) => m_i.σ²II, (m_i.name, QQ) => m_i.σ²QQ, (m_i.name, UU) => m_i.σ²UU,
+        (m_j.name, II) => m_j.σ²II, (m_j.name, QQ) => m_j.σ²QQ, (m_j.name, UU) => m_j.σ²UU,
+        (m_p.name, II) => m_p.σ²II, (m_p.name, QQ) => m_p.σ²QQ, (m_p.name, UU) => m_p.σ²UU,
+        (m_q.name, II) => m_q.σ²II, (m_q.name, QQ) => m_q.σ²QQ, (m_q.name, UU) => m_q.σ²UU)
+
+    return CovarianceWorkspace{T}(
+        field_names,
+        lmax,
+        mask_p,
+        weight_p,
+        ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
+        ThreadSafeDict{WIndex, SpectralVector{T}}())
+end
+
+
+function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) where T
+    if (A, i, j, α) in keys(workspace.effective_weights)
+        return workspace.effective_weights[(A, i, j, α)]
+    end
+
+    X, Y = split_maptype(α)
+
+    m_iX = workspace.mask_p[i, X]
+    m_jY = workspace.mask_p[j, Y]
+
+    if A == ∅∅
+        map_buffer = m_iX * m_jY
+        w_result = map2alm(map_buffer)
+        workspace.effective_weights[A, i, j, α] = w_result
+        return w_result
+    elseif (A in (II, QQ, UU))
+        if i == j
+            map_buffer = m_iX * m_jY
+            Ω_p = 4π / map_buffer.resolution.numOfPixels
+            map_buffer.pixels .*= workspace.weight_p[i, A].pixels .* Ω_p
+            w_result = map2alm(map_buffer)
+            workspace.effective_weights[A, i, j, α] = w_result
+            return w_result
+        end
+    end
+
+    # otherwise return zero
+    lmax = workspace.lmax
+    return Alm(lmax, lmax, zeros(ComplexF64, numberOfAlms(lmax, lmax)))
+end
+
+
+function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p, q, β) where T
+    # check if it's already computed
+    if (X, Y, i, j, α, p, q, β) in keys(workspace.W_spectra)
+        return workspace.W_spectra[(X, Y, i, j, α, p, q, β)]
+    end
+
+    # TT turns into II
+    if X == TT
+        wterms_X = (II,)
+    elseif X == PP
+        wterms_X = (QQ, UU)
+    else
+        wterms_X = (X,)
+    end
+    
+    if Y == TT
+        wterms_Y = (II,)
+    elseif Y == PP
+        wterms_Y = (QQ, UU)
+    else
+        wterms_Y = (Y,)
+    end
+
+    result = zeros(T, workspace.lmax+1)
+
+    # Planck 2015 eq. C.11 - C.16
+    for wX in wterms_X
+        for wY in wterms_Y
+            result .+= alm2cl(
+                effective_weight_alm!(workspace, wX, i, j, α),
+                effective_weight_alm!(workspace, wY, p, q, β))
+        end
+    end
+    norm = one(T) / (length(wterms_X) * length(wterms_Y))
+    result .*= norm
+    result = SpectralVector(result)
+
+    workspace.W_spectra[X, Y, i, j, α, p, q, β] = result
+    return result
 end
 
 # function SpectralWorkspace(m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
