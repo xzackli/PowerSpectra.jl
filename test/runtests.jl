@@ -11,7 +11,7 @@ import AngularPowerSpectra: TT, TE, EE
 ##
 @testset "Mode Coupling Matrix TT" begin
     nside = 256
-    mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64)
+    mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
@@ -20,19 +20,19 @@ import AngularPowerSpectra: TT, TE, EE
     mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
     factorized_mcm = lu(mcm.parent)
 
-    reference = readdlm("test/data/mcm_TT_diag.txt")
+    reference = readdlm("data/mcm_TT_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
 
-    map1 = readMapFromFITS("test/data/example_map.fits", 1, Float64)
+    map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
     Cl_hat = compute_spectra(map1 * mask, map1 * mask, factorized_mcm, flat_beam, flat_beam)
-    reference_spectrum = readdlm("test/data/example_TT_spectrum.txt")
+    reference_spectrum = readdlm("data/example_TT_spectrum.txt")
     @test all(reference_spectrum .≈ Cl_hat[3:end])
 end
 
 ##
 @testset "Mode Coupling Matrix Diag EE" begin
     nside = 256
-    mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64)
+    mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
@@ -41,14 +41,14 @@ end
     mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
     factorized_mcm = lu(mcm.parent)
 
-    reference = readdlm("test/data/mcm_EE_diag.txt")
+    reference = readdlm("data/mcm_EE_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
 end
 
 ##
 @testset "Mode Coupling Matrix Diag TE/ET" begin
     nside = 256
-    mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64)
+    mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
@@ -56,22 +56,22 @@ end
     workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
     mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
     factorized_mcm = lu(mcm.parent)
-    reference = readdlm("test/data/mcm_TE_diag.txt")
+    reference = readdlm("data/mcm_TE_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
 
     mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
     factorized_mcm = lu(mcm.parent)
-    reference = readdlm("test/data/mcm_TE_diag.txt")
+    reference = readdlm("data/mcm_TE_diag.txt")
     @test all(reference .≈ diag(mcm.parent)[3:767])
 end
 
 ##
 @testset "Full Non-Trivial MCM" begin
     nside = 256
-    mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
-    mask2_T = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
-    mask1_P = readMapFromFITS("test/data/mask1_P.fits", 1, Float64)
-    mask2_P = readMapFromFITS("test/data/mask2_P.fits", 1, Float64)
+    mask1_T = readMapFromFITS("data/mask1_T.fits", 1, Float64)
+    mask2_T = readMapFromFITS("data/mask2_T.fits", 1, Float64)
+    mask1_P = readMapFromFITS("data/mask1_P.fits", 1, Float64)
+    mask2_P = readMapFromFITS("data/mask2_P.fits", 1, Float64)
     unit_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     unit_beam = SpectralVector(ones(3*nside))
     m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
@@ -79,43 +79,43 @@ end
     workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
 
     mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("test/data/mcmTT.npy")
+    reference_mcm = npzread("data/mcmTT.npy")
     @test all(isapprox(mcm.parent[3:end, 3:end], reference_mcm[3:end, 3:end], atol=1e-11))
 
     mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("test/data/mcmTE.npy")
+    reference_mcm = npzread("data/mcmTE.npy")
     for k in 0:3nside
         @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
     end
 
     mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("test/data/mcmET.npy")
+    reference_mcm = npzread("data/mcmET.npy")
 
     for k in 0:3nside
         @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
     end
 
     mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("test/data/mcmEE.npy")
+    reference_mcm = npzread("data/mcmEE.npy")
     for k in 0:3nside
         @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
     end
 end
 
-##
 
+##
 @testset "Covariance Matrix Diagonal in the Isotropic Noise Limit" begin
     nside = 256
-    mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
-    mask2_T = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
-    mask1_P = readMapFromFITS("test/data/mask1_P.fits", 1, Float64)
-    mask2_P = readMapFromFITS("test/data/mask2_P.fits", 1, Float64)
+    mask1_T = readMapFromFITS("data/mask1_T.fits", 1, Float64)
+    mask2_T = readMapFromFITS("data/mask2_T.fits", 1, Float64)
+    mask1_P = readMapFromFITS("data/mask1_P.fits", 1, Float64)
+    mask2_P = readMapFromFITS("data/mask2_P.fits", 1, Float64)
     unit_var = Map{Float64, RingOrder}(ones(nside2npix(nside)))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     beam1 = SpectralVector(ones(3nside))
     beam2 = SpectralVector(ones(3nside))
-    theory = CSV.read("test/data/theory.csv", DataFrame)
-    noise = CSV.read("test/data/noise.csv", DataFrame)
+    theory = CSV.read("data/theory.csv", DataFrame)
+    noise = CSV.read("data/noise.csv", DataFrame)
     identity_spectrum = SpectralVector(ones(3nside));
 
     cltt = SpectralVector(convert(Vector, theory.cltt))
@@ -160,33 +160,31 @@ end
 
     C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-    reference_covar = npzread("test/data/covar_TT_TT.npy")
+    reference_covar = npzread("data/covar_TT_TT.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-    reference_covar = npzread("test/data/covar_TT_TE.npy")
+    reference_covar = npzread("data/covar_TT_TE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-    reference_covar = npzread("test/data/covar_TE_TE.npy")
+    reference_covar = npzread("data/covar_TE_TE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-    reference_covar = npzread("test/data/covar_TT_EE.npy")
+    reference_covar = npzread("data/covar_TT_EE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-    reference_covar = npzread("test/data/covar_TE_EE.npy")
+    reference_covar = npzread("data/covar_TE_EE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
-    reference_covar = npzread("test/data/covar_EE_EE.npy")
+    reference_covar = npzread("data/covar_EE_EE.npy")
     @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
 end
-
-##
