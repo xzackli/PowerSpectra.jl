@@ -39,14 +39,11 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@v1
-      - run: julia --project=. -e 'using Pkg; pkg"add Healpix#master"; Pkg.instantiate()'
       - uses: julia-actions/julia-runtest@v1
-        env:
-          JULIA_NUM_THREADS: 2
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: julia-actions/julia-uploadcodecov@latest
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - uses: codecov/codecov-action@v1
+        with:
+          file: lcov.info
   docs:
     name: Documentation
     runs-on: ubuntu-latest
@@ -54,12 +51,17 @@ jobs:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
-          version: '1.5'
+          version: '1'
       - run: |
           julia --project=docs -e '
             using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
+      - run: |
+          julia --project=docs -e '
+            using Documenter: doctest
+            using AngularPowerSpectra
+            doctest(AngularPowerSpectra)'
       - run: julia --project=docs docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
