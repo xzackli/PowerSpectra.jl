@@ -6,10 +6,8 @@ function decouple_covmat!(C::SpectralArray{T,2}, mcm_adj_XY::SpectralArray{T,2},
 end
 
 
-function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, 
-            spectra, rescaling_coefficients, 
-             m_i::AbstractField{T}, m_j::AbstractField{T}, m_p::AbstractField{T}, m_q::AbstractField{T};
-             lmax=0) where {T <: Real}
+function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra, 
+                                     rescaling_coefficients; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -69,10 +67,8 @@ function loop_covTTTT!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, 
-             spectra, rescaling_coefficients, 
-             m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-             lmax=0) where {T <: Real}
+function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, spectra, 
+                                     rescaling_coefficients; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -133,10 +129,8 @@ function loop_covEEEE!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TTTE(workspace::CovarianceWorkspace{T}, 
-             spectra, rescaling_coefficients, 
-             m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-             lmax=0) where {T <: Real}
+function compute_coupled_covmat_TTTE(workspace::CovarianceWorkspace{T}, spectra, 
+                                     rescaling_coefficients; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -188,10 +182,8 @@ function loop_covTTTE!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TETE(workspace::CovarianceWorkspace{T}, 
-             spectra, rescaling_coefficients, 
-             m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-             lmax=0) where {T <: Real}
+function compute_coupled_covmat_TETE(workspace::CovarianceWorkspace{T}, spectra, 
+                                     rescaling_coefficients; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -259,11 +251,8 @@ function loop_covTETE!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-
-function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, 
-             spectra, rescaling_coefficients, 
-             m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-             lmax=0, planck=false) where {T <: Real}
+function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, spectra, 
+                                     rescaling_coefficients; lmax=0, planck=false) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
@@ -365,11 +354,8 @@ function loop_covTEEE_planck!(C::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-
-function compute_coupled_covmat_TTEE(workspace::CovarianceWorkspace{T}, 
-             spectra, rescaling_coefficients, 
-             m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-             lmax=0) where {T <: Real}
+function compute_coupled_covmat_TTEE(workspace::CovarianceWorkspace{T}, spectra, 
+                                     rescaling_coefficients; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
