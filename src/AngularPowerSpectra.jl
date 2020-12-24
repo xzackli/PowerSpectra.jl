@@ -13,9 +13,9 @@ import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_arra
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
 import LinearAlgebra: ldiv!, rdiv!, Hermitian
-import Distributions: MvNormal
+# import Distributions: MvNormal
 using Random
-import LoopVectorization: @avx
+# import LoopVectorization: @avx
 
 export compute_mcm_TT, compute_spectra, beam_cov
 export compute_covmat_TTTT, compute_covmat_EEEE
