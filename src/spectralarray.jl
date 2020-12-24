@@ -12,8 +12,3 @@ SpectralVector{T}(init::ArrayInitializer,
 function SpectralArray(A::AbstractArray{T,N}) where {T,N}
     SpectralArray{T,N,typeof(A)}(A, map(x->-1, size(A)))
 end
-SpectralArray{T,N}(init::ArrayInitializer, sizes::NTuple{N, Int}) where {T,N} =
-    SpectralArray(Array{T,N}(init, sizes), map(x->-1, sizes))
-SpectralArray{T}(init::ArrayInitializer, sizes::NTuple{N,Int}) where {T,N} = SpectralArray{T,N}(init, sizes)
-SpectralArray{T,N}(init::ArrayInitializer, sizes::Vararg{Int,N}) where {T,N} = SpectralArray{T,N}(init, sizes)
-SpectralArray{T}(init::ArrayInitializer, sizes::Vararg{Int,N}) where {T,N} = SpectralArray{T,N}(init, sizes)

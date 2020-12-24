@@ -1,5 +1,18 @@
 
 
+function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing)
+    nbins = length(left_bins)
+    lmax = isnothing(lmax) ? right_bins[end] : lmax
+    P = zeros(nbins, lmax)
+    for b in 1:nbins
+        weights = weight_function_ℓ.(left_bins[b]:right_bins[b])
+        norm = sum(weights)
+        P[b, left_bins[b]+1:right_bins[b]+1] .= weights ./ norm
+    end
+    return P
+end
+
+
 # function generate_correlated_noise(nside, σ, nltt)
 #     noisemap = Map{Float64, RingOrder}(nside)
 #     res = noisemap.resolution
@@ -47,17 +60,17 @@
 
 
 
-function get_ell_array(lmax)
-    nalm = numberOfAlms(lmax, lmax)
-    ell_alm_array = zeros(Int, nalm)
-    zero_alm = Alm(lmax, lmax, Zeros{Complex{Float64}}(nalm))
+# function get_ell_array(lmax)
+#     nalm = numberOfAlms(lmax, lmax)
+#     ell_alm_array = zeros(Int, nalm)
+#     zero_alm = Alm(lmax, lmax, Zeros{Complex{Float64}}(nalm))
 
-    for l in 0:lmax
-        for m in 0:l 
-            index = almIndex(zero_alm, l, m)
-            ell_alm_array[index] = l
-        end
-    end
-    return ell_alm_array
-end
+#     for l in 0:lmax
+#         for m in 0:l 
+#             index = almIndex(zero_alm, l, m)
+#             ell_alm_array[index] = l
+#         end
+#     end
+#     return ell_alm_array
+# end
 

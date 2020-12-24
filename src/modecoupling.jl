@@ -13,8 +13,6 @@ function Ξ_TT(W_arr::SpectralVector{T, AA},
     end
     return Ξ / (4π)
 end
-Ξ_TT(W_arr::SpectralVector{T, AA}, w3j²_00::WignerSymbolVector{T, Int}, 
-    ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
 
 
 """
@@ -36,8 +34,6 @@ function Ξ_EE(W_arr::SpectralVector{T, AA},
     end
     return Ξ / (4π)
 end
-Ξ_EE(W_arr::SpectralVector{T, AA}, w3j²_22::WignerSymbolVector{T, Int}, 
-    ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
 
 
 """
@@ -59,8 +55,6 @@ function Ξ_TE(W_arr::SpectralVector{T, AA},
     end
     return Ξ / (4π)
 end
-Ξ_TE(W_arr::SpectralVector{T, AA}, w3j²_22::WignerSymbolVector{T, Int}, 
-    ℓ₁::Int, ℓ₂::Int) where {T, AA<:Zeros} = zero(T)
 
 
 # inner MCM loop TT
@@ -206,14 +200,3 @@ function compute_spectra(alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end
 
-function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing)
-    nbins = length(left_bins)
-    lmax = isnothing(lmax) ? right_bins[end] : lmax
-    P = zeros(nbins, lmax)
-    for b in 1:nbins
-        weights = weight_function_ℓ.(left_bins[b]:right_bins[b])
-        norm = sum(weights)
-        P[b, left_bins[b]+1:right_bins[b]+1] .= weights ./ norm
-    end
-    return P
-end
