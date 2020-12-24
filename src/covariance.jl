@@ -1,26 +1,5 @@
 
-"""
-    cov(workspace::CovarianceWorkspace{T}, m_i::Field{T}, m_j::Field{T}, 
-        m_p::Field{T}=m_i, m_q::Field{T}=m_j; band=5) where {T <: Real}
-
-Compute the covariance matrix between Cℓ₁(i,j) and Cℓ₂(p,q) for temperature.
-
-# Arguments
-- `m_i::Field{T}`: the array to search
-- `m_j::Field{T}`: the value to search for
-
-# Keywords
-- `band::Integer`: compute the banded covariance matrix. Set to 0 for just the diagonal.
-
-# Returns
-- `Symmetric{Array{T,2}}`: covariance
-"""
-function compute_covmat_TTTT(workspace::CovarianceWorkspace{T}, 
-        spectra, rescaling_coefficients, mcm_adj_XY, mcm_adj_ZW,
-        m_i::AbstractField{T}, m_j::AbstractField{T}, m_p::AbstractField{T}, m_q::AbstractField{T};
-        lmax=0) where {T <: Real}
-
-    C = compute_coupled_covmat_TTTT(workspace, spectra, rescaling_coefficients, m_i, m_j, m_p, m_q)
+function decouple_covmat!(C::SpectralArray{T,2}, mcm_adj_XY::SpectralArray{T,2}, mcm_adj_ZW::SpectralArray{T,2}) where {T <: Real}
     rdiv!(C.parent', mcm_adj_ZW)
     rdiv!(C.parent, mcm_adj_XY)
     return C
@@ -89,18 +68,6 @@ function loop_covTTTT!(C::SpectralArray{T,2}, lmax::Integer,
     end
 end
 
-
-function compute_covmat_EEEE(workspace::CovarianceWorkspace{T}, 
-        spectra, rescaling_coefficients, 
-        mcm_adj_XY, mcm_adj_ZW,
-        m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-        lmax=0) where {T <: Real}
-
-    C = compute_coupled_covmat_EEEE(workspace, spectra, rescaling_coefficients, m_i, m_j, m_p, m_q)
-    rdiv!(C.parent', mcm_adj_ZW)
-    rdiv!(C.parent, mcm_adj_XY)
-    return C
-end
 
 function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, 
              spectra, rescaling_coefficients, 
