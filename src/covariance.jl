@@ -1,5 +1,5 @@
 
-function decouple_covmat!(C::SpectralArray{T,2}, mcm_adj_XY::SpectralArray{T,2}, mcm_adj_ZW::SpectralArray{T,2}) where {T <: Real}
+function decouple_covmat!(C::SpectralArray{T,2}, mcm_adj_XY::F, mcm_adj_ZW::F) where {T <: Real, F<:Factorization{T}}
     rdiv!(C.parent', mcm_adj_ZW)
     rdiv!(C.parent, mcm_adj_XY)
     return C

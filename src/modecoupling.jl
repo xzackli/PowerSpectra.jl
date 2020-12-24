@@ -181,6 +181,25 @@ function compute_mcm_ET(workspace::SpectralWorkspace{T},
 end
 
 
+"""
+Compute a mode-coupling matrix.
+"""
+function mcm(spec::MapType, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+    workspace = SpectralWorkspace(f1, f2)
+    if spec == TT
+        return compute_mcm_TT(workspace, f1.name, f2.name)
+    elseif spec == TE
+        return compute_mcm_TE(workspace, f1.name, f2.name)
+    elseif spec == ET
+        return compute_mcm_ET(workspace, f1.name, f2.name)
+    elseif spec == EE
+        return compute_mcm_EE(workspace, f1.name, f2.name)
+    else
+        throw(ArgumentError("Spectrum requested is not yet implemented."))
+    end
+end
+
+
 function compute_spectra(map_1::Map{T}, map_2::Map{T}, 
                          factorized_mcm,
                          Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
