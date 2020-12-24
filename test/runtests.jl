@@ -161,30 +161,30 @@ end
     C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("data/covar_TT_TT.npy")
-    @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
+    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("data/covar_TT_TE.npy")
-    @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
+    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("data/covar_TE_TE.npy")
-    @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
+    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("data/covar_TT_EE.npy")
-    @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
+    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("data/covar_TE_EE.npy")
-    @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
+    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
 
     C = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff,
         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
     reference_covar = npzread("data/covar_EE_EE.npy")
-    @test all((diag(C.parent) .≈ diag(reference_covar))[3:end])
+    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
 end
