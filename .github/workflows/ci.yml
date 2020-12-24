@@ -40,6 +40,7 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Pkg
+            Pkg.develop(url="https://github.com/ziotom78/Healpix.jl.git")
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
