@@ -12,9 +12,7 @@ struct PolarizedField{T} <: AbstractField{T}
     name::String
     maskT::Map{T}
     maskP::Map{T}
-    σ²II::Map{T}
-    σ²QQ::Map{T}
-    σ²UU::Map{T}
+    σ²::PolarizedMap{T}
     beamT::SpectralVector{T}
     beamP::SpectralVector{T}
 end
@@ -22,7 +20,20 @@ end
 function Base.show(io::IO, ::MIME"text/plain", x::Field{T}) where T
     println("Field " * x.name, ": ", typeof(x.maskT), " ", size(x.maskT.nside))
     println("maskT [", ["$(x_), " for x_ in x.maskT.pixels[1:3]]..., "...]")
-    println("σ²II   [", ["$(x_), " for x_ in x.maskT.pixels[1:3]]..., "...]")
+    println("σ²   [", ["$(x_), " for x_ in x.σ².pixels[1:3]]..., "...]")
+end
+
+function PolarizedField(name::String, maskT::Map{T}, maskP::Map{T}, σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA}, beamT::AbstractVector{T}, beamP::AbstractVector{T}) where {T, O, AA}
+    σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
+    return PolarizedField{T}(name, maskT, maskP, σ², beamT, beamP)
+end
+
+function PolarizedField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA}) where {T, O, AA}
+    nside = maskT.resolution.nside
+    one_beam = SpectralVector(ones(3nside))
+    zero_map = Map{T, O, AA}(zeros(nside2npix(nside)))
+    σ² = PolarizedMap{T, O, AA}(zero_map, zero_map, zero_map)
+    return PolarizedField{T}(name, maskT, maskP, σ², one_beam, one_beam)
 end
 
 
@@ -93,10 +104,10 @@ function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T},
         (m_i.name, PP) => m_i.maskP, (m_j.name, PP) => m_j.maskP, 
         (m_p.name, PP) => m_p.maskP, (m_q.name, PP) => m_q.maskP)
     weight_p = Dict{Tuple{String, MapType},Map{T,RingOrder}}(
-        (m_i.name, II) => m_i.σ²II, (m_i.name, QQ) => m_i.σ²QQ, (m_i.name, UU) => m_i.σ²UU,
-        (m_j.name, II) => m_j.σ²II, (m_j.name, QQ) => m_j.σ²QQ, (m_j.name, UU) => m_j.σ²UU,
-        (m_p.name, II) => m_p.σ²II, (m_p.name, QQ) => m_p.σ²QQ, (m_p.name, UU) => m_p.σ²UU,
-        (m_q.name, II) => m_q.σ²II, (m_q.name, QQ) => m_q.σ²QQ, (m_q.name, UU) => m_q.σ²UU)
+        (m_i.name, II) => m_i.σ².i, (m_i.name, QQ) => m_i.σ².q, (m_i.name, UU) => m_i.σ².u,
+        (m_j.name, II) => m_j.σ².i, (m_j.name, QQ) => m_j.σ².q, (m_j.name, UU) => m_j.σ².u,
+        (m_p.name, II) => m_p.σ².i, (m_p.name, QQ) => m_p.σ².q, (m_p.name, UU) => m_p.σ².u,
+        (m_q.name, II) => m_q.σ².i, (m_q.name, QQ) => m_q.σ².q, (m_q.name, UU) => m_q.σ².u)
 
     return CovarianceWorkspace{T}(
         field_names,

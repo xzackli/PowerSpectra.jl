@@ -7,7 +7,7 @@ import ThreadSafeDicts: ThreadSafeDict
 # import DataStructures: DefaultDict
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
-    RingInfo, getringinfo!, almIndex, alm2map
+    RingInfo, getringinfo!, almIndex, alm2map, nside2npix
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array, 
     swap_triangular
 import FillArrays: Zeros
