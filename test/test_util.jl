@@ -15,7 +15,3 @@ end
     @test all(t[!, "a"] .≈ [1.0, 2.0])
     @test all(t[!, "b"] .≈ [2.0, 3.0])
 end
-
-@testset "Base.show Field" begin
-    Base.show(io::IO, ::MIME"text/plain", x::Field{T})
-end
