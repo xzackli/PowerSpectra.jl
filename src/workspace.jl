@@ -4,7 +4,7 @@ abstract type AbstractField{T} end
 struct Field{T} <: AbstractField{T}
     name::String
     maskT::Map{T}
-    σ²II::Map{T}
+    σ²::Map{T}
     beam::SpectralVector{T}
 end
 
@@ -17,11 +17,6 @@ struct PolarizedField{T} <: AbstractField{T}
     beamP::SpectralVector{T}
 end
 
-function Base.show(io::IO, ::MIME"text/plain", x::Field{T}) where T
-    println("Field " * x.name, ": ", typeof(x.maskT), " ", size(x.maskT.nside))
-    println("maskT [", ["$(x_), " for x_ in x.maskT.pixels[1:3]]..., "...]")
-    println("σ²   [", ["$(x_), " for x_ in x.σ².pixels[1:3]]..., "...]")
-end
 
 function PolarizedField(name::String, maskT::Map{T}, maskP::Map{T}, σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA}, beamT::AbstractVector{T}, beamP::AbstractVector{T}) where {T, O, AA}
     σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
