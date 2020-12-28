@@ -13,10 +13,15 @@ function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing
 end
 
 
-function read_commented_header(filename)
-    header = CSV.read(filename, DataFrame; header=false, delim=" ", ignorerepeated=true, limit=1, type=String)
-    headers = [header[1,"Column$(i)"] for i in 2:ncol(header)]  # skip the #
-    table = CSV.read(filename, DataFrame; comment="#", header=headers, delim=" ", ignorerepeated=true)
+function read_commented_header(filename; delim=" ")
+    header = CSV.read(filename, DataFrame; header=false, delim=delim, ignorerepeated=true, limit=1, type=String)
+    headers = [header[1,"Column$(i)"] for i in 1:ncol(header)] 
+    if headers[1] == "#"   # skip the #
+        headers = headers[2:end]
+    elseif headers[1][1] == '#'
+        headers[1] = strip(headers[1][2:end])
+    end
+    table = CSV.read(filename, DataFrame; comment="#", header=headers, delim=delim, ignorerepeated=true)
     return table
 end
 
