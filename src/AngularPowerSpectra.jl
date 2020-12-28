@@ -15,6 +15,7 @@ import OffsetArrays: OffsetArray, OffsetVector
 import LinearAlgebra: ldiv!, rdiv!, Factorization
 # import Distributions: MvNormal
 using Random
+using CSV, DataFrames
 # import LoopVectorization: @avx
 
 export mcm, decouple_covmat!
@@ -26,7 +27,7 @@ export CovarianceWorkspace
 export compute_mcm_EE
 export compute_mcm_TE, compute_mcm_ET
 export binning_matrix
-export generate_correlated_noise
+export read_commented_header
 
 include("util.jl")
 include("spectralarray.jl")

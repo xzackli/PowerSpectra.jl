@@ -13,6 +13,13 @@ function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing
 end
 
 
+function read_commented_header(filename)
+    header = CSV.read(filename, DataFrame; header=false, delim=" ", ignorerepeated=true, limit=1, type=String)
+    headers = [header[1,"Column$(i)"] for i in 2:ncol(header)]  # skip the #
+    table = CSV.read(filename, DataFrame; comment="#", header=headers, delim=" ", ignorerepeated=true)
+    return table
+end
+
 # function generate_correlated_noise(nside, σ, nltt)
 #     noisemap = Map{Float64, RingOrder}(nside)
 #     res = noisemap.resolution
