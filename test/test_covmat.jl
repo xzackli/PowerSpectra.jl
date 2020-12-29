@@ -63,39 +63,39 @@ import AngularPowerSpectra: TT, TE, EE
     m2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
     workspace = CovarianceWorkspace(m1, m2, m1, m2)
 
-    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff);
-    𝐂_ref = npzread("data/covar_TT_TT.npy")
-    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
+    C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff);
+    C_ref = npzread("data/covar_TT_TT.npy")
+    @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
-    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff);
-    𝐂_ref = npzread("data/covar_TT_TE.npy")
-    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
+    C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff);
+    C_ref = npzread("data/covar_TT_TE.npy")
+    @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
-    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff);
-    𝐂_ref = npzread("data/covar_TE_TE.npy")
-    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
+    C = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff);
+    C_ref = npzread("data/covar_TE_TE.npy")
+    @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
-    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff);
-    𝐂_ref = npzread("data/covar_TT_EE.npy")
-    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
+    C = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff);
+    C_ref = npzread("data/covar_TT_EE.npy")
+    @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
-    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff);
-    𝐂_ref = npzread("data/covar_TE_EE.npy")
-    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
+    C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff);
+    C_ref = npzread("data/covar_TE_EE.npy")
+    @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
-    𝐂 = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff);
-    𝐂_ref = npzread("data/covar_EE_EE.npy")
-    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
+    C = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff);
+    C_ref = npzread("data/covar_EE_EE.npy")
+    @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
     # test that planck approx is kind of close at high ell
-    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff; planck=true);
-    𝐂_ref = npzread("data/covar_TE_EE.npy")
-    @test isapprox(diag(𝐂.parent)[30:end], diag(𝐂_ref)[30:end], rtol=0.01)
+    C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff; planck=true);
+    C_ref = npzread("data/covar_TE_EE.npy")
+    @test isapprox(diag(C.parent)[30:end], diag(C_ref)[30:end], rtol=0.01)
 
 
     # test decoupling
-    𝐌 = mcm(EE, m1, m2)
-    𝐂_decoupled = deepcopy(𝐂)
-    decouple_covmat!(𝐂_decoupled, lu(𝐌.parent'), lu(𝐌.parent'))
-    @test isapprox((𝐂.parent), 𝐌.parent * 𝐂_decoupled.parent * 𝐌.parent' )
+    M = mcm(EE, m1, m2)
+    C_decoupled = deepcopy(C)
+    decouple_covmat!(C_decoupled, lu(M.parent'), lu(M.parent'))
+    @test isapprox((C.parent), M.parent * C_decoupled.parent * M.parent' )
 end
