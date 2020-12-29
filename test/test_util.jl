@@ -1,7 +1,7 @@
 using AngularPowerSpectra
 
 @testset "binning matrix" begin
-    b = binning_matrix([0,1,2], [0,1,3], ℓ->1; ℓₘₐₓ=4)
+    b = binning_matrix([0,1,2], [0,1,3], ℓ->1; lmax=4)
     ref = [
         1.0  0.0  0.0  0.0
         0.0  1.0  0.0  0.0

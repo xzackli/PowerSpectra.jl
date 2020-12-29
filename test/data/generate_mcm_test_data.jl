@@ -11,7 +11,7 @@ nmt = pyimport("pymaster")
 data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
 # mask = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 nside = 256
-ℓₘₐₓ = 3 * nside - 1
+lmax = 3 * nside - 1
 
 flat_beam = SpectralVector(ones(3*nside))
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
@@ -54,23 +54,23 @@ b = nmt.NmtBin.from_nside_linear(nside, 1)
 ##
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_2, f_2, b)
-writedlm("test/mcm_EE_diag.txt", diag(w.get_coupling_matrix()[1:4:4*ℓₘₐₓ, 1:4:4*ℓₘₐₓ])[3:767])
+writedlm("test/mcm_EE_diag.txt", diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767])
 
 ##
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_0, f_0, b)
-writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:ℓₘₐₓ, 1:ℓₘₐₓ])[3:767])
+writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:lmax, 1:lmax])[3:767])
 
 ##
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_0, f_2, b)
-writedlm("test/mcm_TE_diag.txt", diag(w.get_coupling_matrix()[1:2:2*ℓₘₐₓ, 1:2:2*ℓₘₐₓ])[3:767])
+writedlm("test/mcm_TE_diag.txt", diag(w.get_coupling_matrix()[1:2:2*lmax, 1:2:2*lmax])[3:767])
 
 # @time w.compute_coupling_matrix(f_0, f_0, b)
 
 ##
 clf()
-plt.plot(diag(w.get_coupling_matrix()[1:2:2*ℓₘₐₓ, 1:2:2*ℓₘₐₓ]), "-")
+plt.plot(diag(w.get_coupling_matrix()[1:2:2*lmax, 1:2:2*lmax]), "-")
 plt.plot(diag(mcm12.parent), "--")
 # plt.ylim(0.3,0.4)
 plt.xlim(0,20)
@@ -81,7 +81,7 @@ gcf()
 
 
 clf()
-plt.plot(diag(w.get_coupling_matrix()[1:4:4*ℓₘₐₓ, 1:4:4*ℓₘₐₓ])[3:767]  .- diag(mcm12.parent)[3:767], "-")
+plt.plot(diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767]  .- diag(mcm12.parent)[3:767], "-")
 # plt.xlim(0,10)
 gcf()
 
@@ -96,7 +96,7 @@ f_2 = nmt.NmtField(mask.pixels, [flat_mask.pixels, flat_mask.pixels])
 b = nmt.NmtBin.from_nside_linear(nside, 1)
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_0, f_0, b)
-writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:ℓₘₐₓ, 1:ℓₘₐₓ])[3:767])
+writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:lmax, 1:lmax])[3:767])
 
 ##
 b = nmt.NmtBin.from_nside_linear(nside, 1)
