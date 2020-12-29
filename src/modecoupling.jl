@@ -2,14 +2,14 @@
 """
 Projector function for TT. Goes into the mode-coupling matrix.
 """
-function Ξ_TT(W_arr::SpectralVector{T, AA}, 
+function Ξ_TT(𝐖::SpectralVector{T, AA}, 
              w3j²₀₀::WignerSymbolVector{T, Int}, 
              ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j²₀₀), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j²₀₀), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j²₀₀), firstindex(𝐖))
+    ℓ₃_end = min(lastindex(w3j²₀₀), lastindex(𝐖))
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * w3j²₀₀[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * w3j²₀₀[ℓ₃] * 𝐖[ℓ₃]
     end
     return Ξ / (4π)
 end
@@ -20,17 +20,17 @@ Projector function for EE. Goes into the mode-coupling matrix.
 
 Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 """
-function Ξ_EE(W_arr::SpectralVector{T, AA}, 
+function Ξ_EE(𝐖::SpectralVector{T, AA}, 
                 w3j²₂₂::WignerSymbolVector{T, Int}, 
                 ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j²₂₂), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(𝐖))
+    ℓ₃_end = min(lastindex(w3j²₂₂), lastindex(𝐖))
     if isodd(ℓ₁ + ℓ₂ + ℓ₃_start)
         ℓ₃_start += 1
     end
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:2:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * w3j²₂₂[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * w3j²₂₂[ℓ₃] * 𝐖[ℓ₃]
     end
     return Ξ / (4π)
 end
@@ -41,17 +41,17 @@ Projector function for TE. Goes into the mode-coupling matrix.
 
 Note that w3j₀₀₂₂ refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 """
-function Ξ_TE(W_arr::SpectralVector{T, AA}, 
+function Ξ_TE(𝐖::SpectralVector{T, AA}, 
               w3j₀₀₂₂::WignerSymbolVector{T, Int}, 
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j₀₀₂₂), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j₀₀₂₂), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j₀₀₂₂), firstindex(𝐖))
+    ℓ₃_end = min(lastindex(w3j₀₀₂₂), lastindex(𝐖))
     if isodd(ℓ₁ + ℓ₂ + ℓ₃_start)
         ℓ₃_start += 1
     end
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:2:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * w3j₀₀₂₂[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * w3j₀₀₂₂[ℓ₃] * 𝐖[ℓ₃]
     end
     return Ξ / (4π)
 end

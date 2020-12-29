@@ -79,7 +79,7 @@ import AngularPowerSpectra: TT, TE, EE
     C_ref = npzread("data/covar_TT_EE.npy")
     @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff);
+    C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff; planck=false);
     C_ref = npzread("data/covar_TE_EE.npy")
     @test isapprox(diag(C.parent)[3:end], diag(C_ref)[3:end])
 
@@ -94,8 +94,8 @@ import AngularPowerSpectra: TT, TE, EE
 
 
     # test decoupling
-    M = mcm(EE, m1, m2)
+    𝐌 = mcm(EE, m1, m2)
     C_decoupled = deepcopy(C)
-    decouple_covmat!(C_decoupled, lu(M.parent'), lu(M.parent'))
-    @test isapprox((C.parent), M.parent * C_decoupled.parent * M.parent' )
+    decouple_covmat!(C_decoupled, lu(𝐌.parent'), lu(𝐌.parent'))
+    @test isapprox((C.parent), 𝐌.parent * C_decoupled.parent * 𝐌.parent' )
 end
