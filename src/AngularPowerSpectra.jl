@@ -8,8 +8,7 @@ import ThreadSafeDicts: ThreadSafeDict
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
     RingInfo, getringinfo!, almIndex, alm2map, nside2npix
-import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array, 
-    swap_triangular
+import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
 import LinearAlgebra: ldiv!, rdiv!, Factorization
@@ -18,14 +17,13 @@ using Random
 using CSV, DataFrames
 # import LoopVectorization: @avx
 
-export mcm, decouple_covmat!
-export compute_mcm_TT, compute_spectra, beam_cov
+export mcm, decouple_covmat!, spectra_from_masked_maps
 export compute_covmat_TTTT, compute_covmat_EEEE
 export Field, SpectralWorkspace, SpectralVector, SpectralArray
+
 export PolarizedField
 export CovarianceWorkspace
-export compute_mcm_EE
-export compute_mcm_TE, compute_mcm_ET
+
 export binning_matrix
 export read_commented_header
 

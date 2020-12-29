@@ -7,9 +7,9 @@ end
 
 
 function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra, 
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     rescaling_coefficients; ℓₘₐₓ=0) where {T <: Real}
 
-    lmax = iszero(lmax) ? workspace.lmax : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
     i, j, p, q = workspace.field_names
 
     r_ℓ_ip = rescaling_coefficients[TT, i, p]
@@ -17,8 +17,8 @@ function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra,
     r_ℓ_iq = rescaling_coefficients[TT, i, q]
     r_ℓ_jp = rescaling_coefficients[TT, j, p]
 
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    loop_covTTTT!(C, lmax, 
+    C = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    loop_covTTTT!(C, ℓₘₐₓ, 
         spectra[TT,i,p], spectra[TT,j,q], spectra[TT,i,q], spectra[TT,j,p],
         r_ℓ_ip, r_ℓ_jq, r_ℓ_iq, r_ℓ_jp,
         window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, TT),
@@ -35,18 +35,18 @@ end
 
 
 # inner loop 
-function loop_covTTTT!(C::SpectralArray{T,2}, lmax::Integer, 
+function loop_covTTTT!(C::SpectralArray{T,2}, ℓₘₐₓ::Integer, 
                      TTip::SpectralVector{T}, TTjq::SpectralVector{T}, 
                      TTiq::SpectralVector{T}, TTjp::SpectralVector{T},
                      r_ℓ_ip::SpectralVector{T}, r_ℓ_jq::SpectralVector{T}, 
                      r_ℓ_iq::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
                      W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
-    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
+    thread_buffers = get_thread_buffers(T, 2 * ℓₘₐₓ + 1)
     
-    @qthreads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 0:ℓₘₐₓ
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax
+        for ℓ₂ in ℓ₁:ℓₘₐₓ
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
@@ -68,9 +68,9 @@ end
 
 
 function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, spectra, 
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     rescaling_coefficients; ℓₘₐₓ=0) where {T <: Real}
 
-    lmax = iszero(lmax) ? workspace.lmax : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
     i, j, p, q = workspace.field_names
 
     r_ℓ_ip = rescaling_coefficients[EE, i, p]
@@ -78,8 +78,8 @@ function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, spectra,
     r_ℓ_iq = rescaling_coefficients[EE, i, q]
     r_ℓ_jp = rescaling_coefficients[EE, j, p]
 
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    loop_covEEEE!(C, lmax, 
+    C = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    loop_covEEEE!(C, ℓₘₐₓ, 
         spectra[EE,i,p], spectra[EE,j,q], spectra[EE,i,q], spectra[EE,j,p],
         r_ℓ_ip, r_ℓ_jq, r_ℓ_iq, r_ℓ_jp,
         window_function_W!(workspace, ∅∅, ∅∅, i, p, PP, j, q, PP),
@@ -96,18 +96,18 @@ end
 
 
 # inner loop 
-function loop_covEEEE!(C::SpectralArray{T,2}, lmax::Integer,
+function loop_covEEEE!(C::SpectralArray{T,2}, ℓₘₐₓ::Integer,
                      EEip::SpectralVector{T}, EEjq::SpectralVector{T}, 
                      EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
                      r_ℓ_ip::SpectralVector{T}, r_ℓ_jq::SpectralVector{T}, 
                      r_ℓ_iq::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
                      W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
-    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
+    thread_buffers = get_thread_buffers(T, 2 * ℓₘₐₓ + 1)
     
-    @qthreads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 0:ℓₘₐₓ
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax 
+        for ℓ₂ in ℓ₁:ℓₘₐₓ 
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
@@ -130,17 +130,17 @@ end
 
 
 function compute_coupled_covmat_TTTE(workspace::CovarianceWorkspace{T}, spectra, 
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     rescaling_coefficients; ℓₘₐₓ=0) where {T <: Real}
 
-    lmax = iszero(lmax) ? workspace.lmax : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
     r_ℓ_ip = rescaling_coefficients[TT, i, p]
     r_ℓ_jp = rescaling_coefficients[TT, j, p]
 
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    loop_covTTTE!(C, lmax, 
+    C = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    loop_covTTTE!(C, ℓₘₐₓ, 
         spectra[TT,i,p], spectra[TT,j,p], spectra[TE,i,q], spectra[TE,j,q],
         r_ℓ_ip, r_ℓ_jp,
         window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, TP),
@@ -153,17 +153,17 @@ end
 
 
 # inner loop 
-function loop_covTTTE!(C::SpectralArray{T,2}, lmax::Integer,
+function loop_covTTTE!(C::SpectralArray{T,2}, ℓₘₐₓ::Integer,
                      TTip::SpectralVector{T}, TTjp::SpectralVector{T}, 
                      TEiq::SpectralVector{T}, TEjq::SpectralVector{T},
                      r_ℓ_ip::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
                      W1, W2, W3, W4) where {T}
 
-    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
+    thread_buffers = get_thread_buffers(T, 2 * ℓₘₐₓ + 1)
     
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:ℓₘₐₓ
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax 
+        for ℓ₂ in ℓ₁:ℓₘₐₓ 
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
@@ -183,17 +183,17 @@ end
 
 
 function compute_coupled_covmat_TETE(workspace::CovarianceWorkspace{T}, spectra, 
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     rescaling_coefficients; ℓₘₐₓ=0) where {T <: Real}
 
-    lmax = iszero(lmax) ? workspace.lmax : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
     r_TT_ip = rescaling_coefficients[TT, i, p]
     r_PP_jq = rescaling_coefficients[EE, j, q]
 
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    loop_covTETE!(C, lmax, 
+    C = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    loop_covTETE!(C, ℓₘₐₓ, 
         spectra[TT,i,p], spectra[EE,j,q], spectra[TE,i,q], spectra[TE,j,p], 
         r_TT_ip, r_PP_jq, 
         window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, PP),
@@ -207,20 +207,20 @@ end
 
 
 # inner loop 
-function loop_covTETE!(C::SpectralArray{T,2}, lmax::Integer,
+function loop_covTETE!(C::SpectralArray{T,2}, ℓₘₐₓ::Integer,
                      TTip::SpectralVector{T}, EEjq::SpectralVector{T}, 
                      TEiq::SpectralVector{T}, TEjp::SpectralVector{T},
                      r_TT_ip::SpectralVector{T}, r_PP_jq::SpectralVector{T}, 
                      W1, W2, W3, W4, W5) where {T}
 
-    thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
-    thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
+    thread_buffers_0 = get_thread_buffers(T, 2*ℓₘₐₓ+1)
+    thread_buffers_2 = get_thread_buffers(T, 2*ℓₘₐₓ+1)
     
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:ℓₘₐₓ
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
 
-        for ℓ₂ in ℓ₁:lmax 
+        for ℓ₂ in ℓ₁:ℓₘₐₓ 
             w00 = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             w22 = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view_0 = uview(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
@@ -252,19 +252,19 @@ end
 
 
 function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, spectra, 
-                                     rescaling_coefficients; lmax=0, planck=false) where {T <: Real}
+                                     rescaling_coefficients; ℓₘₐₓ=0, planck=false) where {T <: Real}
 
-    lmax = iszero(lmax) ? workspace.lmax : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
     r_EE_jq = rescaling_coefficients[EE, j, q]
     r_EE_jp = rescaling_coefficients[EE, j, p]
 
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    C = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
 
     if planck
-        loop_covTEEE_planck!(C, lmax, 
+        loop_covTEEE_planck!(C, ℓₘₐₓ, 
             spectra[EE,j,q], spectra[EE,j,p], spectra[TE,i,p], spectra[TE,i,q],
             r_EE_jq, r_EE_jp,
             window_function_W!(workspace, ∅∅, ∅∅, i, p, TP, j, q, PP),
@@ -272,7 +272,7 @@ function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, spectra,
             window_function_W!(workspace, ∅∅, PP, i, p, TP, j, q, PP),
             window_function_W!(workspace, ∅∅, PP, i, q, TP, j, p, PP))
     else
-        loop_covTEEE!(C, lmax, 
+        loop_covTEEE!(C, ℓₘₐₓ, 
             spectra[EE,j,q], spectra[EE,j,p], spectra[TE,i,p], spectra[TE,i,q],
             r_EE_jq, r_EE_jp,
             window_function_W!(workspace, ∅∅, ∅∅, i, p, TP, j, q, PP),
@@ -286,18 +286,18 @@ end
 
 
 # inner loop 
-function loop_covTEEE!(C::SpectralArray{T,2}, lmax::Integer,
+function loop_covTEEE!(C::SpectralArray{T,2}, ℓₘₐₓ::Integer,
                       EEjq::SpectralVector{T}, EEjp::SpectralVector{T}, 
                       TEip::SpectralVector{T}, TEiq::SpectralVector{T},
                      r_EE_jq::SpectralVector{T}, r_EE_jp::SpectralVector{T}, 
                      W1, W2, W3, W4) where {T}
 
-    thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
-    thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
-    @qthreads for ℓ₁ in 2:lmax
+    thread_buffers_0 = get_thread_buffers(T, 2*ℓₘₐₓ+1)
+    thread_buffers_2 = get_thread_buffers(T, 2*ℓₘₐₓ+1)
+    @qthreads for ℓ₁ in 2:ℓₘₐₓ
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax 
+        for ℓ₂ in ℓ₁:ℓₘₐₓ 
             w00 = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             w22 = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view_0 = uview(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
@@ -326,16 +326,16 @@ end
 
 
 # inner loop 
-function loop_covTEEE_planck!(C::SpectralArray{T,2}, lmax::Integer,
+function loop_covTEEE_planck!(C::SpectralArray{T,2}, ℓₘₐₓ::Integer,
                       EEjq::SpectralVector{T}, EEjp::SpectralVector{T}, 
                       TEip::SpectralVector{T}, TEiq::SpectralVector{T},
                      r_EE_jq::SpectralVector{T}, r_EE_jp::SpectralVector{T}, 
                      W1, W2, W3, W4) where {T}
 
-    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
-    @qthreads for ℓ₁ in 0:lmax
+    thread_buffers = get_thread_buffers(T, 2 * ℓₘₐₓ + 1)
+    @qthreads for ℓ₁ in 0:ℓₘₐₓ
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax 
+        for ℓ₂ in ℓ₁:ℓₘₐₓ 
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
@@ -355,14 +355,14 @@ end
 
 
 function compute_coupled_covmat_TTEE(workspace::CovarianceWorkspace{T}, spectra, 
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     rescaling_coefficients; ℓₘₐₓ=0) where {T <: Real}
 
-    lmax = iszero(lmax) ? workspace.lmax : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    C = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    loop_covTTEE!(C, lmax, 
+    C = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    loop_covTTEE!(C, ℓₘₐₓ, 
         spectra[TE,i,p], spectra[TE,i,q], spectra[TE,j,q], spectra[TE,j,p],
         window_function_W!(workspace, ∅∅, ∅∅, i, p, TP, j, q, TP),
         window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, TP),
@@ -373,16 +373,16 @@ end
 
 
 # inner loop 
-function loop_covTTEE!(C::SpectralArray{T,2}, lmax::Integer,
+function loop_covTTEE!(C::SpectralArray{T,2}, ℓₘₐₓ::Integer,
                       TEip::SpectralVector{T}, TEiq::SpectralVector{T},
                       TEjq::SpectralVector{T}, TEjp::SpectralVector{T}, 
                      W1, W2) where {T}
 
-    thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
+    thread_buffers = get_thread_buffers(T, 2 * ℓₘₐₓ + 1)
     
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:ℓₘₐₓ
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax 
+        for ℓ₂ in ℓ₁:ℓₘₐₓ 
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
@@ -402,16 +402,16 @@ end
 #              workspace::SpectralWorkspace{T}, 
 #              spectra, 
 #              m_i::PolarizedField{T}, m_j::PolarizedField{T}, m_p::PolarizedField{T}, m_q::PolarizedField{T};
-#              lmax=0) where {T <: Real}
+#              ℓₘₐₓ=0) where {T <: Real}
 
 #     effective_weights_w!(workspace, m_i, m_j, m_p, m_q)
 
-#     lmax = iszero(lmax) ? workspace.lmax : lmax
+#     ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
 #     i, j, p, q = workspace.field_names
 #     W = workspace.W_spectra
 
-#     C = SpectralArray(zeros(T, (lmax+1, lmax+1, 8)))
-#     loop_covEEEE_DEBUG!(C, lmax, 
+#     C = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1, 8)))
+#     loop_covEEEE_DEBUG!(C, ℓₘₐₓ, 
 #         spectra[EE,i,p], spectra[EE,j,q], spectra[EE,i,q], spectra[EE,j,p],
 #         window_function_W!(workspace, ∅∅, ∅∅, i, p, PP, j, q, PP),
 #         window_function_W!(workspace, ∅∅, ∅∅, i, q, PP, j, p, PP),
@@ -431,15 +431,15 @@ end
 
 # # inner loop 
 # function loop_covEEEE_DEBUG!(
-#         C::SpectralArray{T,3}, lmax::Integer,
+#         C::SpectralArray{T,3}, ℓₘₐₓ::Integer,
 #         EEip::SpectralVector{T}, EEjq::SpectralVector{T}, EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
 #         W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
-#     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
+#     thread_buffers = get_thread_buffers(T, 2 * ℓₘₐₓ + 1)
     
-#     @qthreads for ℓ₁ in 2:lmax
+#     @qthreads for ℓ₁ in 2:ℓₘₐₓ
 #         buffer = thread_buffers[Threads.threadid()]
-#         for ℓ₂ in ℓ₁:lmax 
+#         for ℓ₂ in ℓ₁:ℓₘₐₓ 
 #             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
 #             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
 #             w3j² = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)

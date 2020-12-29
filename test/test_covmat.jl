@@ -59,43 +59,43 @@ import AngularPowerSpectra: TT, TE, EE
         (TE, "143_hm2", "143_hm2") => clte,
     )
 
-    m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_var, unit_var, unit_var, beam1, beam1)
-    m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
-    workspace = CovarianceWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+    m1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_var, unit_var, unit_var, beam1, beam1)
+    m2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
+    workspace = CovarianceWorkspace(m1, m2, m1, m2)
 
-    C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff);
-    reference_covar = npzread("data/covar_TT_TT.npy")
-    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
+    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff);
+    𝐂_ref = npzread("data/covar_TT_TT.npy")
+    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff);
-    reference_covar = npzread("data/covar_TT_TE.npy")
-    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
+    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TTTE(workspace, spectra, r_coeff);
+    𝐂_ref = npzread("data/covar_TT_TE.npy")
+    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff);
-    reference_covar = npzread("data/covar_TE_TE.npy")
-    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
+    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TETE(workspace, spectra, r_coeff);
+    𝐂_ref = npzread("data/covar_TE_TE.npy")
+    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff);
-    reference_covar = npzread("data/covar_TT_EE.npy")
-    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
+    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TTEE(workspace, spectra, r_coeff);
+    𝐂_ref = npzread("data/covar_TT_EE.npy")
+    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff);
-    reference_covar = npzread("data/covar_TE_EE.npy")
-    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
+    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff);
+    𝐂_ref = npzread("data/covar_TE_EE.npy")
+    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff);
-    reference_covar = npzread("data/covar_EE_EE.npy")
-    @test isapprox(diag(C.parent)[3:end], diag(reference_covar)[3:end])
+    𝐂 = AngularPowerSpectra.compute_coupled_covmat_EEEE(workspace, spectra, r_coeff);
+    𝐂_ref = npzread("data/covar_EE_EE.npy")
+    @test isapprox(diag(𝐂.parent)[3:end], diag(𝐂_ref)[3:end])
 
     # test that planck approx is kind of close at high ell
-    C = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff; planck=true);
-    reference_covar = npzread("data/covar_TE_EE.npy")
-    @test isapprox(diag(C.parent)[30:end], diag(reference_covar)[30:end], rtol=0.01)
+    𝐂 = AngularPowerSpectra.compute_coupled_covmat_TEEE(workspace, spectra, r_coeff; planck=true);
+    𝐂_ref = npzread("data/covar_TE_EE.npy")
+    @test isapprox(diag(𝐂.parent)[30:end], diag(𝐂_ref)[30:end], rtol=0.01)
 
 
     # test decoupling
-    mcm_12 = mcm(EE, m_143_hm1, m_143_hm2)
-    C_decoupled = deepcopy(C)
-    decouple_covmat!(C_decoupled, lu(mcm_12.parent'), lu(mcm_12.parent'))
-    @test isapprox((C.parent), mcm_12.parent * C_decoupled.parent * mcm_12.parent' )
+    𝐌 = mcm(EE, m1, m2)
+    𝐂_decoupled = deepcopy(𝐂)
+    decouple_covmat!(𝐂_decoupled, lu(𝐌.parent'), lu(𝐌.parent'))
+    @test isapprox((𝐂.parent), 𝐌.parent * 𝐂_decoupled.parent * 𝐌.parent' )
 end

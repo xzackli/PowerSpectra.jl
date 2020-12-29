@@ -11,7 +11,7 @@ nmt = pyimport("pymaster")
 data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
 # mask = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 nside = 256
-lmax = 3 * nside - 1
+ℓₘₐₓ = 3 * nside - 1
 
 flat_beam = SpectralVector(ones(3*nside))
 flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
@@ -24,24 +24,24 @@ gcf()
 
 
 ##
-m_143_hm1 = Field("143_hm1", mask, flat_mask, flat_beam)
-m_143_hm2 = Field("143_hm2", mask, flat_mask, flat_beam)
-workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-@time mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
+m1 = Field("143_hm1", mask, flat_mask, flat_beam)
+m2 = Field("143_hm2", mask, flat_mask, flat_beam)
+workspace = SpectralWorkspace(m1, m2, m1, m2)
+@time mcm12 = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
 
 ##
-m_143_hm1_P = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-m_143_hm2_P = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-workspace_P = PolarizedSpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
-@time mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-# @time factorized_mcm = lu(mcm.parent);
+m1_P = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m2_P = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+workspace_P = PolarizedSpectralWorkspace(m1, m2, m1, m2)
+@time mcm12 = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
+# @time factorized_mcm12 = lu(mcm12.parent);
 
 ##
-m_143_hm1_P = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-m_143_hm2_P = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-workspace_P = PolarizedSpectralWorkspace(m_143_hm1_P, m_143_hm2_P, m_143_hm1_P, m_143_hm2_P)
-@time mcm = compute_mcm_TE(workspace_P, "143_hm1", "143_hm2")
-# @time factorized_mcm = lu(mcm.parent);
+m1_P = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m2_P = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+workspace_P = PolarizedSpectralWorkspace(m1_P, m2_P, m1_P, m2_P)
+@time mcm12 = compute_mcm_TE(workspace_P, "143_hm1", "143_hm2")
+# @time factorized_mcm12 = lu(mcm12.parent);
 
 
 ##
@@ -54,24 +54,24 @@ b = nmt.NmtBin.from_nside_linear(nside, 1)
 ##
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_2, f_2, b)
-writedlm("test/mcm_EE_diag.txt", diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767])
+writedlm("test/mcm_EE_diag.txt", diag(w.get_coupling_matrix()[1:4:4*ℓₘₐₓ, 1:4:4*ℓₘₐₓ])[3:767])
 
 ##
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_0, f_0, b)
-writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:lmax, 1:lmax])[3:767])
+writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:ℓₘₐₓ, 1:ℓₘₐₓ])[3:767])
 
 ##
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_0, f_2, b)
-writedlm("test/mcm_TE_diag.txt", diag(w.get_coupling_matrix()[1:2:2*lmax, 1:2:2*lmax])[3:767])
+writedlm("test/mcm_TE_diag.txt", diag(w.get_coupling_matrix()[1:2:2*ℓₘₐₓ, 1:2:2*ℓₘₐₓ])[3:767])
 
 # @time w.compute_coupling_matrix(f_0, f_0, b)
 
 ##
 clf()
-plt.plot(diag(w.get_coupling_matrix()[1:2:2*lmax, 1:2:2*lmax]), "-")
-plt.plot(diag(mcm.parent), "--")
+plt.plot(diag(w.get_coupling_matrix()[1:2:2*ℓₘₐₓ, 1:2:2*ℓₘₐₓ]), "-")
+plt.plot(diag(mcm12.parent), "--")
 # plt.ylim(0.3,0.4)
 plt.xlim(0,20)
 # plt.yscale("log")
@@ -81,7 +81,7 @@ gcf()
 
 
 clf()
-plt.plot(diag(w.get_coupling_matrix()[1:4:4*lmax, 1:4:4*lmax])[3:767]  .- diag(mcm.parent)[3:767], "-")
+plt.plot(diag(w.get_coupling_matrix()[1:4:4*ℓₘₐₓ, 1:4:4*ℓₘₐₓ])[3:767]  .- diag(mcm12.parent)[3:767], "-")
 # plt.xlim(0,10)
 gcf()
 
@@ -96,7 +96,7 @@ f_2 = nmt.NmtField(mask.pixels, [flat_mask.pixels, flat_mask.pixels])
 b = nmt.NmtBin.from_nside_linear(nside, 1)
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f_0, f_0, b)
-writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:lmax, 1:lmax])[3:767])
+writedlm("test/mcm_TT_diag.txt", diag(w.get_coupling_matrix()[1:ℓₘₐₓ, 1:ℓₘₐₓ])[3:767])
 
 ##
 b = nmt.NmtBin.from_nside_linear(nside, 1)
@@ -127,12 +127,12 @@ m.pixels .= m0;
 # map = readMapFromFITS(data_dir * "map.fits", 1, Float64)
 
 wl = SpectralVector(hp.pixwin(nside))
-m_143_hm1 = Field("143_hm1", mask, flat_mask, wl)
-m_143_hm2 = Field("143_hm2", mask, flat_mask, wl)
-workspace = SpectralWorkspace(m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+m1 = Field("143_hm1", mask, flat_mask, wl)
+m2 = Field("143_hm2", mask, flat_mask, wl)
+workspace = SpectralWorkspace(m1, m2, m1, m2)
 
-@time mcm = compute_mcm(workspace, "143_hm1", "143_hm1")
-@time factorized_mcm = cholesky(Hermitian(mcm.parent));
+@time mcm12 = mcm(workspace, "143_hm1", "143_hm1")
+@time factorized_mcm12 = cholesky(Hermitian(mcm12.parent));
 
 
 ##
@@ -145,11 +145,11 @@ spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float6
     (TT, "143_hm1", "143_hm2") => cltt,
     (TT, "143_hm2", "143_hm1") => cltt)
 @time C = compute_covmat(workspace, spectra, factorized_mcm, factorized_mcm,
-                         m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2);
+                         m1, m2, m1, m2);
 
 
 ##
-@time Clhat = compute_spectra(m * mask, m * mask, factorized_mcm, wl, wl)
+@time Clhat = spectra_from_masked_maps(m * mask, m * mask, factorized_mcm, wl, wl)
 ells = collect(0:(length(Clhat)-1));
 
 ##
@@ -163,7 +163,7 @@ function generate_sim_array(spec, nsims, nside, mask_, fact_mcm)
         m0 .-= norm
         m = Map{Float64, RingOrder}(nside)
         m.pixels .= m0
-        result[:,i] .= compute_spectra(m * mask_, m * mask_, factorized_mcm, wl, wl)
+        result[:,i] .= spectra_from_masked_maps(m * mask_, m * mask_, factorized_mcm, wl, wl)
     end
 
     return result
@@ -274,9 +274,9 @@ plt.plot(diag(M.parent,4))
 plt.gcf()
 ##
 
-AngularPowerSpectra.effective_weights!(workspace, m_143_hm1, m_143_hm2, m_143_hm1, m_143_hm2)
+AngularPowerSpectra.effective_weights!(workspace, m1, m2, m1, m2)
 AngularPowerSpectra.W_spectra!(workspace)
 
 using BenchmarkTools
-# @btime cov($workspace, $m_143_hm1, $m_143_hm2, $m_143_hm1, $m_143_hm2)
+# @btime cov($workspace, $m1, $m2, $m1, $m2)
 ##

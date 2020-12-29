@@ -33,6 +33,10 @@ end
 
 
 @enum MapType ∅∅ II QQ UU TT PP TP PT TE ET EE
+function MapType(s::String)
+    return getproperty(AngularPowerSpectra, Symbol(s))
+end
+
 
 # converts i.e. TP => (TT, PP)
 function split_maptype(XY::MapType)
@@ -55,33 +59,33 @@ const WIndex = Tuple{MapType, MapType, String, String, MapType, String, String, 
 
 struct SpectralWorkspace{T <: Real}
     field_names::NTuple{2, String}
-    lmax::Int
+    ℓₘₐₓ::Int
 
     mask_alm::Dict{Tuple{String, MapType}, Alm{Complex{T}}}  # T and P alms for i and j
 end
 
 
-function SpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}; lmax::Int=0) where {T}
+function SpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}; ℓₘₐₓ::Int=0) where {T}
     field_names = (m_i.name, m_j.name)
     (m_i.maskT.resolution.nside != m_i.maskP.resolution.nside) && throw(
         ArgumentError("m_i temperature and polarization nside do not match."))
     (m_j.maskT.resolution.nside != m_j.maskP.resolution.nside) && throw(
         ArgumentError("m_j temperature and polarization nside do not match."))
-    lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? 3 * m_i.maskT.resolution.nside - 1 : ℓₘₐₓ
 
-    masks = Dict{Tuple{String, MapType}, Alm{Complex{T}}}(
+    mask_alm = Dict{Tuple{String, MapType}, Alm{Complex{T}}}(
         (m_i.name, TT) => map2alm(m_i.maskT), 
         (m_j.name, TT) => map2alm(m_j.maskT), 
         (m_i.name, PP) => map2alm(m_i.maskP), 
         (m_j.name, PP) => map2alm(m_j.maskP))
 
-    return SpectralWorkspace{T}(field_names, lmax, masks)
+    return SpectralWorkspace{T}(field_names, ℓₘₐₓ, mask_alm)
 end
 
 
 struct CovarianceWorkspace{T <: Real}
     field_names::NTuple{4, String}
-    lmax::Int
+    ℓₘₐₓ::Int
     mask_p::Dict{Tuple{String, MapType}, Map{T,RingOrder}}
     weight_p::Dict{Tuple{String, MapType}, Map{T,RingOrder}}
     effective_weights::ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}
@@ -90,9 +94,9 @@ end
 
 
 function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}, 
-                             m_p::PolarizedField{T}, m_q::PolarizedField{T}; lmax::Int=0) where {T}
+                             m_p::PolarizedField{T}, m_q::PolarizedField{T}; ℓₘₐₓ::Int=0) where {T}
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
-    lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? 3 * m_i.maskT.resolution.nside - 1 : ℓₘₐₓ
     mask_p = Dict{Tuple{String, MapType},Map{T,RingOrder}}(
         (m_i.name, TT) => m_i.maskT, (m_j.name, TT) => m_j.maskT, 
         (m_p.name, TT) => m_p.maskT, (m_q.name, TT) => m_q.maskT,
@@ -106,7 +110,7 @@ function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T},
 
     return CovarianceWorkspace{T}(
         field_names,
-        lmax,
+        ℓₘₐₓ,
         mask_p,
         weight_p,
         ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
@@ -141,8 +145,8 @@ function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) w
     end
 
     # otherwise return zero
-    lmax = workspace.lmax
-    return Alm(lmax, lmax, zeros(ComplexF64, numberOfAlms(lmax, lmax)))
+    ℓₘₐₓ = workspace.ℓₘₐₓ
+    return Alm(ℓₘₐₓ, ℓₘₐₓ, zeros(ComplexF64, numberOfAlms(ℓₘₐₓ, ℓₘₐₓ)))
 end
 
 
@@ -169,7 +173,7 @@ function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p
         wterms_Y = (Y,)
     end
 
-    result = zeros(T, workspace.lmax+1)
+    result = zeros(T, workspace.ℓₘₐₓ+1)
 
     # Planck 2015 eq. C.11 - C.16
     for wX in wterms_X
@@ -186,61 +190,6 @@ function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p
     workspace.W_spectra[X, Y, i, j, α, p, q, β] = result
     return result
 end
-
-# function SpectralWorkspace(m_i::Field{T}, m_j::Field{T}, m_p::Field{T}, m_q::Field{T};
-#                            lmax::Int=0) where {T}
-#     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)
-#     lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
-
-#     zero_alm = Alm(lmax, lmax, Zeros{Complex{T}}(numberOfAlms(lmax, lmax)))
-#     zero_cl = SpectralVector(Zeros{T}(lmax+1))
-
-#     masks = Dict{Tuple{String, MapType}, Alm{Complex{T}}}(
-#         (m_i.name, TT) => map2alm(m_i.maskT), 
-#         (m_j.name, TT) => map2alm(m_j.maskT), 
-#         (m_p.name, TT) => map2alm(m_p.maskT), 
-#         (m_q.name, TT) => map2alm(m_q.maskT)
-#     )
-
-#     return SpectralWorkspace{T}(
-#         field_names,
-#         lmax,
-#         masks,
-#         ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
-#         ThreadSafeDict{WIndex, SpectralVector{T}}()
-#     )
-# end
-
-
-
-# function PolarizedSpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}, 
-#                                     m_p::PolarizedField{T}, m_q::PolarizedField{T};
-#                                     lmax::Int=0) where {T}
-#     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)
-#     lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
-
-#     zero_alm = Alm(lmax, lmax, Zeros{Complex{T}}(numberOfAlms(lmax, lmax)))
-#     zero_cl = SpectralVector(Zeros{T}(lmax+1))
-
-#     masks = Dict{Tuple{String, MapType}, Alm{Complex{T}}}(
-#         (m_i.name, TT) => map2alm(m_i.maskT), 
-#         (m_j.name, TT) => map2alm(m_j.maskT), 
-#         (m_p.name, TT) => map2alm(m_p.maskT), 
-#         (m_q.name, TT) => map2alm(m_q.maskT),
-#         (m_i.name, PP) => map2alm(m_i.maskP), 
-#         (m_j.name, PP) => map2alm(m_j.maskP), 
-#         (m_p.name, PP) => map2alm(m_p.maskP), 
-#         (m_q.name, PP) => map2alm(m_q.maskP)
-#     )
-
-#     return SpectralWorkspace{T}(
-#         field_names,
-#         lmax,
-#         masks,
-#         ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
-#         ThreadSafeDict{WIndex, SpectralVector{T}}()
-#     )
-# end
 
 
 """

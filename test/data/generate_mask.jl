@@ -11,7 +11,7 @@ nmt = pyimport("pymaster")
 data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
 # mask = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 nside = 256
-lmax = 3 * nside - 1
+ℓₘₐₓ = 3 * nside - 1
 
 ##
 mask_arr = zeros(hp.nside2npix(nside))

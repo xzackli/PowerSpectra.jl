@@ -6,7 +6,7 @@ using LinearAlgebra
 using DataFrames
 using DelimitedFiles
 using NPZ
-import AngularPowerSpectra: TT, TE, EE
+import AngularPowerSpectra: TT, TE, ET, EE
 
 ##
 @testset "Mode Coupling Matrix TT" begin
@@ -14,17 +14,15 @@ import AngularPowerSpectra: TT, TE, EE
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
-    mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
-    factorized_mcm = lu(mcm.parent)
+    m1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    m2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    workspace = SpectralWorkspace(m1, m2)
+    𝐌 = mcm(workspace, TT, "143_hm1", "143_hm2")
 
     reference = readdlm("data/mcm_TT_diag.txt")
-    @test all(reference .≈ diag(mcm.parent)[3:767])
-
+    @test all(reference .≈ diag(𝐌.parent)[3:767])
     map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
-    Cl_hat = compute_spectra(map1 * mask, map1 * mask, factorized_mcm, flat_beam, flat_beam)
+    Cl_hat = spectra_from_masked_maps(map1 * mask, map1 * mask, lu(𝐌.parent), flat_beam, flat_beam)
     reference_spectrum = readdlm("data/example_TT_spectrum.txt")
     @test all(reference_spectrum .≈ Cl_hat[3:end])
 end
@@ -35,14 +33,14 @@ end
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
-    mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-    factorized_mcm = lu(mcm.parent)
+    m1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    m2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    workspace = SpectralWorkspace(m1, m2)
+    𝐌 = mcm(workspace, EE, "143_hm1", "143_hm2")
+    factorized_mcm12 = lu(𝐌.parent)
 
     reference = readdlm("data/mcm_EE_diag.txt")
-    @test all(reference .≈ diag(mcm.parent)[3:767])
+    @test all(reference .≈ diag(𝐌.parent)[3:767])
 end
 
 ##
@@ -51,18 +49,16 @@ end
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    m_143_hm1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    m_143_hm2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
-    mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
-    factorized_mcm = lu(mcm.parent)
+    m1 = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    m2 = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    workspace = SpectralWorkspace(m1, m2)
+    𝐌 = mcm(workspace, TE, "143_hm1", "143_hm2")
     reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(mcm.parent)[3:767])
+    @test all(reference .≈ diag(𝐌.parent)[3:767])
 
-    mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
-    factorized_mcm = lu(mcm.parent)
+    𝐌 = mcm(workspace, ET, "143_hm1", "143_hm2")
     reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(mcm.parent)[3:767])
+    @test all(reference .≈ diag(𝐌.parent)[3:767])
 end
 
 ##
@@ -74,30 +70,30 @@ end
     mask2_P = readMapFromFITS("data/mask2_P.fits", 1, Float64)
     unit_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     unit_beam = SpectralVector(ones(3*nside))
-    m_143_hm1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
-    m_143_hm2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
-    workspace = SpectralWorkspace(m_143_hm1, m_143_hm2)
+    m1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
+    m2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
+    workspace = SpectralWorkspace(m1, m2)
 
-    mcm = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("data/mcmTT.npy")
-    @test all(isapprox(mcm.parent[3:end, 3:end], reference_mcm[3:end, 3:end], atol=1e-11))
+    𝐌 = mcm(workspace, TT, "143_hm1", "143_hm2")
+    𝐌_ref = npzread("data/mcmTT.npy")
+    @test all(isapprox(𝐌.parent[3:end, 3:end], 𝐌_ref[3:end, 3:end], atol=1e-11))
 
-    mcm = compute_mcm_TE(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("data/mcmTE.npy")
+    𝐌 = mcm(workspace, TE, "143_hm1", "143_hm2")
+    𝐌_ref = npzread("data/mcmTE.npy")
     for k in 0:3nside
-        @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
+        @test all(isapprox(diag(𝐌.parent, k)[3:end], diag(𝐌_ref, k)[3:end]))
     end
 
-    mcm = compute_mcm_ET(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("data/mcmET.npy")
+    𝐌 = mcm(workspace, ET, "143_hm1", "143_hm2")
+    𝐌_ref = npzread("data/mcmET.npy")
 
     for k in 0:3nside
-        @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
+        @test all(isapprox(diag(𝐌.parent, k)[3:end], diag(𝐌_ref, k)[3:end]))
     end
 
-    mcm = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
-    reference_mcm = npzread("data/mcmEE.npy")
+    𝐌 = mcm(workspace, EE, "143_hm1", "143_hm2")
+    𝐌_ref = npzread("data/mcmEE.npy")
     for k in 0:3nside
-        @test all(isapprox(diag(mcm.parent, k)[3:end], diag(reference_mcm, k)[3:end]))
+        @test all(isapprox(diag(𝐌.parent, k)[3:end], diag(𝐌_ref, k)[3:end]))
     end
 end

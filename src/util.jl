@@ -1,9 +1,9 @@
 
 
-function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing)
+function binning_matrix(left_bins, right_bins, weight_function_ℓ; ℓₘₐₓ=nothing)
     nbins = length(left_bins)
-    lmax = isnothing(lmax) ? right_bins[end] : lmax
-    P = zeros(nbins, lmax)
+    ℓₘₐₓ = isnothing(ℓₘₐₓ) ? right_bins[end] : ℓₘₐₓ
+    P = zeros(nbins, ℓₘₐₓ)
     for b in 1:nbins
         weights = weight_function_ℓ.(left_bins[b]:right_bins[b])
         norm = sum(weights)
@@ -65,7 +65,7 @@ end
 #     alms = map2alm(noisemap)
 
 #     n0 = 1.5394030890788515 / nside
-#     for l in 0:alms.lmax
+#     for l in 0:alms.ℓₘₐₓ
 #         for m in 0:l
 #             index = almIndex(alms, l, m)
 #             alms.alm[index] *= sqrt(l / n0 * nltt[l+1])
@@ -78,12 +78,12 @@ end
 
 
 
-# function get_ell_array(lmax)
-#     nalm = numberOfAlms(lmax, lmax)
+# function get_ell_array(ℓₘₐₓ)
+#     nalm = numberOfAlms(ℓₘₐₓ, ℓₘₐₓ)
 #     ell_alm_array = zeros(Int, nalm)
-#     zero_alm = Alm(lmax, lmax, Zeros{Complex{Float64}}(nalm))
+#     zero_alm = Alm(ℓₘₐₓ, ℓₘₐₓ, Zeros{Complex{Float64}}(nalm))
 
-#     for l in 0:lmax
+#     for l in 0:ℓₘₐₓ
 #         for m in 0:l 
 #             index = almIndex(zero_alm, l, m)
 #             ell_alm_array[index] = l

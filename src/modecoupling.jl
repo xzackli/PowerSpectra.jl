@@ -3,13 +3,13 @@
 Projector function for TT. Goes into the mode-coupling matrix.
 """
 function Ξ_TT(W_arr::SpectralVector{T, AA}, 
-             w3j²_00::WignerSymbolVector{T, Int}, 
+             w3j²₀₀::WignerSymbolVector{T, Int}, 
              ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j²_00), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j²_00), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j²₀₀), firstindex(W_arr))
+    ℓ₃_end = min(lastindex(w3j²₀₀), lastindex(W_arr))
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * w3j²_00[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * w3j²₀₀[ℓ₃] * W_arr[ℓ₃]
     end
     return Ξ / (4π)
 end
@@ -21,16 +21,16 @@ Projector function for EE. Goes into the mode-coupling matrix.
 Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 """
 function Ξ_EE(W_arr::SpectralVector{T, AA}, 
-                w3j²_22::WignerSymbolVector{T, Int}, 
+                w3j²₂₂::WignerSymbolVector{T, Int}, 
                 ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j²_22), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j²_22), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(W_arr))
+    ℓ₃_end = min(lastindex(w3j²₂₂), lastindex(W_arr))
     if isodd(ℓ₁ + ℓ₂ + ℓ₃_start)
         ℓ₃_start += 1
     end
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:2:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * w3j²_22[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * w3j²₂₂[ℓ₃] * W_arr[ℓ₃]
     end
     return Ξ / (4π)
 end
@@ -39,182 +39,195 @@ end
 """
 Projector function for TE. Goes into the mode-coupling matrix.
 
-Note that w3j_00_mul_22 refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
+Note that w3j₀₀₂₂ refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 """
 function Ξ_TE(W_arr::SpectralVector{T, AA}, 
-              w3j_00_mul_22::WignerSymbolVector{T, Int}, 
+              w3j₀₀₂₂::WignerSymbolVector{T, Int}, 
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
-    ℓ₃_start = max(firstindex(w3j_00_mul_22), firstindex(W_arr))
-    ℓ₃_end = min(lastindex(w3j_00_mul_22), lastindex(W_arr))
+    ℓ₃_start = max(firstindex(w3j₀₀₂₂), firstindex(W_arr))
+    ℓ₃_end = min(lastindex(w3j₀₀₂₂), lastindex(W_arr))
     if isodd(ℓ₁ + ℓ₂ + ℓ₃_start)
         ℓ₃_start += 1
     end
     @inbounds @simd for ℓ₃ ∈ ℓ₃_start:2:ℓ₃_end
-        Ξ += (2ℓ₃ + 1) * w3j_00_mul_22[ℓ₃] * W_arr[ℓ₃]
+        Ξ += (2ℓ₃ + 1) * w3j₀₀₂₂[ℓ₃] * W_arr[ℓ₃]
     end
     return Ξ / (4π)
 end
 
 
 # inner MCM loop TT
-function loop_mcm_TT!(mcm::SpectralArray{T,2}, lmax::Integer, 
-                      Vij::SpectralVector{T}) where {T}
-    thread_buffers = get_thread_buffers(T, 2*lmax+1)
+function loop_mcm_TT!(𝐌::SpectralArray{T,2}, ℓₘₐₓ::Integer, 
+                      Vᵢⱼ::SpectralVector{T}) where {T}
+    thread_buffers = get_thread_buffers(T, 2ℓₘₐₓ+1)
     
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:ℓₘₐₓ
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax
+        for ℓ₂ in ℓ₁:ℓₘₐₓ
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-            w3j²_00 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-            wigner3j_f!(w, w3j²_00)  # deposit symbols into buffer
-            w3j²_00.symbols .= w3j²_00.symbols .^ 2  # square the symbols
-            Ξ = Ξ_TT(Vij, w3j²_00, ℓ₁, ℓ₂)
-            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
-            mcm[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
+            w3j²₀₀ = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
+            wigner3j_f!(w, w3j²₀₀)  # deposit symbols into buffer
+            w3j²₀₀.symbols .= w3j²₀₀.symbols .^ 2  # square the symbols
+            Ξ = Ξ_TT(Vᵢⱼ, w3j²₀₀, ℓ₁, ℓ₂)
+            𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
-    mcm[0,0] = one(T)
-    mcm[1,1] = one(T)
-    return mcm
+    𝐌[0,0] = one(T)
+    𝐌[1,1] = one(T)
+    return 𝐌
 end
 
 function compute_mcm_TT(workspace::SpectralWorkspace{T}, 
-                        name_i::String, name_j::String; lmax::Int=0) where {T}
-    lmax = iszero(lmax) ? workspace.lmax : lmax
-    Vij = SpectralVector(alm2cl(workspace.mask_alm[name_i, TT], workspace.mask_alm[name_j, TT]))
-    mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    return loop_mcm_TT!(mcm, lmax, Vij)
+                        name_i::String, name_j::String; ℓₘₐₓ::Int=0) where {T}
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
+    Vᵢⱼ = SpectralVector(alm2cl(workspace.mask_alm[name_i, TT], workspace.mask_alm[name_j, TT]))
+    𝐌 = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    return loop_mcm_TT!(𝐌, ℓₘₐₓ, Vᵢⱼ)
 end
 
 
 # inner MCM loop
-function loop_mcm_EE!(mcm::SpectralArray{T,2}, lmax::Integer, 
-                      Vij::SpectralVector{T}) where {T}
-    thread_buffers = get_thread_buffers(T, 2*lmax+1)
+function loop_mcm_EE!(𝐌::SpectralArray{T,2}, ℓₘₐₓ::Integer, 
+                      Vᵢⱼ::SpectralVector{T}) where {T}
+    thread_buffers = get_thread_buffers(T, 2ℓₘₐₓ+1)
     
-    lmin = 2
-    @qthreads for ℓ₁ in lmin:lmax
+    @qthreads for ℓ₁ in 2:ℓₘₐₓ
         buffer = thread_buffers[Threads.threadid()]
-        for ℓ₂ in ℓ₁:lmax
+        for ℓ₂ in ℓ₁:ℓₘₐₓ
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
             buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-            w3j²_22 = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-            wigner3j_f!(w, w3j²_22)  # deposit symbols into buffer
-            w3j²_22.symbols .= w3j²_22.symbols .^ 2  # square the symbols
-            Ξ = Ξ_EE(Vij, w3j²_22, ℓ₁, ℓ₂)
-            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
-            mcm[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
+            w3j²₂₂ = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
+            wigner3j_f!(w, w3j²₂₂)  # deposit symbols into buffer
+            w3j²₂₂.symbols .= w3j²₂₂.symbols .^ 2  # square the symbols
+            Ξ = Ξ_EE(Vᵢⱼ, w3j²₂₂, ℓ₁, ℓ₂)
+            𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
-    mcm[0,0] = one(T)
-    mcm[1,1] = one(T)
-    return mcm
+    𝐌[0,0] = one(T)
+    𝐌[1,1] = one(T)
+    return 𝐌
 end
 
 function compute_mcm_EE(workspace::SpectralWorkspace{T}, 
-                     name_i::String, name_j::String; lmax::Int=0) where {T}
+                     name_i::String, name_j::String; ℓₘₐₓ::Int=0) where {T}
     
-    lmax = iszero(lmax) ? workspace.lmax : lmax
-    Vij = SpectralVector(alm2cl(workspace.mask_alm[name_i, PP], workspace.mask_alm[name_j, PP]))
-    mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    return loop_mcm_EE!(mcm, lmax, Vij)
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
+    Vᵢⱼ = SpectralVector(alm2cl(
+        workspace.mask_alm[name_i, PP], 
+        workspace.mask_alm[name_j, PP]))
+    𝐌 = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    return loop_mcm_EE!(𝐌, ℓₘₐₓ, Vᵢⱼ)
 end
 
 
 ## TE
 # inner MCM loop
-function loop_mcm_TE!(mcm::SpectralArray{T,2}, lmax::Integer, 
+function loop_mcm_TE!(𝐌::SpectralArray{T,2}, ℓₘₐₓ::Integer, 
                       thread_buffers_0, thread_buffers_2,
-                      Vij::SpectralVector{T}) where {T}
+                      Vᵢⱼ::SpectralVector{T}) where {T}
     
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in 2:ℓₘₐₓ
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
 
-        for ℓ₂ in ℓ₁:lmax
-            w00 = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
-            w22 = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-            buffer_view_0 = uview(buffer0, 1:(w00.nₘₐₓ - w00.nₘᵢₙ + 1))  # preallocated buffer
-            buffer_view_2 = uview(buffer2, 1:(w22.nₘₐₓ - w22.nₘᵢₙ + 1))  # preallocated buffer
-            w3j_00 = WignerSymbolVector(buffer_view_0, w00.nₘᵢₙ:w00.nₘₐₓ)
-            w3j_22 = WignerSymbolVector(buffer_view_2, w22.nₘᵢₙ:w22.nₘₐₓ)
-            wigner3j_f!(w00, w3j_00)  # deposit symbols into buffer
-            wigner3j_f!(w22, w3j_22)  # deposit symbols into buffer
+        for ℓ₂ in ℓ₁:ℓₘₐₓ
+            w₀₀ = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
+            w₂₂ = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
+            buffer_view_0 = uview(buffer0, 1:(w₀₀.nₘₐₓ - w₀₀.nₘᵢₙ + 1))  # preallocated buffer
+            buffer_view_2 = uview(buffer2, 1:(w₂₂.nₘₐₓ - w₂₂.nₘᵢₙ + 1))  # preallocated buffer
+            w3j₀₀ = WignerSymbolVector(buffer_view_0, w₀₀.nₘᵢₙ:w₀₀.nₘₐₓ)
+            w3j₂₂ = WignerSymbolVector(buffer_view_2, w₂₂.nₘᵢₙ:w₂₂.nₘₐₓ)
+            wigner3j_f!(w₀₀, w3j₀₀)  # deposit symbols into buffer
+            wigner3j_f!(w₂₂, w3j₂₂)  # deposit symbols into buffer
 
-            w3j_00_22 = w3j_00
-            w3j_00_22.symbols .*= w3j_22.symbols
-            Ξ = Ξ_TE(Vij, w3j_00_22, ℓ₁, ℓ₂)
-            mcm[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
-            mcm[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
+            w3j₀₀₂₂ = w3j₀₀
+            w3j₀₀₂₂.symbols .*= w3j₂₂.symbols
+            Ξ = Ξ_TE(Vᵢⱼ, w3j₀₀₂₂, ℓ₁, ℓ₂)
+            𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
 
         end
     end
-    mcm[0,0] = one(T)
-    mcm[1,1] = one(T)
-    return mcm
+    𝐌[0,0] = one(T)
+    𝐌[1,1] = one(T)
+    return 𝐌
 end
 
 function compute_mcm_TE(workspace::SpectralWorkspace{T}, 
-                     name_i::String, name_j::String; lmax::Int=0) where {T}
+                     name_i::String, name_j::String; ℓₘₐₓ::Int=0) where {T}
     
-    lmax = iszero(lmax) ? workspace.lmax : lmax
-    thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
-    thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
+    thread_buffers_0 = get_thread_buffers(T, 2ℓₘₐₓ+1)
+    thread_buffers_2 = get_thread_buffers(T, 2ℓₘₐₓ+1)
 
-    Vij = SpectralVector(alm2cl(workspace.mask_alm[name_i, TT], workspace.mask_alm[name_j, PP]))
-    mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    return loop_mcm_TE!(mcm, lmax, thread_buffers_0, thread_buffers_2, Vij)
+    Vᵢⱼ = SpectralVector(alm2cl(
+        workspace.mask_alm[name_i, TT], 
+        workspace.mask_alm[name_j, PP]))
+    𝐌 = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    return loop_mcm_TE!(𝐌, ℓₘₐₓ, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
 end
 
 function compute_mcm_ET(workspace::SpectralWorkspace{T}, 
-                     name_i::String, name_j::String; lmax::Int=0) where {T}
+                     name_i::String, name_j::String; ℓₘₐₓ::Int=0) where {T}
     
-    lmax = iszero(lmax) ? workspace.lmax : lmax
-    thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
-    thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
+    ℓₘₐₓ = iszero(ℓₘₐₓ) ? workspace.ℓₘₐₓ : ℓₘₐₓ
+    thread_buffers_0 = get_thread_buffers(T, 2ℓₘₐₓ+1)
+    thread_buffers_2 = get_thread_buffers(T, 2ℓₘₐₓ+1)
 
-    Vij = SpectralVector(alm2cl(workspace.mask_alm[name_i, PP], workspace.mask_alm[name_j, TT]))
-    mcm = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-    return loop_mcm_TE!(mcm, lmax, thread_buffers_0, thread_buffers_2, Vij)
+    Vᵢⱼ = SpectralVector(alm2cl(
+        workspace.mask_alm[name_i, PP], 
+        workspace.mask_alm[name_j, TT]))
+    𝐌 = SpectralArray(zeros(T, (ℓₘₐₓ+1, ℓₘₐₓ+1)))
+    return loop_mcm_TE!(𝐌, ℓₘₐₓ, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
 end
 
 
 """
 Compute a mode-coupling matrix.
 """
-function mcm(spec::MapType, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
-    workspace = SpectralWorkspace(f1, f2)
+function mcm(workspace::SpectralWorkspace{T}, spec::MapType, f1_name::String, f2_name::String) where {T}
     if spec == TT
-        return compute_mcm_TT(workspace, f1.name, f2.name)
+        return compute_mcm_TT(workspace, f1_name, f2_name)
     elseif spec == TE
-        return compute_mcm_TE(workspace, f1.name, f2.name)
+        return compute_mcm_TE(workspace, f1_name, f2_name)
     elseif spec == ET
-        return compute_mcm_ET(workspace, f1.name, f2.name)
+        return compute_mcm_ET(workspace, f1_name, f2_name)
     elseif spec == EE
-        return compute_mcm_EE(workspace, f1.name, f2.name)
+        return compute_mcm_EE(workspace, f1_name, f2_name)
     else
         throw(ArgumentError("Spectrum requested is not yet implemented."))
     end
 end
+function mcm(workspace::SpectralWorkspace{T}, spec::MapType, 
+             f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+    return mcm(workspace, spec, f1.name, f2.name)
+end
+function mcm(spec::MapType, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+    workspace = SpectralWorkspace(f1, f2)
+    return mcm(workspace, spec, f1, f2)
+end
 
 
-function compute_spectra(map_1::Map{T}, map_2::Map{T}, 
+function spectra_from_masked_maps(map_1::Map{T}, map_2::Map{T}, 
                          factorized_mcm,
                          Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
-    # Cl_hat[1:2] .= 0.0
+    Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
     ldiv!(factorized_mcm, Cl_hat)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end
 
 
-function compute_spectra(alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}}, 
-                         factorized_mcm,
-                         Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
+function spectra_from_masked_maps(
+        alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}}, 
+        factorized_mcm,
+        Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(alm_1, alm_2)
-    Cl_hat[1:2] .= zero(T)
+    Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
     ldiv!(factorized_mcm, Cl_hat)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end
