@@ -59,19 +59,19 @@ const WIndex = Tuple{MapType, MapType, String, String, MapType, String, String, 
 
 struct SpectralWorkspace{T <: Real}
     field_names::NTuple{2, String}
-    ℓₘₐₓ::Int
+    lmax::Int
 
     mask_alm::Dict{Tuple{String, MapType}, Alm{Complex{T}}}  # T and P alms for i and j
 end
 
 
-function SpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}; ℓₘₐₓ::Int=0) where {T}
+function SpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}; lmax::Int=0) where {T}
     field_names = (m_i.name, m_j.name)
     (m_i.maskT.resolution.nside != m_i.maskP.resolution.nside) && throw(
         ArgumentError("m_i temperature and polarization nside do not match."))
     (m_j.maskT.resolution.nside != m_j.maskP.resolution.nside) && throw(
         ArgumentError("m_j temperature and polarization nside do not match."))
-    ℓₘₐₓ = iszero(ℓₘₐₓ) ? 3 * m_i.maskT.resolution.nside - 1 : ℓₘₐₓ
+    lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
 
     mask_alm = Dict{Tuple{String, MapType}, Alm{Complex{T}}}(
         (m_i.name, TT) => map2alm(m_i.maskT), 
@@ -79,13 +79,13 @@ function SpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}; ℓ�
         (m_i.name, PP) => map2alm(m_i.maskP), 
         (m_j.name, PP) => map2alm(m_j.maskP))
 
-    return SpectralWorkspace{T}(field_names, ℓₘₐₓ, mask_alm)
+    return SpectralWorkspace{T}(field_names, lmax, mask_alm)
 end
 
 
 struct CovarianceWorkspace{T <: Real}
     field_names::NTuple{4, String}
-    ℓₘₐₓ::Int
+    lmax::Int
     mask_p::Dict{Tuple{String, MapType}, Map{T,RingOrder}}
     weight_p::Dict{Tuple{String, MapType}, Map{T,RingOrder}}
     effective_weights::ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}
@@ -94,9 +94,9 @@ end
 
 
 function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}, 
-                             m_p::PolarizedField{T}, m_q::PolarizedField{T}; ℓₘₐₓ::Int=0) where {T}
+                             m_p::PolarizedField{T}, m_q::PolarizedField{T}; lmax::Int=0) where {T}
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
-    ℓₘₐₓ = iszero(ℓₘₐₓ) ? 3 * m_i.maskT.resolution.nside - 1 : ℓₘₐₓ
+    lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
     mask_p = Dict{Tuple{String, MapType},Map{T,RingOrder}}(
         (m_i.name, TT) => m_i.maskT, (m_j.name, TT) => m_j.maskT, 
         (m_p.name, TT) => m_p.maskT, (m_q.name, TT) => m_q.maskT,
@@ -110,7 +110,7 @@ function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T},
 
     return CovarianceWorkspace{T}(
         field_names,
-        ℓₘₐₓ,
+        lmax,
         mask_p,
         weight_p,
         ThreadSafeDict{Tuple{MapType, String, String, MapType}, Alm{Complex{T}}}(),
@@ -145,8 +145,8 @@ function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) w
     end
 
     # otherwise return zero
-    ℓₘₐₓ = workspace.ℓₘₐₓ
-    return Alm(ℓₘₐₓ, ℓₘₐₓ, zeros(ComplexF64, numberOfAlms(ℓₘₐₓ, ℓₘₐₓ)))
+    lmax = workspace.lmax
+    return Alm(lmax, lmax, zeros(ComplexF64, numberOfAlms(lmax, lmax)))
 end
 
 
@@ -173,7 +173,7 @@ function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p
         wterms_Y = (Y,)
     end
 
-    result = zeros(T, workspace.ℓₘₐₓ+1)
+    result = zeros(T, workspace.lmax+1)
 
     # Planck 2015 eq. C.11 - C.16
     for wX in wterms_X
