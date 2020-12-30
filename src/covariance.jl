@@ -1,5 +1,6 @@
 
-function decouple_covmat!(𝐂::SpectralArray{T,2}, mcm_adj_XY::F, mcm_adj_ZW::F) where {T <: Real, F<:Factorization{T}}
+function decouple_covmat!(𝐂::SpectralArray{T,2}, 
+                          mcm_adj_XY::F, mcm_adj_ZW::F) where {T <: Real, F<:Factorization{T}}
     rdiv!(𝐂.parent', mcm_adj_ZW)
     rdiv!(𝐂.parent, mcm_adj_XY)
     return 𝐂
@@ -36,11 +37,11 @@ end
 
 # inner loop 
 function loop_covTTTT!(𝐂::SpectralArray{T,2}, lmax::Integer, 
-                     TTip::SpectralVector{T}, TTjq::SpectralVector{T}, 
-                     TTiq::SpectralVector{T}, TTjp::SpectralVector{T},
-                     r_ℓ_ip::SpectralVector{T}, r_ℓ_jq::SpectralVector{T}, 
-                     r_ℓ_iq::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
-                     W1, W2, W3, W4, W5, W6, W7, W8) where {T}
+                       TTip::SpectralVector{T}, TTjq::SpectralVector{T}, 
+                       TTiq::SpectralVector{T}, TTjp::SpectralVector{T},
+                       r_ℓ_ip::SpectralVector{T}, r_ℓ_jq::SpectralVector{T}, 
+                       r_ℓ_iq::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
+                       W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
@@ -97,11 +98,11 @@ end
 
 # inner loop 
 function loop_covEEEE!(𝐂::SpectralArray{T,2}, lmax::Integer,
-                     EEip::SpectralVector{T}, EEjq::SpectralVector{T}, 
-                     EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
-                     r_ℓ_ip::SpectralVector{T}, r_ℓ_jq::SpectralVector{T}, 
-                     r_ℓ_iq::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
-                     W1, W2, W3, W4, W5, W6, W7, W8) where {T}
+                       EEip::SpectralVector{T}, EEjq::SpectralVector{T}, 
+                       EEiq::SpectralVector{T}, EEjp::SpectralVector{T},
+                       r_ℓ_ip::SpectralVector{T}, r_ℓ_jq::SpectralVector{T}, 
+                       r_ℓ_iq::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
+                       W1, W2, W3, W4, W5, W6, W7, W8) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
@@ -154,10 +155,10 @@ end
 
 # inner loop 
 function loop_covTTTE!(𝐂::SpectralArray{T,2}, lmax::Integer,
-                     TTip::SpectralVector{T}, TTjp::SpectralVector{T}, 
-                     TEiq::SpectralVector{T}, TEjq::SpectralVector{T},
-                     r_ℓ_ip::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
-                     W1, W2, W3, W4) where {T}
+                       TTip::SpectralVector{T}, TTjp::SpectralVector{T}, 
+                       TEiq::SpectralVector{T}, TEjq::SpectralVector{T},
+                       r_ℓ_ip::SpectralVector{T}, r_ℓ_jp::SpectralVector{T},
+                       W1, W2, W3, W4) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     
@@ -208,10 +209,10 @@ end
 
 # inner loop 
 function loop_covTETE!(𝐂::SpectralArray{T,2}, lmax::Integer,
-                     TTip::SpectralVector{T}, EEjq::SpectralVector{T}, 
-                     TEiq::SpectralVector{T}, TEjp::SpectralVector{T},
-                     r_TT_ip::SpectralVector{T}, r_PP_jq::SpectralVector{T}, 
-                     W1, W2, W3, W4, W5) where {T}
+                       TTip::SpectralVector{T}, EEjq::SpectralVector{T}, 
+                       TEiq::SpectralVector{T}, TEjp::SpectralVector{T},
+                       r_TT_ip::SpectralVector{T}, r_PP_jq::SpectralVector{T}, 
+                       W1, W2, W3, W4, W5) where {T}
 
     thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
@@ -286,10 +287,10 @@ end
 
 # inner loop 
 function loop_covTEEE!(𝐂::SpectralArray{T,2}, lmax::Integer,
-                      EEjq::SpectralVector{T}, EEjp::SpectralVector{T}, 
-                      TEip::SpectralVector{T}, TEiq::SpectralVector{T},
-                     r_EE_jq::SpectralVector{T}, r_EE_jp::SpectralVector{T}, 
-                     W1, W2, W3, W4) where {T}
+                       EEjq::SpectralVector{T}, EEjp::SpectralVector{T}, 
+                       TEip::SpectralVector{T}, TEiq::SpectralVector{T},
+                       r_EE_jq::SpectralVector{T}, r_EE_jp::SpectralVector{T}, 
+                       W1, W2, W3, W4) where {T}
 
     thread_buffers_0 = get_thread_buffers(T, 2*lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2*lmax+1)
@@ -309,8 +310,6 @@ function loop_covTEEE!(𝐂::SpectralArray{T,2}, lmax::Integer,
             w3j² = w3j_22  # buffer 2
             w3j².symbols .*= w3j_00.symbols   # buffer2 = (buffer 2) * (buffer 1)
 
-
-
             𝐂[ℓ₁, ℓ₂] = (
                 sqrt(EEjq[ℓ₁] * EEjq[ℓ₂]) * (TEip[ℓ₁] + TEip[ℓ₂]) * Ξ_EE(W1, w3j², ℓ₁, ℓ₂) +
                 sqrt(EEjp[ℓ₁] * EEjp[ℓ₂]) * (TEiq[ℓ₁] + TEiq[ℓ₂]) * Ξ_EE(W2, w3j², ℓ₁, ℓ₂) + 
@@ -326,10 +325,10 @@ end
 
 # inner loop 
 function loop_covTEEE_planck!(𝐂::SpectralArray{T,2}, lmax::Integer,
-                      EEjq::SpectralVector{T}, EEjp::SpectralVector{T}, 
-                      TEip::SpectralVector{T}, TEiq::SpectralVector{T},
-                     r_EE_jq::SpectralVector{T}, r_EE_jp::SpectralVector{T}, 
-                     W1, W2, W3, W4) where {T}
+                              EEjq::SpectralVector{T}, EEjp::SpectralVector{T}, 
+                              TEip::SpectralVector{T}, TEiq::SpectralVector{T},
+                              r_EE_jq::SpectralVector{T}, r_EE_jp::SpectralVector{T}, 
+                              W1, W2, W3, W4) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     @qthreads for ℓ₁ in 0:lmax
@@ -373,9 +372,9 @@ end
 
 # inner loop 
 function loop_covTTEE!(𝐂::SpectralArray{T,2}, lmax::Integer,
-                      TEip::SpectralVector{T}, TEiq::SpectralVector{T},
-                      TEjq::SpectralVector{T}, TEjp::SpectralVector{T}, 
-                     W1, W2) where {T}
+                       TEip::SpectralVector{T}, TEiq::SpectralVector{T},
+                       TEjq::SpectralVector{T}, TEjp::SpectralVector{T}, 
+                       W1, W2) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
     

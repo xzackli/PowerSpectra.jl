@@ -3,8 +3,8 @@
 Projector function for TT. Goes into the mode-coupling matrix.
 """
 function Ξ_TT(𝐖::SpectralVector{T, AA}, 
-             w3j²₀₀::WignerSymbolVector{T, Int}, 
-             ℓ₁::Int, ℓ₂::Int) where {T, AA}
+              w3j²₀₀::WignerSymbolVector{T, Int}, 
+              ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²₀₀), firstindex(𝐖))
     ℓ₃_end = min(lastindex(w3j²₀₀), lastindex(𝐖))
@@ -21,8 +21,8 @@ Projector function for EE. Goes into the mode-coupling matrix.
 Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 """
 function Ξ_EE(𝐖::SpectralVector{T, AA}, 
-                w3j²₂₂::WignerSymbolVector{T, Int}, 
-                ℓ₁::Int, ℓ₂::Int) where {T, AA}
+              w3j²₂₂::WignerSymbolVector{T, Int}, 
+              ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(𝐖))
     ℓ₃_end = min(lastindex(w3j²₂₂), lastindex(𝐖))
@@ -113,7 +113,7 @@ function loop_mcm_EE!(𝐌::SpectralArray{T,2}, lmax::Integer,
 end
 
 function compute_mcm_EE(workspace::SpectralWorkspace{T}, 
-                     name_i::String, name_j::String; lmax::Int=0) where {T}
+                        name_i::String, name_j::String; lmax::Int=0) where {T}
     
     lmax = iszero(lmax) ? workspace.lmax : lmax
     Vᵢⱼ = SpectralVector(alm2cl(
@@ -158,7 +158,7 @@ function loop_mcm_TE!(𝐌::SpectralArray{T,2}, lmax::Integer,
 end
 
 function compute_mcm_TE(workspace::SpectralWorkspace{T}, 
-                     name_i::String, name_j::String; lmax::Int=0) where {T}
+                        name_i::String, name_j::String; lmax::Int=0) where {T}
     
     lmax = iszero(lmax) ? workspace.lmax : lmax
     thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
@@ -189,7 +189,8 @@ end
 """
 Compute a mode-coupling matrix.
 """
-function mcm(workspace::SpectralWorkspace{T}, spec::MapType, f1_name::String, f2_name::String) where {T}
+function mcm(workspace::SpectralWorkspace{T}, spec::MapType, 
+             f1_name::String, f2_name::String) where {T}
     if spec == TT
         return compute_mcm_TT(workspace, f1_name, f2_name)
     elseif spec == TE
@@ -212,9 +213,9 @@ function mcm(spec::MapType, f1::PolarizedField{T}, f2::PolarizedField{T}) where 
 end
 
 
-function spectra_from_masked_maps(map_1::Map{T}, map_2::Map{T}, 
-                         factorized_mcm,
-                         Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
+function spectra_from_masked_maps(
+        map_1::Map{T}, map_2::Map{T}, factorized_mcm,
+        Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
     Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
     ldiv!(factorized_mcm, Cl_hat)
@@ -224,8 +225,7 @@ end
 
 function spectra_from_masked_maps(
         alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}}, 
-        factorized_mcm,
-        Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
+        factorized_mcm, Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(alm_1, alm_2)
     Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
     ldiv!(factorized_mcm, Cl_hat)
