@@ -14,6 +14,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Spectra" => "spectra.md",
+        "Covariance" => "covariance.md",
     ],
 )
 
