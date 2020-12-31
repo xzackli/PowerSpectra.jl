@@ -108,12 +108,12 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
     𝐂 = Array{T,2}(undef, (ncomp, ncomp))  # covariance for this given ℓ
     alm_buffer = zeros(Complex{T}, ncomp)
     for ℓ in 0:lmax
+        # build the 𝐂 matrix for ℓ. only necessary to copy the upper triangle
+        for cᵢ in 1:ncomp, cⱼ in cᵢ:ncomp
+            𝐂[cᵢ, cⱼ] = Cl[cᵢ, cⱼ, ℓ+1]
+        end
+        cholesky!(Hermitian(𝐂))  # THIS IS WHERE THE ALLOCATIONS ARE
         for m in 0:ℓ
-            # build the 𝐂 matrix for ℓ. only necessary to copy the upper triangle
-            for cᵢ in 1:ncomp, cⱼ in cᵢ:ncomp
-                𝐂[cᵢ, cⱼ] = Cl[cᵢ, cⱼ, ℓ+1]
-            end
-            cholesky!(Hermitian(𝐂))  # THIS IS WHERE THE ALLOCATIONS ARE
             i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
             for comp in 1:ncomp  # copy over the random variates into buffer
                 alm_buffer[comp] = alms[comp].alm[i_alm]
