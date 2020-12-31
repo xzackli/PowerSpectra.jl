@@ -194,9 +194,8 @@ function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p
 end
 
 
-"""
-Allocate Vector{T} of a given size for each thread.
-"""
+
+# Allocate Vector{T} of a given size for each thread.
 function get_thread_buffers(::Type{T}, size) where {T}
     thread_buffers = Vector{Vector{T}}(undef, Threads.nthreads())
     Threads.@threads for i in 1:Threads.nthreads()

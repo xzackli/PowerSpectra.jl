@@ -1,9 +1,7 @@
 
-"""
-Projector function for TT. Goes into the mode-coupling matrix.
-"""
-function Ξ_TT(𝐖::SpectralVector{T, AA}, 
-              w3j²₀₀::WignerSymbolVector{T, Int}, 
+# Projector function for TT. Goes into the mode-coupling matrix.
+function Ξ_TT(𝐖::SpectralVector{T, AA},
+              w3j²₀₀::WignerSymbolVector{T, Int},
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²₀₀), firstindex(𝐖))
@@ -15,13 +13,10 @@ function Ξ_TT(𝐖::SpectralVector{T, AA},
 end
 
 
-"""
-Projector function for EE. Goes into the mode-coupling matrix.
-
-Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
-"""
-function Ξ_EE(𝐖::SpectralVector{T, AA}, 
-              w3j²₂₂::WignerSymbolVector{T, Int}, 
+# Projector function for EE. Goes into the mode-coupling matrix.
+# Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
+function Ξ_EE(𝐖::SpectralVector{T, AA},
+              w3j²₂₂::WignerSymbolVector{T, Int},
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(𝐖))
@@ -36,13 +31,10 @@ function Ξ_EE(𝐖::SpectralVector{T, AA},
 end
 
 
-"""
-Projector function for TE. Goes into the mode-coupling matrix.
-
-Note that w3j₀₀₂₂ refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
-"""
-function Ξ_TE(𝐖::SpectralVector{T, AA}, 
-              w3j₀₀₂₂::WignerSymbolVector{T, Int}, 
+# Projector function for TE. Goes into the mode-coupling matrix.
+# Note that w3j₀₀₂₂ refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
+function Ξ_TE(𝐖::SpectralVector{T, AA},
+              w3j₀₀₂₂::WignerSymbolVector{T, Int},
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j₀₀₂₂), firstindex(𝐖))
@@ -56,12 +48,11 @@ function Ξ_TE(𝐖::SpectralVector{T, AA},
     return Ξ / (4π)
 end
 
-
 # inner MCM loop TT
-function loop_mcm_TT!(𝐌::SpectralArray{T,2}, lmax::Integer, 
+function loop_mcm_TT!(𝐌::SpectralArray{T,2}, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
-    
+
     @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
@@ -80,7 +71,7 @@ function loop_mcm_TT!(𝐌::SpectralArray{T,2}, lmax::Integer,
     return 𝐌
 end
 
-function compute_mcm_TT(workspace::SpectralWorkspace{T}, 
+function compute_mcm_TT(workspace::SpectralWorkspace{T},
                         name_i::String, name_j::String; lmax::Int=0) where {T}
     lmax = iszero(lmax) ? workspace.lmax : lmax
     Vᵢⱼ = SpectralVector(alm2cl(workspace.mask_alm[name_i, TT], workspace.mask_alm[name_j, TT]))
@@ -89,11 +80,10 @@ function compute_mcm_TT(workspace::SpectralWorkspace{T},
 end
 
 
-# inner MCM loop
-function loop_mcm_EE!(𝐌::SpectralArray{T,2}, lmax::Integer, 
+function loop_mcm_EE!(𝐌::SpectralArray{T,2}, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
-    
+
     @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
@@ -112,24 +102,21 @@ function loop_mcm_EE!(𝐌::SpectralArray{T,2}, lmax::Integer,
     return 𝐌
 end
 
-function compute_mcm_EE(workspace::SpectralWorkspace{T}, 
+function compute_mcm_EE(workspace::SpectralWorkspace{T},
                         name_i::String, name_j::String; lmax::Int=0) where {T}
-    
+
     lmax = iszero(lmax) ? workspace.lmax : lmax
     Vᵢⱼ = SpectralVector(alm2cl(
-        workspace.mask_alm[name_i, PP], 
+        workspace.mask_alm[name_i, PP],
         workspace.mask_alm[name_j, PP]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_EE!(𝐌, lmax, Vᵢⱼ)
 end
 
-
-## TE
-# inner MCM loop
-function loop_mcm_TE!(𝐌::SpectralArray{T,2}, lmax::Integer, 
+function loop_mcm_TE!(𝐌::SpectralArray{T,2}, lmax::Integer,
                       thread_buffers_0, thread_buffers_2,
                       Vᵢⱼ::SpectralVector{T}) where {T}
-    
+
     @qthreads for ℓ₁ in 2:lmax
         buffer0 = thread_buffers_0[Threads.threadid()]
         buffer2 = thread_buffers_2[Threads.threadid()]
@@ -157,29 +144,29 @@ function loop_mcm_TE!(𝐌::SpectralArray{T,2}, lmax::Integer,
     return 𝐌
 end
 
-function compute_mcm_TE(workspace::SpectralWorkspace{T}, 
+function compute_mcm_TE(workspace::SpectralWorkspace{T},
                         name_i::String, name_j::String; lmax::Int=0) where {T}
-    
+
     lmax = iszero(lmax) ? workspace.lmax : lmax
     thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
 
     Vᵢⱼ = SpectralVector(alm2cl(
-        workspace.mask_alm[name_i, TT], 
+        workspace.mask_alm[name_i, TT],
         workspace.mask_alm[name_j, PP]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_TE!(𝐌, lmax, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
 end
 
-function compute_mcm_ET(workspace::SpectralWorkspace{T}, 
+function compute_mcm_ET(workspace::SpectralWorkspace{T},
                      name_i::String, name_j::String; lmax::Int=0) where {T}
-    
+
     lmax = iszero(lmax) ? workspace.lmax : lmax
     thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
 
     Vᵢⱼ = SpectralVector(alm2cl(
-        workspace.mask_alm[name_i, PP], 
+        workspace.mask_alm[name_i, PP],
         workspace.mask_alm[name_j, TT]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_TE!(𝐌, lmax, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
@@ -187,9 +174,26 @@ end
 
 
 """
-Compute a mode-coupling matrix.
+    mcm(workspace::SpectralWorkspace{T}, spec::MapType, f1_name::String, f2_name::String) where {T}
+
+# Arguments:
+- `workspace::SpectralWorkspace{T}`: stores the SHTs of the masks
+- `spec::MapType`: the spectrum to compute
+- `f1_name::String`: the name of the first field
+- `f2_name::String`: the name of the second field
+
+# Returns:
+- `SpectralArray{T,2}`: zero-indexed array containing the mode-coupling matrix
+
+# Examples
+```julia
+m1 = PolarizedField("field1", mask1_T, mask1_P)
+m2 = PolarizedField("field2", mask2_T, mask2_P)
+workspace = SpectralWorkspace(m1, m2)
+𝐌 = mcm(workspace, spec, "field1", "field2")
+```
 """
-function mcm(workspace::SpectralWorkspace{T}, spec::MapType, 
+function mcm(workspace::SpectralWorkspace{T}, spec::MapType,
              f1_name::String, f2_name::String) where {T}
     if spec == TT
         return compute_mcm_TT(workspace, f1_name, f2_name)
@@ -203,7 +207,7 @@ function mcm(workspace::SpectralWorkspace{T}, spec::MapType,
         throw(ArgumentError("Spectrum requested is not yet implemented."))
     end
 end
-function mcm(workspace::SpectralWorkspace{T}, spec::MapType, 
+function mcm(workspace::SpectralWorkspace{T}, spec::MapType,
              f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
     return mcm(workspace, spec, f1.name, f2.name)
 end
@@ -212,9 +216,20 @@ function mcm(spec::MapType, f1::PolarizedField{T}, f2::PolarizedField{T}) where 
     return mcm(workspace, spec, f1, f2)
 end
 
+"""
+    spectra_from_masked_maps(...)
 
+# Arguments:
+- `map_1::Map{T}`: masked map
+- `map_2::Map{T}`: masked map
+- `Bℓ_1::SpectralVector{T}`: beam associated with first map
+- `Bℓ_2::SpectralVector{T}`: beam associated with second map
+
+# Returns:
+- `Array{T,1}`: spectrum
+"""
 function spectra_from_masked_maps(
-        map_1::Map{T}, map_2::Map{T}, factorized_mcm,
+        map_1::Map{T}, map_2::Map{T}, factorized_mcm::Factorization,
         Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
     Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
@@ -224,11 +239,10 @@ end
 
 
 function spectra_from_masked_maps(
-        alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}}, 
-        factorized_mcm, Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
+        alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}},
+        factorized_mcm::Factorization, Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(alm_1, alm_2)
     Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
     ldiv!(factorized_mcm, Cl_hat)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end
-

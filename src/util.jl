@@ -33,10 +33,7 @@ function read_commented_header(filename; delim=" ", strip_spaces=true)
     return table
 end
 
-
-"""
-convenience functions for interacting with Alm using a[ℓ, m] indices
-"""
+# convenience functions for interacting with Alm using a[ℓ, m] indices
 @inline function Base.setindex!(A::Alm{T,AA}, val, ℓ::Int, m::Int) where {T,AA}
     i = almIndex(A, ℓ, m)
     A.alm[i] = val
@@ -94,6 +91,9 @@ synalm!(Cl, alms)
 ```
 """
 function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {T}
+    # This implementation could be 1.2x faster by storing the cholesky factorization, but
+    # typically you also perform two SHTs with each synalm, which dominates the cost.
+
     ncomp = size(Cl,1)
     @assert ncomp > 0
     @assert size(Cl,1) == size(Cl,2)
