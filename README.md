@@ -5,9 +5,5 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://xzackli.github.io/AngularPowerSpectra.jl/dev)
  <!--- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://xzackli.github.io/AngularPowerSpectra.jl/stable) ---> 
 
-## Notes
 
-* Computes TT, TE, EE mode-coupling matrices.
-* Computes TTTT, TTTE, TTEE, TEEE, EEEE analytic covariance matrices (Efsthathiou+06, Planck XI 2015).
-
-A flag is provided for the TEEE block, to agree with the Planck analysis.
+[AngularPowerSpectra.jl](https://github.com/xzackli/AngularPowerSpectra.jl) computes mode-coupling matrices and analytic covariance matrices for TT, TE, and EE spectra, using pseudo-Cl methods (i.e. [Hivon et al. 2002](https://arxiv.org/abs/astro-ph/0105302), [Efstathiou 2006](https://arxiv.org/abs/astro-ph/0601107), [Hamimeche and Lewis 2008](https://arxiv.org/abs/0801.0554)).

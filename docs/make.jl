@@ -15,6 +15,7 @@ makedocs(;
         "Home" => "index.md",
         "Spectra" => "spectra.md",
         "Covariance" => "covariance.md",
+        "Index" => "module_index.md",
     ],
 )
 
