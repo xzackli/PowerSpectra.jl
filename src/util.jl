@@ -62,28 +62,51 @@ end
 nside = 16
 C0 = [3.  2.;  2.  5.]
 Cl = repeat(C0, 1, 1, 3nside)  # spectra constant with ℓ
-synalm(Cl, nside)
+alms = synalm(Cl, nside)
 ```
 """
 function synalm(rng::AbstractRNG, Cl::AbstractArray{T,3}, nside::Int) where T
-    Cl_ℓmax = size(Cl,3)
     ncomp = size(Cl,1)
-    @assert size(Cl,1) == size(Cl,2)
     @assert ncomp > 0
-    lmax = 3nside-1
-
-    # covariance buffer between components
-    𝐂 = Array{T,2}(undef, (ncomp, ncomp))
-    # alm array to return
     alms = Alm{Complex{T}}[Alm{Complex{T}}(3nside-1, 3nside-1) for i in 1:ncomp]
+    synalm!(rng, Cl, alms)
+    return alms
+end
+synalm(Cl::AbstractArray{T,3}, nside::Int) where T = synalm(Random.default_rng(), Cl, nside)
+
+
+"""
+    synalm!([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, alms::Array{Alm{Complex{T}}}) where T
+
+In-place synthesis of spherical harmonic coefficients, given spectra.
+
+# Arguments:
+- `Cl::AbstractArray{T,3}`: array with dimensions of comp, comp, ℓ
+- `alms::Array{Alm{Complex{T}}}`: array of Alm to fill
+
+# Examples
+```julia
+nside = 16
+C0 = [3.  2.;  2.  5.]
+Cl = repeat(C0, 1, 1, 3nside)  # spectra constant with ℓ
+alms = Alm{Complex{Float64}}[Alm{Complex{Float64}}(3nside-1, 3nside-1) for i in 1:2]
+alms = synalm!(Cl, alms)
+```
+"""
+function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::AbstractVector{Alm{Complex{T}}}) where T
+    ncomp = size(Cl,1)
+    @assert ncomp > 0
+    @assert size(Cl,1) == size(Cl,2)
+    @assert size(alms,1) > 0
+    lmax = alms[1].lmax
 
     # first we synthesize just a unit normal for alms. we'll adjust the magnitudes later
-    # it is faster to perform randn! on arrays than one at a time
     for comp in 1:ncomp
         randn!(rng, alms[comp].alm)
     end
 
-    a_buffer = zeros(Complex{T}, ncomp)
+    𝐂 = Array{T,2}(undef, (ncomp, ncomp))  # covariance for this given ℓ
+    alm_buffer = zeros(Complex{T}, ncomp)
     for ℓ in 0:lmax
         for m in 0:ℓ
             # build the 𝐂 matrix for ℓ. only necessary to copy the upper triangle
@@ -93,15 +116,14 @@ function synalm(rng::AbstractRNG, Cl::AbstractArray{T,3}, nside::Int) where T
             cholesky!(Hermitian(𝐂))
             i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
             for comp in 1:ncomp  # copy over the random variates into buffer
-                a_buffer[comp] = alms[comp].alm[i_alm]
+                alm_buffer[comp] = alms[comp].alm[i_alm]
             end
-            lmul!(LowerTriangular(𝐂'), a_buffer)  # transform
+            lmul!(LowerTriangular(𝐂'), alm_buffer)  # transform
             for comp in 1:ncomp  # copy buffer back into the alms
-                alms[comp].alm[i_alm] = a_buffer[comp]
+                alms[comp].alm[i_alm] = alm_buffer[comp]
             end
         end
     end
-
-    return alms
 end
-synalm(Cl::AbstractArray{T,3}, nside::Int) where T = synalm(Random.default_rng(), Cl, nside)
+synalm!(Cl::AbstractArray{T,3}, alms::AbstractVector{Alm{Complex{T}}}) where T =
+    synalm!(Random.default_rng(), Cl, alms)

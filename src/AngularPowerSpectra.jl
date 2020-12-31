@@ -25,7 +25,7 @@ export PolarizedField
 export CovarianceWorkspace
 
 export binning_matrix, read_commented_header
-export synalm
+export synalm, synalm!
 
 include("util.jl")
 include("spectralarray.jl")
