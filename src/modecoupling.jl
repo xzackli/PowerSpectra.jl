@@ -178,7 +178,7 @@ end
 
 # Arguments:
 - `workspace::SpectralWorkspace{T}`: stores the SHTs of the masks
-- `spec::MapType`: the spectrum to compute
+- `spec::String`: the spectrum to compute, such as "TT", "TE", or "EE"
 - `f1_name::String`: the name of the first field
 - `f2_name::String`: the name of the second field
 
@@ -193,25 +193,25 @@ workspace = SpectralWorkspace(m1, m2)
 𝐌 = mcm(workspace, spec, "field1", "field2")
 ```
 """
-function mcm(workspace::SpectralWorkspace{T}, spec::MapType,
+function mcm(workspace::SpectralWorkspace{T}, spec::String,
              f1_name::String, f2_name::String) where {T}
-    if spec == TT
+    if spec == "TT"
         return compute_mcm_TT(workspace, f1_name, f2_name)
-    elseif spec == TE
+    elseif spec == "TE"
         return compute_mcm_TE(workspace, f1_name, f2_name)
-    elseif spec == ET
+    elseif spec == "ET"
         return compute_mcm_ET(workspace, f1_name, f2_name)
-    elseif spec == EE
+    elseif spec == "EE"
         return compute_mcm_EE(workspace, f1_name, f2_name)
     else
         throw(ArgumentError("Spectrum requested is not yet implemented."))
     end
 end
-function mcm(workspace::SpectralWorkspace{T}, spec::MapType,
+function mcm(workspace::SpectralWorkspace{T}, spec::String,
              f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
     return mcm(workspace, spec, f1.name, f2.name)
 end
-function mcm(spec::MapType, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+function mcm(spec::String, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
     workspace = SpectralWorkspace(f1, f2)
     return mcm(workspace, spec, f1, f2)
 end
