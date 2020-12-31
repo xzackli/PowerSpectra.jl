@@ -68,7 +68,7 @@ alms = synalm(Cl, nside)
 function synalm(rng::AbstractRNG, Cl::AbstractArray{T,3}, nside::Int) where T
     ncomp = size(Cl,1)
     @assert ncomp > 0
-    alms = Alm{Complex{T}}[Alm{Complex{T}}(3nside-1, 3nside-1) for i in 1:ncomp]
+    alms = [Alm{Complex{T}}(3nside-1, 3nside-1) for i in 1:ncomp]
     synalm!(rng, Cl, alms)
     return alms
 end
@@ -76,24 +76,24 @@ synalm(Cl::AbstractArray{T,3}, nside::Int) where T = synalm(Random.default_rng()
 
 
 """
-    synalm!([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, alms::Array{Alm{Complex{T}}}) where T
+    synalm!([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, alms::Vector{Alm{Complex{T}}}) where T
 
 In-place synthesis of spherical harmonic coefficients, given spectra.
 
 # Arguments:
 - `Cl::AbstractArray{T,3}`: array with dimensions of comp, comp, ℓ
-- `alms::Array{Alm{Complex{T}}}`: array of Alm to fill
+- `alms::Vector`: array of Alm to fill
 
 # Examples
 ```julia
 nside = 16
 C0 = [3.  2.;  2.  5.]
 Cl = repeat(C0, 1, 1, 3nside)  # spectra constant with ℓ
-alms = Alm{Complex{Float64}}[Alm{Complex{Float64}}(3nside-1, 3nside-1) for i in 1:2]
-alms = synalm!(Cl, alms)
+alms = [Alm{Complex{Float64}}(3nside-1, 3nside-1) for i in 1:2]
+synalm!(Cl, alms)
 ```
 """
-function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::AbstractVector{Alm{Complex{T}}}) where T
+function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {T}
     ncomp = size(Cl,1)
     @assert ncomp > 0
     @assert size(Cl,1) == size(Cl,2)
@@ -113,7 +113,7 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::AbstractVector{
             for cᵢ in 1:ncomp, cⱼ in cᵢ:ncomp
                 𝐂[cᵢ, cⱼ] = Cl[cᵢ, cⱼ, ℓ+1]
             end
-            cholesky!(Hermitian(𝐂))
+            cholesky!(Hermitian(𝐂))  # THIS IS WHERE THE ALLOCATIONS ARE
             i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
             for comp in 1:ncomp  # copy over the random variates into buffer
                 alm_buffer[comp] = alms[comp].alm[i_alm]
@@ -125,5 +125,4 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::AbstractVector{
         end
     end
 end
-synalm!(Cl::AbstractArray{T,3}, alms::AbstractVector{Alm{Complex{T}}}) where T =
-    synalm!(Random.default_rng(), Cl, alms)
+synalm!(Cl::AbstractArray{T,3}, alms::Vector) where T = synalm!(Random.default_rng(), Cl, alms)
