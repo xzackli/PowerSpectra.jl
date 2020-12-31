@@ -52,7 +52,7 @@ import AngularPowerSpectra: TT, TE, EE
         (EE, "143_hm1", "143_hm2") => clee,
         (EE, "143_hm2", "143_hm1") => clee,
         (EE, "143_hm2", "143_hm2") => clee ,
-        
+
         (TE, "143_hm1", "143_hm1") => clte,
         (TE, "143_hm1", "143_hm2") => clte,
         (TE, "143_hm2", "143_hm1") => clte,
@@ -94,7 +94,7 @@ import AngularPowerSpectra: TT, TE, EE
 
 
     # test decoupling
-    𝐌 = mcm(EE, m1, m2)
+    𝐌 = mcm("EE", m1, m2)
     C_decoupled = deepcopy(C)
     decouple_covmat!(C_decoupled, lu(𝐌.parent'), lu(𝐌.parent'))
     @test isapprox((C.parent), 𝐌.parent * C_decoupled.parent * 𝐌.parent' )
