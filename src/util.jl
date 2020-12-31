@@ -14,12 +14,13 @@ end
 
 
 function read_commented_header(filename; delim=" ", strip_spaces=true)
-    header = CSV.read(filename, DataFrame; header=false, delim=delim, ignorerepeated=true, limit=1, type=String)
+    header = CSV.read(filename, DataFrame; header=false, delim=delim, ignorerepeated=true,
+        limit=1, type=String)
     if strip_spaces
-        headers = [String(strip(header[1,"Column$(i)"])) for i in 1:ncol(header)] 
-        
+        headers = [String(strip(header[1,"Column$(i)"])) for i in 1:ncol(header)]
+
     else
-        headers = [header[1,"Column$(i)"] for i in 1:ncol(header)] 
+        headers = [header[1,"Column$(i)"] for i in 1:ncol(header)]
     end
     if headers[1] == "#"   # skip the #
         headers = headers[2:end]
@@ -27,68 +28,80 @@ function read_commented_header(filename; delim=" ", strip_spaces=true)
         headers[1] = String(strip(headers[1][2:end]))
     end
 
-    table = CSV.read(filename, DataFrame; comment="#", header=headers, delim=delim, ignorerepeated=true)
+    table = CSV.read(filename, DataFrame; comment="#", header=headers, delim=delim,
+        ignorerepeated=true)
     return table
 end
 
-# function generate_correlated_noise(nside, σ, nltt)
-#     noisemap = Map{Float64, RingOrder}(nside)
-#     res = noisemap.resolution
 
-#     rings = Array{RingInfo, 1}(undef, Threads.nthreads())
-#     cov_buffers = Array{Array{Float64, 2}, 1}(undef, Threads.nthreads())
-#     Threads.@threads for i in 1:Threads.nthreads()
-#         rings[i] = RingInfo(0, 0, 0, 0, 0)
-#         cov_buffers[i] = Array{Float64, 2}(undef, (4nside, 4nside))
-#     end
-
-#     @threads for ring_index in 1:(4nside - 1)
-#         thid = Threads.threadid()
-#         ring = rings[thid]
-#         getringinfo!(res, ring_index, ring)
-#         npix = ring.numOfPixels
-#         pixsize = 2π / npix
-#         lastpix = ring.firstPixIdx + npix - 1
-#         ring_vector = view(noisemap.pixels, ring.firstPixIdx:lastpix)
-#         cov_pp = view(cov_buffers[thid], 1:npix, 1:npix)
-
-#         for m ∈ 1:npix, n ∈ 1:npix
-#             Δϕ = abs(m - n) * pixsize
-#             Δϕ = min(Δϕ, 2π - Δϕ)
-#             cov_pp[m, n] = exp(-0.5 * (Δϕ / σ))
-#         end
-        
-#         dist = MvNormal(zeros(npix), Matrix(Hermitian(cov_pp)))
-#         rand!(dist, ring_vector)
-#     end
-
-#     alms = map2alm(noisemap)
-
-#     n0 = 1.5394030890788515 / nside
-#     for l in 0:alms.lmax
-#         for m in 0:l
-#             index = almIndex(alms, l, m)
-#             alms.alm[index] *= sqrt(l / n0 * nltt[l+1])
-#         end
-#     end
-
-#     alm2map(alms, nside)
-#     # alms
-# end
+"""
+convenience functions for interacting with Alm using a[ℓ, m] indices
+"""
+@inline function Base.setindex!(A::Alm{T,AA}, val, ℓ::Int, m::Int) where {T,AA}
+    i = almIndex(A, ℓ, m)
+    A.alm[i] = val
+end
+@inline function Base.getindex(A::Alm{T,AA}, ℓ::Int, m::Int) where {T, AA}
+    i = almIndex(A, ℓ, m)
+    A.alm[i]
+end
 
 
+"""
+    synalm([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, nside::Int) where T
 
-# function get_ell_array(lmax)
-#     nalm = numberOfAlms(lmax, lmax)
-#     ell_alm_array = zeros(Int, nalm)
-#     zero_alm = Alm(lmax, lmax, Zeros{Complex{Float64}}(nalm))
+# Arguments:
+- `Cl::AbstractArray{T,3}`: array with dimensions of comp, comp, ℓ
+- `nside::Int`: healpix resolution
 
-#     for l in 0:lmax
-#         for m in 0:l 
-#             index = almIndex(zero_alm, l, m)
-#             ell_alm_array[index] = l
-#         end
-#     end
-#     return ell_alm_array
-# end
+# Returns:
+- `Vector{Alm{T}}`: spherical harmonics realizations for each component
 
+# Examples
+```julia
+nside = 16
+C0 = [3.  2.;  2.  5.]
+Cl = repeat(C0, 1, 1, 3nside)  # spectra constant with ℓ
+synalm(Cl, nside)
+```
+"""
+function synalm(rng::AbstractRNG, Cl::AbstractArray{T,3}, nside::Int) where T
+    Cl_ℓmax = size(Cl,3)
+    ncomp = size(Cl,1)
+    @assert size(Cl,1) == size(Cl,2)
+    @assert ncomp > 0
+    lmax = 3nside-1
+
+    # covariance buffer between components
+    𝐂 = Array{T,2}(undef, (ncomp, ncomp))
+    # alm array to return
+    alms = Alm{Complex{T}}[Alm{Complex{T}}(3nside-1, 3nside-1) for i in 1:ncomp]
+
+    # first we synthesize just a unit normal for alms. we'll adjust the magnitudes later
+    # it is faster to perform randn! on arrays than one at a time
+    for comp in 1:ncomp
+        randn!(rng, alms[comp].alm)
+    end
+
+    a_buffer = zeros(Complex{T}, ncomp)
+    for ℓ in 0:lmax
+        for m in 0:ℓ
+            # build the 𝐂 matrix for ℓ. only necessary to copy the upper triangle
+            for cᵢ in 1:ncomp, cⱼ in cᵢ:ncomp
+                𝐂[cᵢ, cⱼ] = Cl[cᵢ, cⱼ, ℓ+1]
+            end
+            cholesky!(Hermitian(𝐂))
+            i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
+            for comp in 1:ncomp  # copy over the random variates into buffer
+                a_buffer[comp] = alms[comp].alm[i_alm]
+            end
+            lmul!(LowerTriangular(𝐂'), a_buffer)  # transform
+            for comp in 1:ncomp  # copy buffer back into the alms
+                alms[comp].alm[i_alm] = a_buffer[comp]
+            end
+        end
+    end
+
+    return alms
+end
+synalm(Cl::AbstractArray{T,3}, nside::Int) where T = synalm(Random.default_rng(), Cl, nside)

@@ -18,7 +18,9 @@ struct PolarizedField{T} <: AbstractField{T}
 end
 
 
-function PolarizedField(name::String, maskT::Map{T}, maskP::Map{T}, σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA}, beamT::AbstractVector{T}, beamP::AbstractVector{T}) where {T, O, AA}
+function PolarizedField(name::String, maskT::Map{T}, maskP::Map{T},
+        σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA},
+        beamT::AbstractVector{T}, beamP::AbstractVector{T}) where {T, O, AA}
     σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
     return PolarizedField{T}(name, maskT, maskP, σ², beamT, beamP)
 end
@@ -74,9 +76,9 @@ function SpectralWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}; lmax:
     lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
 
     mask_alm = Dict{Tuple{String, MapType}, Alm{Complex{T}}}(
-        (m_i.name, TT) => map2alm(m_i.maskT), 
-        (m_j.name, TT) => map2alm(m_j.maskT), 
-        (m_i.name, PP) => map2alm(m_i.maskP), 
+        (m_i.name, TT) => map2alm(m_i.maskT),
+        (m_j.name, TT) => map2alm(m_j.maskT),
+        (m_i.name, PP) => map2alm(m_i.maskP),
         (m_j.name, PP) => map2alm(m_j.maskP))
 
     return SpectralWorkspace{T}(field_names, lmax, mask_alm)
@@ -93,14 +95,14 @@ struct CovarianceWorkspace{T <: Real}
 end
 
 
-function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T}, 
+function CovarianceWorkspace(m_i::PolarizedField{T}, m_j::PolarizedField{T},
                              m_p::PolarizedField{T}, m_q::PolarizedField{T}; lmax::Int=0) where {T}
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
     lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
     mask_p = Dict{Tuple{String, MapType},Map{T,RingOrder}}(
-        (m_i.name, TT) => m_i.maskT, (m_j.name, TT) => m_j.maskT, 
+        (m_i.name, TT) => m_i.maskT, (m_j.name, TT) => m_j.maskT,
         (m_p.name, TT) => m_p.maskT, (m_q.name, TT) => m_q.maskT,
-        (m_i.name, PP) => m_i.maskP, (m_j.name, PP) => m_j.maskP, 
+        (m_i.name, PP) => m_i.maskP, (m_j.name, PP) => m_j.maskP,
         (m_p.name, PP) => m_p.maskP, (m_q.name, PP) => m_q.maskP)
     weight_p = Dict{Tuple{String, MapType},Map{T,RingOrder}}(
         (m_i.name, II) => m_i.σ².i, (m_i.name, QQ) => m_i.σ².q, (m_i.name, UU) => m_i.σ².u,
@@ -164,7 +166,7 @@ function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p
     else
         wterms_X = (X,)
     end
-    
+
     if Y == TT
         wterms_Y = (II,)
     elseif Y == PP

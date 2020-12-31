@@ -11,7 +11,7 @@ import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
-import LinearAlgebra: ldiv!, rdiv!, Factorization
+import LinearAlgebra: ldiv!, rdiv!, lmul!, Factorization, Hermitian, LowerTriangular, cholesky!, isposdef
 # import Distributions: MvNormal
 using Random
 using CSV, DataFrames
@@ -24,8 +24,8 @@ export Field, SpectralWorkspace, SpectralVector, SpectralArray
 export PolarizedField
 export CovarianceWorkspace
 
-export binning_matrix
-export read_commented_header
+export binning_matrix, read_commented_header
+export synalm
 
 include("util.jl")
 include("spectralarray.jl")
