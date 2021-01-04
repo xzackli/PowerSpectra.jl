@@ -106,21 +106,49 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
     end
 
     𝐂 = Array{T,2}(undef, (ncomp, ncomp))  # covariance for this given ℓ
-    alm_buffer = zeros(Complex{T}, ncomp)
+
+    alm_out = zeros(Complex{T}, ncomp)
+    alm_in = zeros(Complex{T}, ncomp)
+
     for ℓ in 0:lmax
-        # build the 𝐂 matrix for ℓ. only necessary to copy the upper triangle
-        for cᵢ in 1:ncomp, cⱼ in cᵢ:ncomp
+        # build the 𝐂 matrix for ℓ
+        for cᵢ in 1:ncomp, cⱼ in 1:ncomp
             𝐂[cᵢ, cⱼ] = Cl[cᵢ, cⱼ, ℓ+1]
         end
-        cholesky!(Hermitian(𝐂))  # THIS IS WHERE THE ALLOCATIONS ARE
-        for m in 0:ℓ
-            i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
-            for comp in 1:ncomp  # copy over the random variates into buffer
-                alm_buffer[comp] = alms[comp].alm[i_alm]
+
+        if iszero(𝐂)
+            for m in 0:ℓ
+                i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
+                for comp in 1:ncomp  # copy buffer back into the alms
+                    alms[comp].alm[i_alm] = zero(T)
+                end
             end
-            lmul!(LowerTriangular(𝐂'), alm_buffer)  # transform
-            for comp in 1:ncomp  # copy buffer back into the alms
-                alms[comp].alm[i_alm] = alm_buffer[comp]
+        else
+            h𝐂 = Hermitian(𝐂)
+            if !isposdef(h𝐂)
+                𝐂 .= sqrt(h𝐂)
+                for m in 0:ℓ
+                    i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
+                    for comp in 1:ncomp  # copy over the random variates into buffer
+                        alm_in[comp] = alms[comp].alm[i_alm]
+                    end
+                    mul!(alm_out, h𝐂, alm_in)
+                    for comp in 1:ncomp  # copy buffer back into the alms
+                        alms[comp].alm[i_alm] = alm_out[comp]
+                    end
+                end
+            else
+                cholesky!(h𝐂)
+                for m in 0:ℓ
+                    i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
+                    for comp in 1:ncomp  # copy over the random variates into buffer
+                        alm_in[comp] = alms[comp].alm[i_alm]
+                    end
+                    lmul!(LowerTriangular(𝐂'), alm_in)  # transform
+                    for comp in 1:ncomp  # copy buffer back into the alms
+                        alms[comp].alm[i_alm] = alm_in[comp]
+                    end
+                end
             end
         end
     end
