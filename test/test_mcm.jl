@@ -21,7 +21,7 @@ using NPZ
     reference = readdlm("data/mcm_TT_diag.txt")
     @test all(reference .≈ diag(M.parent)[3:767])
     map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
-    Cl_hat = spectra_from_masked_maps(map1 * mask, map1 * mask, lu(M.parent), flat_beam, flat_beam)
+    Cl_hat = map2cl(map1 * mask, map1 * mask, lu(M.parent), flat_beam, flat_beam)
     reference_spectrum = readdlm("data/example_TT_spectrum.txt")
     @test all(reference_spectrum .≈ Cl_hat[3:end])
 end

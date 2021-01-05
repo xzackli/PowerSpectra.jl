@@ -2,6 +2,7 @@ module AngularPowerSpectra
 
 import ThreadPools: @qthreads
 import Base.Threads: @threads
+import Base: copyto!
 import UnsafeArrays: uview, UnsafeArray
 import ThreadSafeDicts: ThreadSafeDict
 # import DataStructures: DefaultDict
@@ -17,21 +18,24 @@ using Random
 using CSV, DataFrames
 # import LoopVectorization: @avx
 
-export mcm, decouple_covmat!, spectra_from_masked_maps
-export compute_covmat_TTTT, compute_covmat_EEEE
-export Field, SpectralWorkspace, SpectralVector, SpectralArray
-
-export PolarizedField
-export CovarianceWorkspace
-
-export binning_matrix, read_commented_header
-export synalm, synalm!
 
 include("util.jl")
 include("spectralarray.jl")
 include("workspace.jl")
 include("modecoupling.jl")
 include("covariance.jl")
+
+
+export mcm, decouple_covmat!, mask!, map2cl, alm2cl
+export compute_covmat_TTTT, compute_covmat_EEEE
+export Field, SpectralWorkspace, SpectralVector, SpectralArray
+export channelindex
+
+export PolarizedField
+export CovarianceWorkspace
+
+export binning_matrix, read_commented_header
+export synalm, synalm!
 
 
 end

@@ -217,32 +217,62 @@ function mcm(spec::String, f1::PolarizedField{T}, f2::PolarizedField{T}) where {
 end
 
 """
-    spectra_from_masked_maps(...)
+    map2cl(...)
 
 # Arguments:
 - `map_1::Map{T}`: masked map
 - `map_2::Map{T}`: masked map
+- `factorized_mcm::Factorization`: lu(mode coupling matrix)
 - `Bℓ_1::SpectralVector{T}`: beam associated with first map
 - `Bℓ_2::SpectralVector{T}`: beam associated with second map
 
 # Returns:
 - `Array{T,1}`: spectrum
 """
-function spectra_from_masked_maps(
+function map2cl(
         map_1::Map{T}, map_2::Map{T}, factorized_mcm::Factorization,
         Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
+    return alm2cl(map2alm(map_1), map2alm(map_2), factorized_mcm, Bℓ_1, Bℓ_2)
+end
+
+function map2cl(
+        map_1::Map{T}, map_2::Map{T}, factorized_mcm::Factorization) where T
     Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
-    Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
-    ldiv!(factorized_mcm, Cl_hat)
+    return alm2cl(map2alm(map_1), map2alm(map_2), factorized_mcm)
+end
+
+
+function alm2cl(
+        alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}},
+        factorized_mcm::Factorization, Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
+    Cl_hat = alm2cl(alm_1, alm_2, factorized_mcm)
     return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
 end
 
 
-function spectra_from_masked_maps(
-        alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}},
-        factorized_mcm::Factorization, Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
-    Cl_hat = alm2cl(alm_1, alm_2)
+function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, factorized_mcm::Factorization) where {T<:Number}
+    Cl_hat = alm2cl(alm₁, alm₂)
     Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
     ldiv!(factorized_mcm, Cl_hat)
-    return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
+    return Cl_hat
+end
+
+function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::AbstractArray) where {T<:Number}
+    return alm2cl(alm₁, alm₂, lu(mcm))
+end
+
+
+"""
+    mask!
+
+Convenience function for applying a mask to a map.
+"""
+function mask!(m::Map{T}, mask::Map{T}) where T
+    m.pixels .*= mask.pixels
+end
+
+function mask!(m::PolarizedMap{T}, maskT::Map{T}, maskP::Map{T}) where T
+    m.i.pixels .*= maskT.pixels
+    m.q.pixels .*= maskP.pixels
+    m.u.pixels .*= maskP.pixels
 end
