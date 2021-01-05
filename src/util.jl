@@ -104,9 +104,8 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
     for comp in 1:ncomp
         randn!(rng, alms[comp].alm)
     end
-
     𝐂 = Array{T,2}(undef, (ncomp, ncomp))  # covariance for this given ℓ
-
+    h𝐂 = Hermitian(Array{T,2}(undef, (ncomp, ncomp)))  # hermitian buffer
     alm_out = zeros(Complex{T}, ncomp)
     alm_in = zeros(Complex{T}, ncomp)
 
@@ -124,9 +123,10 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
                 end
             end
         else
-            h𝐂 = Hermitian(𝐂)
-            if !isposdef(h𝐂)
-                𝐂 .= sqrt(h𝐂)
+            h𝐂 .= Hermitian(𝐂)
+            cholesky_factorizable = isposdef!(h𝐂)
+            if !cholesky_factorizable
+                h𝐂 .= sqrt(𝐂)
                 for m in 0:ℓ
                     i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
                     for comp in 1:ncomp  # copy over the random variates into buffer
@@ -138,13 +138,13 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
                     end
                 end
             else
-                cholesky!(h𝐂)
+                # cholesky!(h𝐂)  # we already cholesky'd by calling isposdef!
                 for m in 0:ℓ
                     i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
                     for comp in 1:ncomp  # copy over the random variates into buffer
                         alm_in[comp] = alms[comp].alm[i_alm]
                     end
-                    lmul!(LowerTriangular(𝐂'), alm_in)  # transform
+                    lmul!(LowerTriangular(h𝐂'), alm_in)  # transform
                     for comp in 1:ncomp  # copy buffer back into the alms
                         alms[comp].alm[i_alm] = alm_in[comp]
                     end
