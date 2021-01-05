@@ -161,13 +161,13 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
             h𝐂 .= Hermitian(𝐂)
             cholesky_factorizable = isposdef!(h𝐂)
             if !cholesky_factorizable
-                h𝐂 .= sqrt(𝐂)
+                𝐂 .= sqrt(𝐂)
                 for m in 0:ℓ
                     i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
                     for comp in 1:ncomp  # copy over the random variates into buffer
                         alm_in[comp] = alms[comp].alm[i_alm]
                     end
-                    mul!(alm_out, h𝐂, alm_in)
+                    mul!(alm_out, 𝐂, alm_in)
                     for comp in 1:ncomp  # copy buffer back into the alms
                         alms[comp].alm[i_alm] = alm_out[comp]
                     end
