@@ -5,7 +5,7 @@ import Base.Threads: @threads
 import Base: copyto!
 import UnsafeArrays: uview, UnsafeArray
 import ThreadSafeDicts: ThreadSafeDict
-# import DataStructures: DefaultDict
+import DataStructures: DefaultDict
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
     RingInfo, getringinfo!, almIndex, alm2map, nside2npix
@@ -32,7 +32,7 @@ export Field, SpectralWorkspace, SpectralVector, SpectralArray
 export channelindex
 
 export PolarizedField
-export CovarianceWorkspace
+export CovarianceWorkspace, coupled_covmat
 
 export binning_matrix, read_commented_header
 export synalm, synalm!

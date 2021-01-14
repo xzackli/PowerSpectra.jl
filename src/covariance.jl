@@ -7,6 +7,30 @@ function decouple_covmat!(𝐂::SpectralArray{T,2},
 end
 
 
+# convenience
+function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace{T},
+                        spectra, rescaling_coefficients::Dict; lmax=0) where T
+    if (ch1=="TT") && (ch2=="TT")
+        return compute_coupled_covmat_TTTT(workspace, spectra, rescaling_coefficients; lmax=lmax)
+    elseif (ch1=="EE") && (ch2=="EE")
+        return compute_coupled_covmat_EEEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
+    elseif (ch1=="TE") && (ch2=="TE")
+        return compute_coupled_covmat_TETE(workspace, spectra, rescaling_coefficients; lmax=lmax)
+    elseif (ch1=="TT") && ( ch2=="TE")
+        return compute_coupled_covmat_TTTE(workspace, spectra, rescaling_coefficients; lmax=lmax)
+    elseif (ch1=="TE") && (ch2=="EE")
+        return compute_coupled_covmat_TEEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
+    end
+end
+function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace{T},
+                        spectra; lmax=0) where T
+
+    identity_spectrum = SpectralVector(ones(lmax+1))
+    rescaling_coefficients = DefaultDict(identity_spectrum)
+    coupled_covmat(ch1, ch2, workspace, spectra, rescaling_coefficients; lmax=lmax)
+end
+
+
 function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra,
                                      rescaling_coefficients; lmax=0) where {T <: Real}
 
