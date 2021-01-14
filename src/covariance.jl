@@ -9,7 +9,13 @@ end
 
 # convenience
 function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace{T},
-                        spectra, rescaling_coefficients::Dict; lmax=0) where T
+                        spectra; rescaling_coefficients::Dict=Dict(), lmax=0) where T
+
+    lmax = iszero(lmax) ? workspace.lmax : lmax
+    if length(rescaling_coefficients) == 0
+        identity_spectrum = SpectralVector(ones(lmax+1))
+        rescaling_coefficients = DefaultDict(identity_spectrum)
+    end
     if (ch1=="TT") && (ch2=="TT")
         return compute_coupled_covmat_TTTT(workspace, spectra, rescaling_coefficients; lmax=lmax)
     elseif (ch1=="EE") && (ch2=="EE")
@@ -22,14 +28,6 @@ function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace
         return compute_coupled_covmat_TEEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
     end
 end
-function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace{T},
-                        spectra; lmax=0) where T
-
-    identity_spectrum = SpectralVector(ones(lmax+1))
-    rescaling_coefficients = DefaultDict(identity_spectrum)
-    coupled_covmat(ch1, ch2, workspace, spectra, rescaling_coefficients; lmax=lmax)
-end
-
 
 function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra,
                                      rescaling_coefficients; lmax=0) where {T <: Real}
