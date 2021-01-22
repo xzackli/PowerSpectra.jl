@@ -84,11 +84,13 @@ M₋ * inv(M₊) * M₋ .- M_EB[3:end,3:end] * inv(M_EE[3:end,3:end]) * M_EB[3:e
 
 ##
 M22 = AngularPowerSpectra.mcm22(m1, m2)
-ĉ_EE = alm2cl(a1[2], a2[2])
-ĉ_BB = alm2cl(a1[3], a2[3])
-ctot = qr(M22, Val(true)) \ vcat(ĉ_EE, ĉ_BB)
-c_EE = ctot[1:num_ell]
-c_BB = ctot[num_ell+1:2num_ell];
+c_EE, c_BB = alm2cl((a1[2], a1[3]), (a2[2], a2[3]), M22)
+# ĉ_EE = alm2cl(a1[2], a2[2])
+# ĉ_BB = alm2cl(a1[3], a2[3])
+# ctot = qr(M22, Val(true)) \ vcat(ĉ_EE, ĉ_BB)
+# c_EE = ctot[1:num_ell]
+# c_BB = ctot[num_ell+1:2num_ell];
+
 
 ##
 
