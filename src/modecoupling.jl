@@ -30,6 +30,23 @@ function Ξ_EE(𝐖::SpectralVector{T, AA},
     return Ξ / (4π)
 end
 
+# Projector function for EE. Goes into the mode-coupling matrix.
+# Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
+function Ξ_EB(𝐖::SpectralVector{T, AA},
+              w3j²₂₂::WignerSymbolVector{T, Int},
+              ℓ₁::Int, ℓ₂::Int) where {T, AA}
+    Ξ = zero(T)
+    ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(𝐖))
+    ℓ₃_end = min(lastindex(w3j²₂₂), lastindex(𝐖))
+    if iseven(ℓ₁ + ℓ₂ + ℓ₃_start)
+        ℓ₃_start += 1
+    end
+    @inbounds @simd for ℓ₃ ∈ ℓ₃_start:2:ℓ₃_end
+        Ξ += (2ℓ₃ + 1) * w3j²₂₂[ℓ₃] * 𝐖[ℓ₃]
+    end
+    return Ξ / (4π)
+end
+
 
 # Projector function for TE. Goes into the mode-coupling matrix.
 # Note that w3j₀₀₂₂ refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
@@ -173,6 +190,40 @@ function compute_mcm_ET(workspace::SpectralWorkspace{T},
 end
 
 
+function loop_mcm_EB!(𝐌::SpectralArray{T,2}, lmax::Integer,
+                      Vᵢⱼ::SpectralVector{T}) where {T}
+    thread_buffers = get_thread_buffers(T, 2lmax+1)
+
+    @qthreads for ℓ₁ in 2:lmax
+        buffer = thread_buffers[Threads.threadid()]
+        for ℓ₂ in ℓ₁:lmax
+            w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
+            buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
+            w3j²₂₂ = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
+            wigner3j_f!(w, w3j²₂₂)  # deposit symbols into buffer
+            w3j²₂₂.symbols .= w3j²₂₂.symbols .^ 2  # square the symbols
+            Ξ = Ξ_EB(Vᵢⱼ, w3j²₂₂, ℓ₁, ℓ₂)
+            𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
+        end
+    end
+    𝐌[0,0] = one(T)
+    𝐌[1,1] = one(T)
+    return 𝐌
+end
+
+function compute_mcm_EB(workspace::SpectralWorkspace{T},
+                        name_i::String, name_j::String; lmax::Int=0) where {T}
+
+    lmax = iszero(lmax) ? workspace.lmax : lmax
+    Vᵢⱼ = SpectralVector(alm2cl(
+        workspace.mask_alm[name_i, PP],
+        workspace.mask_alm[name_j, PP]))
+    𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    return loop_mcm_EB!(𝐌, lmax, Vᵢⱼ)
+end
+
+
 """
     mcm(workspace::SpectralWorkspace{T}, spec::MapType, f1_name::String, f2_name::String) where {T}
 
@@ -203,8 +254,10 @@ function mcm(workspace::SpectralWorkspace{T}, spec::String,
         return compute_mcm_ET(workspace, f1_name, f2_name)
     elseif spec == "EE"
         return compute_mcm_EE(workspace, f1_name, f2_name)
+    elseif spec == "EB"
+        return compute_mcm_EB(workspace, f1_name, f2_name)
     else
-        throw(ArgumentError("Spectrum requested is not yet implemented."))
+        throw(ArgumentError("Spectrum requested is not implemented."))
     end
 end
 function mcm(workspace::SpectralWorkspace{T}, spec::String,
@@ -215,6 +268,32 @@ function mcm(spec::String, f1::PolarizedField{T}, f2::PolarizedField{T}) where {
     workspace = SpectralWorkspace(f1, f2)
     return mcm(workspace, spec, f1, f2)
 end
+
+
+# EXPERIMENTAL
+# EE and BB with coupling between them!
+function mcm22(f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+    workspace = SpectralWorkspace(f1, f2)
+    M_EE = mcm(workspace, "EE", f1.name, f2.name).parent
+    M_EB = mcm(workspace, "EB", f1.name, f2.name).parent
+    num_ell = size(M_EE,1)
+    M22 = zeros(2num_ell, 2num_ell)
+
+    M22[1:num_ell,1:num_ell] .= M_EE
+    M22[num_ell+1:2num_ell,num_ell+1:2num_ell] .= M_EE
+    M22[1:num_ell,num_ell+1:2num_ell] .= M_EB
+    M22[num_ell+1:2num_ell,1:num_ell] .= M_EB
+
+    return M22  # probably need to do pivoted qr as this may be nearly rank deficient
+end
+
+# i.e.
+# ĉ_EE = alm2cl(a1[2], a2[2])
+# ĉ_BB = alm2cl(a1[3], a2[3])
+# ctot = qr(M22, Val(true)) \ vcat(ĉ_EE, ĉ_BB)
+# c_EE = ctot[1:num_ell]
+# c_BB = ctot[num_ell+1:2num_ell];
+
 
 """
     map2cl(...)

@@ -11,4 +11,5 @@ function SpectralArray(A::AbstractArray{T,N}) where {T,N}
     SpectralArray{T,N,typeof(A)}(A, map(x->-1, size(A)))
 end
 
-LinearAlgebra.lu(a::SpectralArray{T,2,AA}) where {T,AA} = LinearAlgebra.lu(a.parent::AA)
+SA_lu(a::SpectralArray{T,2,AA}) where {T,AA} = LinearAlgebra.lu(a.parent::AA)
+SA_inv(a::SpectralArray{T,2,AA}) where {T,AA} = LinearAlgebra.inv(a.parent::AA)
