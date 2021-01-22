@@ -272,8 +272,7 @@ end
 
 # EXPERIMENTAL
 # EE and BB with coupling between them!
-function mcm22(f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
-    workspace = SpectralWorkspace(f1, f2)
+function mcm22(workspace, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
     M_EE = mcm(workspace, "EE", f1.name, f2.name).parent
     M_EB = mcm(workspace, "EB", f1.name, f2.name).parent
     num_ell = size(M_EE,1)
