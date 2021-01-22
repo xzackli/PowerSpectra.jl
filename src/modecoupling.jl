@@ -285,6 +285,7 @@ function mcm22(workspace, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T
 
     return M22  # probably need to do pivoted qr as this may be nearly rank deficient
 end
+mcm22(f1, f2) = mcm22(SpectralWorkspace(f1, f2), f1, f2)
 
 # i.e.
 # ĉ_EE = alm2cl(a1[2], a2[2])
