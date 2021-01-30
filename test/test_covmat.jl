@@ -9,6 +9,22 @@ using NPZ
 import AngularPowerSpectra: TT, TE, EE
 
 
+@testset "Basic Covmat Mode Decoupling" begin
+    A = [1.0 0.2 0.3; 0.4 2.0 0.15; 0.3 0.1 1.44]
+    B1 = [1.2 0.6 0.1; 0.3 1.4 0.5; 0.44 0.2 1.3]
+    B2 = [1.6 0.4 0.1; 0.3 1.4 0.9; 0.45 0.8 1.7]
+    Cref = inv(B1) * (A) * (inv(B2)')
+    C = deepcopy(A)
+    decouple_covmat!(SpectralArray(B1), SpectralArray(C), SpectralArray(B2))
+    @test all(Cref .≈ C)
+
+    Cref = inv(B1[2:end,2:end]) * (A[2:end,2:end]) * (inv(B2[2:end,2:end])')
+    C = deepcopy(A)
+    decouple_covmat!(SpectralArray(B1), SpectralArray(C), SpectralArray(B2); lmin=1)
+    @test all(Cref .≈ C[2:end,2:end])
+end
+
+##
 @testset "Covariance Matrix Diagonal in the Isotropic Noise Limit" begin
     nside = 256
     mask1_T = readMapFromFITS("data/mask1_T.fits", 1, Float64)

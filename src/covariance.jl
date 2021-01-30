@@ -6,6 +6,16 @@ function decouple_covmat!(𝐂::SpectralArray{T,2},
     return 𝐂
 end
 
+# decouple a covmat. uses a diagonal preconditioner for added stability
+function decouple_covmat!(B1::A, M::A, B2::A; lmin=0) where {A <: SpectralArray}
+
+    B1 = B1[lmin:end, lmin:end]
+    B2 = B2[lmin:end, lmin:end]
+    Δi = firstindex(M)
+    C = @view M.parent[(lmin+Δi):end, (lmin+Δi):end]
+    rdiv!(C', lu(B1'))
+    rdiv!(C, lu(B2'))
+end
 
 # convenience
 function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace{T},
