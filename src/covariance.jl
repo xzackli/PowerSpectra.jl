@@ -6,8 +6,14 @@ function decouple_covmat!(𝐂::SpectralArray{T,2},
     return 𝐂
 end
 
-# decouple a covmat. uses a diagonal preconditioner for added stability
-function decouple_covmat!(B1::A, M::A, B2::A; lmin=0) where {A <: SpectralArray}
+
+"""
+    decouple_covmat!(M, B1, B2; lmin=2) -> M
+
+Decouples a covariance matrix starting at lmin, performing B₁⁻¹ × M × (B₂⁻¹)^†
+by mutating M.
+"""
+function decouple_covmat!(M::A, B1::A, B2::A; lmin=2) where {A <: SpectralArray}
 
     B1 = B1[lmin:end, lmin:end]
     B2 = B2[lmin:end, lmin:end]
