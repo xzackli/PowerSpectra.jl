@@ -9,7 +9,7 @@ end
 
 # convenience
 function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace{T},
-                        spectra; rescaling_coefficients::Dict=Dict(), lmax=0) where T
+                        spectra, rescaling_coefficients::Dict=Dict(), lmax=0) where T
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     if length(rescaling_coefficients) == 0
@@ -24,9 +24,12 @@ function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace
         return compute_coupled_covmat_TETE(workspace, spectra, rescaling_coefficients; lmax=lmax)
     elseif (ch1=="TT") && ( ch2=="TE")
         return compute_coupled_covmat_TTTE(workspace, spectra, rescaling_coefficients; lmax=lmax)
+    elseif (ch1=="TT") && ( ch2=="EE")
+        return compute_coupled_covmat_TTEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
     elseif (ch1=="TE") && (ch2=="EE")
         return compute_coupled_covmat_TEEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
     end
+    print("SOMETHING HAS GONE WRONG $(ch1) $(ch2)")
 end
 
 function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra,
@@ -67,7 +70,7 @@ function loop_covTTTT!(𝐂::SpectralArray{T,2}, lmax::Integer,
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
 
-    @qthreads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
@@ -128,7 +131,7 @@ function loop_covEEEE!(𝐂::SpectralArray{T,2}, lmax::Integer,
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
 
-    @qthreads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
@@ -145,7 +148,6 @@ function loop_covEEEE!(𝐂::SpectralArray{T,2}, lmax::Integer,
                 sqrt(EEjp[ℓ₁] * EEjp[ℓ₂]) * Ξ_EE(W6, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_iq[ℓ₂] +
                 Ξ_EE(W7, w3j², ℓ₁, ℓ₂) * r_ℓ_ip[ℓ₁] * r_ℓ_jq[ℓ₁] * r_ℓ_ip[ℓ₂] * r_ℓ_jq[ℓ₂] +
                 Ξ_EE(W8, w3j², ℓ₁, ℓ₂) * r_ℓ_iq[ℓ₁] * r_ℓ_jp[ℓ₁] * r_ℓ_iq[ℓ₂] * r_ℓ_jp[ℓ₂])
-
             𝐂[ℓ₂, ℓ₁] = 𝐂[ℓ₁, ℓ₂]
         end
     end
@@ -353,7 +355,7 @@ function loop_covTEEE_planck!(𝐂::SpectralArray{T,2}, lmax::Integer,
                               W1, W2, W3, W4) where {T}
 
     thread_buffers = get_thread_buffers(T, 2 * lmax + 1)
-    @qthreads for ℓ₁ in 0:lmax
+    @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence

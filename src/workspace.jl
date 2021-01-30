@@ -25,6 +25,15 @@ function PolarizedField(name::String, maskT::Map{T}, maskP::Map{T},
     return PolarizedField{T}(name, maskT, maskP, σ², beamT, beamP)
 end
 
+function PolarizedField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA},
+        σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA}) where {T, O, AA}
+    nside = maskT.resolution.nside
+    one_beam = SpectralVector(ones(3nside))
+    zero_map = Map{T, O, AA}(zeros(nside2npix(nside)))
+    σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
+    return PolarizedField{T}(name, maskT, maskP, σ², one_beam, one_beam)
+end
+
 function PolarizedField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA}) where {T, O, AA}
     nside = maskT.resolution.nside
     one_beam = SpectralVector(ones(3nside))

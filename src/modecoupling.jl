@@ -353,6 +353,11 @@ function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::AbstractA
     return alm2cl(alm₁, alm₂, lu(mcm))
 end
 
+function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::OffsetArray) where {T<:Number}
+    return alm2cl(alm₁, alm₂, lu(mcm.parent))
+end
+
+
 
 function alm2cl(a1_E_B::Tuple{Alm, Alm}, a2_E_B::Tuple{Alm, Alm}, mcm)
     ĉ_EE = alm2cl(a1_E_B[1], a2_E_B[1])
