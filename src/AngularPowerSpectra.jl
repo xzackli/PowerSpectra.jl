@@ -26,7 +26,7 @@ include("modecoupling.jl")
 include("covariance.jl")
 
 
-export mcm, decouple_covmat!, mask!, map2cl, alm2cl
+export mcm, decouple_covmat, mask!, map2cl, alm2cl
 export compute_covmat_TTTT, compute_covmat_EEEE
 export Field, SpectralWorkspace, SpectralVector, SpectralArray
 export channelindex

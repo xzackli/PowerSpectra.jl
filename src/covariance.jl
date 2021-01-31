@@ -1,26 +1,17 @@
 
-function decouple_covmat!(𝐂::SpectralArray{T,2},
-                          mcm_adj_XY::F, mcm_adj_ZW::F) where {T <: Real, F<:Factorization{T}}
-    rdiv!(𝐂.parent', mcm_adj_ZW)
-    rdiv!(𝐂.parent, mcm_adj_XY)
-    return 𝐂
-end
-
-
 """
-    decouple_covmat!(M, B1, B2; lmin=2) -> M
+    decouple_covmat(Y, B1, B2; lmin1=2, lmin2=2)
 
-Decouples a covariance matrix starting at lmin, performing B₁⁻¹ × M × (B₂⁻¹)^†
+Decouples a covariance matrix Y starting at lmin1, performing B₁⁻¹ × M × (B₂⁻¹)^†
 by mutating M.
 """
-function decouple_covmat!(M::A, B1::A, B2::A; lmin=2) where {A <: SpectralArray}
-
-    B1 = B1[lmin:end, lmin:end]
-    B2 = B2[lmin:end, lmin:end]
-    Δi = firstindex(M)
-    C = @view M.parent[(lmin+Δi):end, (lmin+Δi):end]
-    rdiv!(C', lu(B1'))
-    rdiv!(C, lu(B2'))
+function decouple_covmat(Y::SA, B1::SA, B2::SA; lmin1=2, lmin2=2) where {T, SA <: SpectralArray{T,2}}
+    M = deepcopy(Y)
+    M[0:lmin1, 0:lmin2] .= zero(T)
+    C = M.parent
+    rdiv!(C', lu(B1.parent'))
+    rdiv!(C, lu(B2.parent'))
+    return M
 end
 
 # convenience
