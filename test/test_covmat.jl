@@ -14,14 +14,16 @@ import AngularPowerSpectra: TT, TE, EE
     B1 = [1.2 0.6 0.1; 0.3 1.4 0.5; 0.44 0.2 1.3]
     B2 = [1.6 0.4 0.1; 0.3 1.4 0.9; 0.45 0.8 1.7]
     Cref = inv(B1) * (A) * (inv(B2)')
-    C = deepcopy(A)
-    decouple_covmat!(SpectralArray(C), SpectralArray(B1), SpectralArray(B2); lmin=0)
-    @test all(Cref .≈ C)
+    C = decouple_covmat(SpectralArray(deepcopy(A)), SpectralArray(B1), SpectralArray(B2);
+        lmin1=0, lmin2=0)
+    @test all(Cref .≈ C.parent)
 
-    Cref = inv(B1[2:end,2:end]) * (A[2:end,2:end]) * (inv(B2[2:end,2:end])')
-    C = deepcopy(A)
-    decouple_covmat!(SpectralArray(C), SpectralArray(B1), SpectralArray(B2); lmin=1)
-    @test all(Cref .≈ C[2:end,2:end])
+    A₀ = deepcopy(A)
+    A₀[1,1] = 0.0
+    Cref = inv(B1) * A₀ * (inv(B2)')
+    C = decouple_covmat(SpectralArray(deepcopy(A)), SpectralArray(B1), SpectralArray(B2);
+        lmin1=1, lmin2=1)
+    @test all(Cref .≈ C.parent)
 end
 
 ##
@@ -111,10 +113,9 @@ end
 
     # test decoupling
     𝐌 = mcm("EE", m1, m2)
-    C_decoupled = deepcopy(C)
-    decouple_covmat!(C_decoupled, 𝐌, 𝐌)
+    C_decoupled = decouple_covmat(C, 𝐌, 𝐌; lmin1=2, lmin2=2)
 
-    # by default, decouple has lmin=2
+    # # by default, decouple has lmin=2
     @test isapprox(C[2:end,2:end],
         𝐌[2:end,2:end] * C_decoupled[2:end,2:end] * (𝐌[2:end,2:end]') )
 end
