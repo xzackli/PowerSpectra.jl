@@ -9,3 +9,4 @@ notebooks/data/*
 *.jld2
 *.fits
 data/*
+*.ipynb_checkpoints
