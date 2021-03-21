@@ -33,5 +33,4 @@ Note that the inner sum is just a matrix-vector multiplication.
 ```@docs
 quickpolΞ!
 quickpolW
-Ξsum
 ``` 
