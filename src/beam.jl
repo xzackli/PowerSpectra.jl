@@ -53,15 +53,13 @@ function quickpolW(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}) where T<:Nu
 end
 
 @doc raw"""
-    quickpolΞ!(𝚵::AA, ν₁, ν₂, u₁, u₂, s₁, s₂, ω₁, ω₂, b₁, b₂)
+    quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂, ω₁, ω₂)
 
 This computes the ``\Xi_{\ell^{\prime \prime},\ell}`` matrix. It assumes ``\rho`` has been
 absorbed into the ``\omega`` terms.
 
  - `ω₁`: effective scan weights with spin s₁ + ν₁
  - `ω₂`: effective scan weights with spin s₂ + ν₂
- - `b₁`: inverse noise-weighted beam multipoles for spin u₁, detector j₁
- - `b₂`: inverse noise-weighted beam multipoles for spin u₂, detector j₂
 """
 function quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂, ω₁::Alm, ω₂::Alm,
                     buf1::Array{Array{T,1},1}, 
