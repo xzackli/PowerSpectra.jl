@@ -18,7 +18,7 @@ Define the matrix,
      \ell & \ell^{\prime} & \ell^{\prime\prime} \\ -s_2 & s_2+\nu_2  & -\nu_2 \end{pmatrix}
 \end{aligned}
 ```
-This matrix is symmetric, and does not depend on ``u_1, u_2``. In practice, the ``m^{\prime}`` are truncated at some low ``m_{\mathrm{max}}``. We can then write the beam matrix in terms of ``\mathbf{\Xi}``,
+This matrix is symmetric, and does not depend on ``u_1, u_2``. We can then write the beam matrix in terms of ``\mathbf{\Xi}``,
 ```math
 \mathbf{B}_{\ell^{\prime\prime},\ell}^{\nu_1,\nu_2, u_1, u_2} \,= \sum_{j_1, j_2, s_1, s_2} \frac{2\ell + 1}{4\pi} \,_{u_1}\hat{b}^{(j_1)*}_{\ell, s_1} \,_{u_2}\hat{b}^{(j_2)*}_{\ell, s_2} \, \frac{k_{u_1} k_{u_2}}{k_{\nu_1} k_{\nu_2}} \, \mathbf{\Xi}^{\nu_1,\nu_2,s_1,s_2,j_1,j_2}_{\ell^{\prime\prime},\ell}
 ```
