@@ -52,6 +52,13 @@ function quickpolW(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}) where T<:Nu
     return cl
 end
 
+# loop over nonzero elements of a banded SpectralArray
+function specrowrange(𝚵::SpectralArray, r)
+    start = max(2,BandedMatrices.rowstart(𝚵.parent,r+1)-1)
+    stop = BandedMatrices.rowstop(𝚵.parent,r+1)-1
+    return start:stop
+end
+
 @doc raw"""
     quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂, ω₁, ω₂)
 
@@ -73,7 +80,7 @@ function quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂, ω₁::Alm, ω₂::Alm,
         tid = Threads.threadid()
         buffer1 = buf1[tid]
         buffer2 = buf2[tid]
-        for ℓ = max(2,BandedMatrices.rowstart(𝚵.parent,ℓ″+1)-1):ℓ″
+        for ℓ = specrowrange(𝚵, ℓ″)
             # wigner families over ℓ′
             wF₁ = WignerF(T, ℓ, ℓ″, -s₁, -ν₁)  # set up the wigner recurrence problem
             wF₂ = WignerF(T, ℓ, ℓ″, -s₂, -ν₂)  # set up the wigner recurrence problem
@@ -84,7 +91,6 @@ function quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂, ω₁::Alm, ω₂::Alm,
             wigner3j_f!(wF₁, w3j₁)  # deposit symbols into buffer
             wigner3j_f!(wF₂, w3j₂)  # deposit symbols into buffer
             𝚵[ℓ″, ℓ] = Ξsum(W, w3j₁, w3j₂)
-            𝚵[ℓ, ℓ″] = 𝚵[ℓ″, ℓ]
         end
     end
 
