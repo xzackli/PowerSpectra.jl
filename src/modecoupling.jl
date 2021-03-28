@@ -371,7 +371,7 @@ end
 
 
 """
-    mask!
+    mask!(m::Map{T}, mask::Map{T}) where T
 
 Convenience function for applying a mask to a map.
 """

@@ -34,7 +34,7 @@ export Field, SpectralWorkspace, SpectralVector, SpectralArray
 export channelindex
 
 export CovField
-export CovarianceWorkspace, coupled_covmat
+export CovarianceWorkspace, coupledcov
 
 export binning_matrix, read_commented_header
 export synalm, synalm!

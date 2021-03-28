@@ -14,9 +14,26 @@ function decouple_covmat(Y::SA, B1::SA, B2::SA; lmin1=2, lmin2=2) where {T, SA <
     return M
 end
 
-# convenience
-function coupled_covmat(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace{T},
-                        spectra, noise_ratios::Dict=Dict(), lmax=0) where T
+
+"""
+    coupledcov(ch1, ch2, workspace, spectra;
+               noise_ratios=Dict(), lmax=0) where T
+
+# Arguments:
+- `ch1::Symbol`: spectrum type of first spectrum (i.e. :TT, :TE, :EE)
+- `ch2::Symbol`: spectrum type of second spectrum (i.e. :TT, :TE, :EE)
+- `workspace`: cache for working with covariances
+- `spectra`: signal spectra
+
+# Keywords
+- `noise_ratios::AbstractDict`: ratio of noise spectra to white noise
+- `lmax=0`: maximum multipole moment for covariance matrix
+
+# Returns:
+- `SpectralArray{T,2}`: covariance matrix (0-indexed)
+"""
+function coupledcov(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace{T},
+                    spectra::AbstractDict; noise_ratios::AbstractDict=Dict(), lmax=0) where T
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     if length(noise_ratios) == 0  # by default, do not rescale for noise
@@ -24,22 +41,22 @@ function coupled_covmat(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace
         noise_ratios = DefaultDict(identity_spectrum)
     end
     if (ch1==:TT) && (ch2==:TT)
-        return compute_coupled_covmat_TTTT(workspace, spectra, noise_ratios; lmax=lmax)
+        return compute_coupledcov_TTTT(workspace, spectra, noise_ratios; lmax=lmax)
     elseif (ch1==:EE) && (ch2==:EE)
-        return compute_coupled_covmat_EEEE(workspace, spectra, noise_ratios; lmax=lmax)
+        return compute_coupledcov_EEEE(workspace, spectra, noise_ratios; lmax=lmax)
     elseif (ch1==:TE) && (ch2==:TE)
-        return compute_coupled_covmat_TETE(workspace, spectra, noise_ratios; lmax=lmax)
+        return compute_coupledcov_TETE(workspace, spectra, noise_ratios; lmax=lmax)
     elseif (ch1==:TT) && ( ch2==:TE)
-        return compute_coupled_covmat_TTTE(workspace, spectra, noise_ratios; lmax=lmax)
+        return compute_coupledcov_TTTE(workspace, spectra, noise_ratios; lmax=lmax)
     elseif (ch1==:TT) && ( ch2==:EE)
-        return compute_coupled_covmat_TTEE(workspace, spectra, noise_ratios; lmax=lmax)
+        return compute_coupledcov_TTEE(workspace, spectra, noise_ratios; lmax=lmax)
     elseif (ch1==:TE) && (ch2==:EE)
-        return compute_coupled_covmat_TEEE(workspace, spectra, noise_ratios; lmax=lmax)
+        return compute_coupledcov_TEEE(workspace, spectra, noise_ratios; lmax=lmax)
     end
     print("SOMETHING HAS GONE WRONG $(ch1) $(ch2)")
 end
 
-function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra,
+function compute_coupledcov_TTTT(workspace::CovarianceWorkspace{T}, spectra,
                                      noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
@@ -100,7 +117,7 @@ function loop_covTTTT!(𝐂::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, spectra,
+function compute_coupledcov_EEEE(workspace::CovarianceWorkspace{T}, spectra,
                                      noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
@@ -161,7 +178,7 @@ function loop_covEEEE!(𝐂::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TTTE(workspace::CovarianceWorkspace{T}, spectra,
+function compute_coupledcov_TTTE(workspace::CovarianceWorkspace{T}, spectra,
                                      noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
@@ -214,7 +231,7 @@ function loop_covTTTE!(𝐂::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TETE(workspace::CovarianceWorkspace{T}, spectra,
+function compute_coupledcov_TETE(workspace::CovarianceWorkspace{T}, spectra,
                                      noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
@@ -283,7 +300,7 @@ function loop_covTETE!(𝐂::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, spectra,
+function compute_coupledcov_TEEE(workspace::CovarianceWorkspace{T}, spectra,
                                      noise_ratios; lmax=0, planck=true) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
@@ -383,7 +400,7 @@ function loop_covTEEE_planck!(𝐂::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-function compute_coupled_covmat_TTEE(workspace::CovarianceWorkspace{T}, spectra,
+function compute_coupledcov_TTEE(workspace::CovarianceWorkspace{T}, spectra,
                                      noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax

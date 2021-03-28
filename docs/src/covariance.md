@@ -65,5 +65,11 @@ spectra = Dict{SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
 Now all that remains is to compute the coupled covmat.
 
 ```julia
-C = coupled_covmat(:TT, :TT, "143_hm1", "143_hm2", w, spectra)
+C = coupledcov(:TT, :TT, "143_hm1", "143_hm2", w, spectra)
 ```
+
+```@docs
+CovField
+CovarianceWorkspace
+coupledcov
+``` 

@@ -18,9 +18,27 @@ struct CovField{T} <: AbstractField{T}
 end
 
 
+"""
+    CovField(name, maskT, maskP,
+        σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA},
+        beamT::SpectralVector{T}, beamP::SpectralVector{T})
+
+Create a structure for describing the information needed for a covariance
+involving this field.
+
+# Arguments:
+- `name::String`: name of this field
+- `maskT::Map{T}`: temperature mask
+- `maskP::Map{T}`: polarization mask
+- `σ²::PolarizedMap{T}`: pixel variances
+- `beamT::SpectralVector{T}`: temperature beam
+- `beamP::SpectralVector{T}`: polarization beam
+"""
+function CovField end
+
 function CovField(name::String, maskT::Map{T}, maskP::Map{T},
         σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA},
-        beamT::AbstractVector{T}, beamP::AbstractVector{T}) where {T, O, AA}
+        beamT::SpectralVector{T}, beamP::SpectralVector{T}) where {T, O, AA}
     σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
     return CovField{T}(name, maskT, maskP, σ², beamT, beamP)
 end
