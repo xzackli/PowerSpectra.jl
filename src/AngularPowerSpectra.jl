@@ -38,6 +38,6 @@ export CovarianceWorkspace, coupled_covmat
 
 export binning_matrix, read_commented_header
 export synalm, synalm!
-
+export SpectrumName
 
 end

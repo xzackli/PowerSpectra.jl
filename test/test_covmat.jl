@@ -49,7 +49,7 @@ end
 
     # this test specifies a map with unit variance. the corresponding white noise level is divided out in r_coeff
     N_white = 4π / nside2npix(nside)
-    r_coeff = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
+    r_coeff = Dict{AngularPowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
         (:TT, "143_hm1", "143_hm1") => sqrt.(nltt ./ N_white),
         (:TT, "143_hm1", "143_hm2") => identity_spectrum,
         (:TT, "143_hm2", "143_hm1") => identity_spectrum,
@@ -60,7 +60,7 @@ end
         (:EE, "143_hm2", "143_hm1") => identity_spectrum,
         (:EE, "143_hm2", "143_hm2") => sqrt.(nlee ./ N_white))
 
-    spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
+    spectra = Dict{AngularPowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
         (:TT, "143_hm1", "143_hm1") => cltt,
         (:TT, "143_hm1", "143_hm2") => cltt,
         (:TT, "143_hm2", "143_hm1") => cltt,

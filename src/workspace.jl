@@ -50,7 +50,7 @@ function split_maptype(XY::Symbol)
 end
 
 # index for the mask spectra V
-const VIndex = Tuple{Symbol, String, String}
+const SpectrumName = Tuple{Symbol, String, String}
 
 # Index for the covariance's weighted mask spectra W, indexed X, Y, i, j, α, p, q, β
 const WIndex = Tuple{Symbol, Symbol, String, String, Symbol, String, String, Symbol}

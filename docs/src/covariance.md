@@ -51,18 +51,19 @@ You need to generate a dictionary that maps the names of various cross-spectra t
 nside = mask1.resolution.nside
 cl_th = SpectralVector(ones(nside2lmax(nside)))
 
-spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
-    (:TT, "143_hm1", "143_hm1") => cltt, (:TT, "143_hm1", "143_hm2") => cltt,
-    (:TT, "143_hm2", "143_hm1") => cltt, (:TT, "143_hm2", "143_hm2") => cltt,
+spectra = Dict{SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
+    (:TT, "143_hm1", "143_hm1") => cl_th, (:TT, "143_hm1", "143_hm2") => cl_th,
+    (:TT, "143_hm2", "143_hm1") => cl_th, (:TT, "143_hm2", "143_hm2") => cl_th,
 
-    (:EE, "143_hm1", "143_hm1") => clee, (:EE, "143_hm1", "143_hm2") => clee,
-    (:EE, "143_hm2", "143_hm1") => clee, (:EE, "143_hm2", "143_hm2") => clee ,
+    (:EE, "143_hm1", "143_hm1") => cl_th, (:EE, "143_hm1", "143_hm2") => cl_th,
+    (:EE, "143_hm2", "143_hm1") => cl_th, (:EE, "143_hm2", "143_hm2") => cl_th ,
 
-    (:TE, "143_hm1", "143_hm1") => clte, (:TE, "143_hm1", "143_hm2") => clte,
-    (:TE, "143_hm2", "143_hm1") => clte, (:TE, "143_hm2", "143_hm2") => clte)
+    (:TE, "143_hm1", "143_hm1") => cl_th, (:TE, "143_hm1", "143_hm2") => cl_th,
+    (:TE, "143_hm2", "143_hm1") => cl_th, (:TE, "143_hm2", "143_hm2") => cl_th)
 ```
 
+Now all that remains is to compute the coupled covmat.
+
 ```julia
-w = CovarianceWorkspace(f1, f2, f1, f2)
-C = coupled_covmat("143_hm1", "143_hm2", w, spectra)
+C = coupled_covmat(:TT, :TT, "143_hm1", "143_hm2", w, spectra)
 ```

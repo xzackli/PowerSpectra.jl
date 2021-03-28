@@ -139,7 +139,7 @@ workspace = SpectralWorkspace(m1, m2, m1, m2)
 import AngularPowerSpectra: TT
 
 cltt = SpectralVector(convert(Vector, theory.cltt))
-spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
+spectra = Dict{AngularPowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
     (TT, "143_hm1", "143_hm1") => cltt,
     (TT, "143_hm2", "143_hm2") => cltt,
     (TT, "143_hm1", "143_hm2") => cltt,

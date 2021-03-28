@@ -15,40 +15,40 @@ function decouple_covmat(Y::SA, B1::SA, B2::SA; lmin1=2, lmin2=2) where {T, SA <
 end
 
 # convenience
-function coupled_covmat(ch1::String, ch2::String, workspace::CovarianceWorkspace{T},
-                        spectra, rescaling_coefficients::Dict=Dict(), lmax=0) where T
+function coupled_covmat(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace{T},
+                        spectra, noise_ratios::Dict=Dict(), lmax=0) where T
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
-    if length(rescaling_coefficients) == 0
+    if length(noise_ratios) == 0  # by default, do not rescale for noise
         identity_spectrum = SpectralVector(ones(lmax+1))
-        rescaling_coefficients = DefaultDict(identity_spectrum)
+        noise_ratios = DefaultDict(identity_spectrum)
     end
-    if (ch1=="TT") && (ch2=="TT")
-        return compute_coupled_covmat_TTTT(workspace, spectra, rescaling_coefficients; lmax=lmax)
-    elseif (ch1=="EE") && (ch2=="EE")
-        return compute_coupled_covmat_EEEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
-    elseif (ch1=="TE") && (ch2=="TE")
-        return compute_coupled_covmat_TETE(workspace, spectra, rescaling_coefficients; lmax=lmax)
-    elseif (ch1=="TT") && ( ch2=="TE")
-        return compute_coupled_covmat_TTTE(workspace, spectra, rescaling_coefficients; lmax=lmax)
-    elseif (ch1=="TT") && ( ch2=="EE")
-        return compute_coupled_covmat_TTEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
-    elseif (ch1=="TE") && (ch2=="EE")
-        return compute_coupled_covmat_TEEE(workspace, spectra, rescaling_coefficients; lmax=lmax)
+    if (ch1==:TT) && (ch2==:TT)
+        return compute_coupled_covmat_TTTT(workspace, spectra, noise_ratios; lmax=lmax)
+    elseif (ch1==:EE) && (ch2==:EE)
+        return compute_coupled_covmat_EEEE(workspace, spectra, noise_ratios; lmax=lmax)
+    elseif (ch1==:TE) && (ch2==:TE)
+        return compute_coupled_covmat_TETE(workspace, spectra, noise_ratios; lmax=lmax)
+    elseif (ch1==:TT) && ( ch2==:TE)
+        return compute_coupled_covmat_TTTE(workspace, spectra, noise_ratios; lmax=lmax)
+    elseif (ch1==:TT) && ( ch2==:EE)
+        return compute_coupled_covmat_TTEE(workspace, spectra, noise_ratios; lmax=lmax)
+    elseif (ch1==:TE) && (ch2==:EE)
+        return compute_coupled_covmat_TEEE(workspace, spectra, noise_ratios; lmax=lmax)
     end
     print("SOMETHING HAS GONE WRONG $(ch1) $(ch2)")
 end
 
 function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra,
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
 
-    r_ℓ_ip = rescaling_coefficients[:TT, i, p]
-    r_ℓ_jq = rescaling_coefficients[:TT, j, q]
-    r_ℓ_iq = rescaling_coefficients[:TT, i, q]
-    r_ℓ_jp = rescaling_coefficients[:TT, j, p]
+    r_ℓ_ip = noise_ratios[:TT, i, p]
+    r_ℓ_jq = noise_ratios[:TT, j, q]
+    r_ℓ_iq = noise_ratios[:TT, i, q]
+    r_ℓ_jp = noise_ratios[:TT, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTTTT!(𝐂, lmax,
@@ -101,15 +101,15 @@ end
 
 
 function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, spectra,
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
 
-    r_ℓ_ip = rescaling_coefficients[:EE, i, p]
-    r_ℓ_jq = rescaling_coefficients[:EE, j, q]
-    r_ℓ_iq = rescaling_coefficients[:EE, i, q]
-    r_ℓ_jp = rescaling_coefficients[:EE, j, p]
+    r_ℓ_ip = noise_ratios[:EE, i, p]
+    r_ℓ_jq = noise_ratios[:EE, j, q]
+    r_ℓ_iq = noise_ratios[:EE, i, q]
+    r_ℓ_jp = noise_ratios[:EE, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covEEEE!(𝐂, lmax,
@@ -162,14 +162,14 @@ end
 
 
 function compute_coupled_covmat_TTTE(workspace::CovarianceWorkspace{T}, spectra,
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    r_ℓ_ip = rescaling_coefficients[:TT, i, p]
-    r_ℓ_jp = rescaling_coefficients[:TT, j, p]
+    r_ℓ_ip = noise_ratios[:TT, i, p]
+    r_ℓ_jp = noise_ratios[:TT, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTTTE!(𝐂, lmax,
@@ -215,14 +215,14 @@ end
 
 
 function compute_coupled_covmat_TETE(workspace::CovarianceWorkspace{T}, spectra,
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    r_TT_ip = rescaling_coefficients[:TT, i, p]
-    r_PP_jq = rescaling_coefficients[:EE, j, q]
+    r_TT_ip = noise_ratios[:TT, i, p]
+    r_PP_jq = noise_ratios[:EE, j, q]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTETE!(𝐂, lmax,
@@ -284,13 +284,13 @@ end
 
 
 function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, spectra,
-                                     rescaling_coefficients; lmax=0, planck=true) where {T <: Real}
+                                     noise_ratios; lmax=0, planck=true) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
 
-    r_EE_jq = rescaling_coefficients[:EE, j, q]
-    r_EE_jp = rescaling_coefficients[:EE, j, p]
+    r_EE_jq = noise_ratios[:EE, j, q]
+    r_EE_jp = noise_ratios[:EE, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
 
@@ -384,7 +384,7 @@ end
 
 
 function compute_coupled_covmat_TTEE(workspace::CovarianceWorkspace{T}, spectra,
-                                     rescaling_coefficients; lmax=0) where {T <: Real}
+                                     noise_ratios; lmax=0) where {T <: Real}
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
