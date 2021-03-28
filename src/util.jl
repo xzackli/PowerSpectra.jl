@@ -78,6 +78,9 @@ function channelindex(s)
 end
 
 
+# get the Nyquist frequency from nside
+max_lmax(nside) = 3nside - 1
+
 
 """
     synalm([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, nside::Int) where T

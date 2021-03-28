@@ -33,7 +33,7 @@ export compute_covmat_TTTT, compute_covmat_EEEE
 export Field, SpectralWorkspace, SpectralVector, SpectralArray
 export channelindex
 
-export PolarizedField
+export CovField
 export CovarianceWorkspace, coupled_covmat
 
 export binning_matrix, read_commented_header

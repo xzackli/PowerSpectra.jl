@@ -45,23 +45,23 @@ function compute_coupled_covmat_TTTT(workspace::CovarianceWorkspace{T}, spectra,
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
 
-    r_ℓ_ip = rescaling_coefficients[TT, i, p]
-    r_ℓ_jq = rescaling_coefficients[TT, j, q]
-    r_ℓ_iq = rescaling_coefficients[TT, i, q]
-    r_ℓ_jp = rescaling_coefficients[TT, j, p]
+    r_ℓ_ip = rescaling_coefficients[:TT, i, p]
+    r_ℓ_jq = rescaling_coefficients[:TT, j, q]
+    r_ℓ_iq = rescaling_coefficients[:TT, i, q]
+    r_ℓ_jp = rescaling_coefficients[:TT, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTTTT!(𝐂, lmax,
-        spectra[TT,i,p], spectra[TT,j,q], spectra[TT,i,q], spectra[TT,j,p],
+        spectra[:TT,i,p], spectra[:TT,j,q], spectra[:TT,i,q], spectra[:TT,j,p],
         r_ℓ_ip, r_ℓ_jq, r_ℓ_iq, r_ℓ_jp,
-        window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, TT),
-        window_function_W!(workspace, ∅∅, ∅∅, i, q, TT, j, p, TT),
-        window_function_W!(workspace, ∅∅, TT, i, p, TT, j, q, TT),
-        window_function_W!(workspace, ∅∅, TT, j, q, TT, i, p, TT),
-        window_function_W!(workspace, ∅∅, TT, i, q, TT, j, p, TT),
-        window_function_W!(workspace, ∅∅, TT, j, p, TT, i, q, TT),
-        window_function_W!(workspace, TT, TT, i, p, TT, j, q, TT),
-        window_function_W!(workspace, TT, TT, i, q, TT, j, p, TT))
+        window_function_W!(workspace, :∅∅, :∅∅, i, p, :TT, j, q, :TT),
+        window_function_W!(workspace, :∅∅, :∅∅, i, q, :TT, j, p, :TT),
+        window_function_W!(workspace, :∅∅, :TT, i, p, :TT, j, q, :TT),
+        window_function_W!(workspace, :∅∅, :TT, j, q, :TT, i, p, :TT),
+        window_function_W!(workspace, :∅∅, :TT, i, q, :TT, j, p, :TT),
+        window_function_W!(workspace, :∅∅, :TT, j, p, :TT, i, q, :TT),
+        window_function_W!(workspace, :TT, :TT, i, p, :TT, j, q, :TT),
+        window_function_W!(workspace, :TT, :TT, i, q, :TT, j, p, :TT))
 
     return 𝐂
 end
@@ -106,23 +106,23 @@ function compute_coupled_covmat_EEEE(workspace::CovarianceWorkspace{T}, spectra,
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
 
-    r_ℓ_ip = rescaling_coefficients[EE, i, p]
-    r_ℓ_jq = rescaling_coefficients[EE, j, q]
-    r_ℓ_iq = rescaling_coefficients[EE, i, q]
-    r_ℓ_jp = rescaling_coefficients[EE, j, p]
+    r_ℓ_ip = rescaling_coefficients[:EE, i, p]
+    r_ℓ_jq = rescaling_coefficients[:EE, j, q]
+    r_ℓ_iq = rescaling_coefficients[:EE, i, q]
+    r_ℓ_jp = rescaling_coefficients[:EE, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covEEEE!(𝐂, lmax,
-        spectra[EE,i,p], spectra[EE,j,q], spectra[EE,i,q], spectra[EE,j,p],
+        spectra[:EE,i,p], spectra[:EE,j,q], spectra[:EE,i,q], spectra[:EE,j,p],
         r_ℓ_ip, r_ℓ_jq, r_ℓ_iq, r_ℓ_jp,
-        window_function_W!(workspace, ∅∅, ∅∅, i, p, PP, j, q, PP),
-        window_function_W!(workspace, ∅∅, ∅∅, i, q, PP, j, p, PP),
-        window_function_W!(workspace, ∅∅, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, ∅∅, PP, j, q, PP, i, p, PP),
-        window_function_W!(workspace, ∅∅, PP, i, q, PP, j, p, PP),
-        window_function_W!(workspace, ∅∅, PP, j, p, PP, i, q, PP),
-        window_function_W!(workspace, PP, PP, i, p, PP, j, q, PP),
-        window_function_W!(workspace, PP, PP, i, q, PP, j, p, PP))
+        window_function_W!(workspace, :∅∅, :∅∅, i, p, :PP, j, q, :PP),
+        window_function_W!(workspace, :∅∅, :∅∅, i, q, :PP, j, p, :PP),
+        window_function_W!(workspace, :∅∅, :PP, i, p, :PP, j, q, :PP),
+        window_function_W!(workspace, :∅∅, :PP, j, q, :PP, i, p, :PP),
+        window_function_W!(workspace, :∅∅, :PP, i, q, :PP, j, p, :PP),
+        window_function_W!(workspace, :∅∅, :PP, j, p, :PP, i, q, :PP),
+        window_function_W!(workspace, :PP, :PP, i, p, :PP, j, q, :PP),
+        window_function_W!(workspace, :PP, :PP, i, q, :PP, j, p, :PP))
 
     return 𝐂
 end
@@ -168,17 +168,17 @@ function compute_coupled_covmat_TTTE(workspace::CovarianceWorkspace{T}, spectra,
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    r_ℓ_ip = rescaling_coefficients[TT, i, p]
-    r_ℓ_jp = rescaling_coefficients[TT, j, p]
+    r_ℓ_ip = rescaling_coefficients[:TT, i, p]
+    r_ℓ_jp = rescaling_coefficients[:TT, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTTTE!(𝐂, lmax,
-        spectra[TT,i,p], spectra[TT,j,p], spectra[TE,i,q], spectra[TE,j,q],
+        spectra[:TT,i,p], spectra[:TT,j,p], spectra[:TE,i,q], spectra[:TE,j,q],
         r_ℓ_ip, r_ℓ_jp,
-        window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, TP),
-        window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, TT),
-        window_function_W!(workspace, ∅∅, TT, j, q, TP, i, p, TT),
-        window_function_W!(workspace, ∅∅, TT, i, q, TP, j, p, TT))
+        window_function_W!(workspace, :∅∅, :∅∅, i, p, :TT, j, q, :TP),
+        window_function_W!(workspace, :∅∅, :∅∅, i, q, :TP, j, p, :TT),
+        window_function_W!(workspace, :∅∅, :TT, j, q, :TP, i, p, :TT),
+        window_function_W!(workspace, :∅∅, :TT, i, q, :TP, j, p, :TT))
 
     return 𝐂
 end
@@ -221,18 +221,18 @@ function compute_coupled_covmat_TETE(workspace::CovarianceWorkspace{T}, spectra,
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    r_TT_ip = rescaling_coefficients[TT, i, p]
-    r_PP_jq = rescaling_coefficients[EE, j, q]
+    r_TT_ip = rescaling_coefficients[:TT, i, p]
+    r_PP_jq = rescaling_coefficients[:EE, j, q]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTETE!(𝐂, lmax,
-        spectra[TT,i,p], spectra[EE,j,q], spectra[TE,i,q], spectra[TE,j,p],
+        spectra[:TT,i,p], spectra[:EE,j,q], spectra[:TE,i,q], spectra[:TE,j,p],
         r_TT_ip, r_PP_jq,
-        window_function_W!(workspace, ∅∅, ∅∅, i, p, TT, j, q, PP),
-        window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, PT),
-        window_function_W!(workspace, ∅∅, PP, i, p, TT, j, q, PP),
-        window_function_W!(workspace, ∅∅, TT, j, q, PP, i, p, TT),
-        window_function_W!(workspace, TT, PP, i, p, TT, j, q, PP))
+        window_function_W!(workspace, :∅∅, :∅∅, i, p, :TT, j, q, :PP),
+        window_function_W!(workspace, :∅∅, :∅∅, i, q, :TP, j, p, :PT),
+        window_function_W!(workspace, :∅∅, :PP, i, p, :TT, j, q, :PP),
+        window_function_W!(workspace, :∅∅, :TT, j, q, :PP, i, p, :TT),
+        window_function_W!(workspace, :TT, :PP, i, p, :TT, j, q, :PP))
 
     return 𝐂
 end
@@ -289,27 +289,27 @@ function compute_coupled_covmat_TEEE(workspace::CovarianceWorkspace{T}, spectra,
     lmax = iszero(lmax) ? workspace.lmax : lmax
     i, j, p, q = workspace.field_names
 
-    r_EE_jq = rescaling_coefficients[EE, j, q]
-    r_EE_jp = rescaling_coefficients[EE, j, p]
+    r_EE_jq = rescaling_coefficients[:EE, j, q]
+    r_EE_jp = rescaling_coefficients[:EE, j, p]
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
 
     if planck
         loop_covTEEE_planck!(𝐂, lmax,
-            spectra[EE,j,q], spectra[EE,j,p], spectra[TE,i,p], spectra[TE,i,q],
+            spectra[:EE,j,q], spectra[:EE,j,p], spectra[:TE,i,p], spectra[:TE,i,q],
             r_EE_jq, r_EE_jp,
-            window_function_W!(workspace, ∅∅, ∅∅, i, p, TP, j, q, PP),
-            window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, PP),
-            window_function_W!(workspace, ∅∅, PP, i, p, TP, j, q, PP),
-            window_function_W!(workspace, ∅∅, PP, i, q, TP, j, p, PP))
+            window_function_W!(workspace, :∅∅, :∅∅, i, p, :TP, j, q, :PP),
+            window_function_W!(workspace, :∅∅, :∅∅, i, q, :TP, j, p, :PP),
+            window_function_W!(workspace, :∅∅, :PP, i, p, :TP, j, q, :PP),
+            window_function_W!(workspace, :∅∅, :PP, i, q, :TP, j, p, :PP))
     else
         loop_covTEEE!(𝐂, lmax,
-            spectra[EE,j,q], spectra[EE,j,p], spectra[TE,i,p], spectra[TE,i,q],
+            spectra[:EE,j,q], spectra[:EE,j,p], spectra[:TE,i,p], spectra[:TE,i,q],
             r_EE_jq, r_EE_jp,
-            window_function_W!(workspace, ∅∅, ∅∅, i, p, TP, j, q, PP),
-            window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, PP),
-            window_function_W!(workspace, ∅∅, PP, i, p, TP, j, q, PP),
-            window_function_W!(workspace, ∅∅, PP, i, q, TP, j, p, PP))
+            window_function_W!(workspace, :∅∅, :∅∅, i, p, :TP, j, q, :PP),
+            window_function_W!(workspace, :∅∅, :∅∅, i, q, :TP, j, p, :PP),
+            window_function_W!(workspace, :∅∅, :PP, i, p, :TP, j, q, :PP),
+            window_function_W!(workspace, :∅∅, :PP, i, q, :TP, j, p, :PP))
     end
 
     return 𝐂
@@ -392,9 +392,9 @@ function compute_coupled_covmat_TTEE(workspace::CovarianceWorkspace{T}, spectra,
 
     𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     loop_covTTEE!(𝐂, lmax,
-        spectra[TE,i,p], spectra[TE,i,q], spectra[TE,j,q], spectra[TE,j,p],
-        window_function_W!(workspace, ∅∅, ∅∅, i, p, TP, j, q, TP),
-        window_function_W!(workspace, ∅∅, ∅∅, i, q, TP, j, p, TP),
+        spectra[:TE,i,p], spectra[:TE,i,q], spectra[:TE,j,q], spectra[:TE,j,p],
+        window_function_W!(workspace, :∅∅, :∅∅, i, p, :TP, j, q, :TP),
+        window_function_W!(workspace, :∅∅, :∅∅, i, q, :TP, j, p, :TP),
     )
 
     return 𝐂

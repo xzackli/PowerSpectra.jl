@@ -16,7 +16,7 @@ makedocs(;
         "Spectra" => "spectra.md",
         "Covariance" => "covariance.md",
         "Beams" => "beams.md",
-        "API" => "module_index.md",
+        "Index" => "module_index.md",
     ],
 )
 

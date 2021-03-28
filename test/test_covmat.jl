@@ -6,7 +6,7 @@ using LinearAlgebra
 using DataFrames
 using DelimitedFiles
 using NPZ
-import AngularPowerSpectra: TT, TE, EE
+
 
 
 @testset "Basic Covmat Mode Decoupling" begin
@@ -50,35 +50,35 @@ end
     # this test specifies a map with unit variance. the corresponding white noise level is divided out in r_coeff
     N_white = 4π / nside2npix(nside)
     r_coeff = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
-        (TT, "143_hm1", "143_hm1") => sqrt.(nltt ./ N_white),
-        (TT, "143_hm1", "143_hm2") => identity_spectrum,
-        (TT, "143_hm2", "143_hm1") => identity_spectrum,
-        (TT, "143_hm2", "143_hm2") => sqrt.(nltt ./ N_white),
+        (:TT, "143_hm1", "143_hm1") => sqrt.(nltt ./ N_white),
+        (:TT, "143_hm1", "143_hm2") => identity_spectrum,
+        (:TT, "143_hm2", "143_hm1") => identity_spectrum,
+        (:TT, "143_hm2", "143_hm2") => sqrt.(nltt ./ N_white),
 
-        (EE, "143_hm1", "143_hm1") => sqrt.(nlee ./ N_white),
-        (EE, "143_hm1", "143_hm2") => identity_spectrum,
-        (EE, "143_hm2", "143_hm1") => identity_spectrum,
-        (EE, "143_hm2", "143_hm2") => sqrt.(nlee ./ N_white))
+        (:EE, "143_hm1", "143_hm1") => sqrt.(nlee ./ N_white),
+        (:EE, "143_hm1", "143_hm2") => identity_spectrum,
+        (:EE, "143_hm2", "143_hm1") => identity_spectrum,
+        (:EE, "143_hm2", "143_hm2") => sqrt.(nlee ./ N_white))
 
     spectra = Dict{AngularPowerSpectra.VIndex, SpectralVector{Float64, Vector{Float64}}}(
-        (TT, "143_hm1", "143_hm1") => cltt,
-        (TT, "143_hm1", "143_hm2") => cltt,
-        (TT, "143_hm2", "143_hm1") => cltt,
-        (TT, "143_hm2", "143_hm2") => cltt,
+        (:TT, "143_hm1", "143_hm1") => cltt,
+        (:TT, "143_hm1", "143_hm2") => cltt,
+        (:TT, "143_hm2", "143_hm1") => cltt,
+        (:TT, "143_hm2", "143_hm2") => cltt,
 
-        (EE, "143_hm1", "143_hm1") => clee,
-        (EE, "143_hm1", "143_hm2") => clee,
-        (EE, "143_hm2", "143_hm1") => clee,
-        (EE, "143_hm2", "143_hm2") => clee ,
+        (:EE, "143_hm1", "143_hm1") => clee,
+        (:EE, "143_hm1", "143_hm2") => clee,
+        (:EE, "143_hm2", "143_hm1") => clee,
+        (:EE, "143_hm2", "143_hm2") => clee ,
 
-        (TE, "143_hm1", "143_hm1") => clte,
-        (TE, "143_hm1", "143_hm2") => clte,
-        (TE, "143_hm2", "143_hm1") => clte,
-        (TE, "143_hm2", "143_hm2") => clte,
+        (:TE, "143_hm1", "143_hm1") => clte,
+        (:TE, "143_hm1", "143_hm2") => clte,
+        (:TE, "143_hm2", "143_hm1") => clte,
+        (:TE, "143_hm2", "143_hm2") => clte,
     )
 
-    m1 = PolarizedField("143_hm1", mask1_T, mask1_P, unit_var, unit_var, unit_var, beam1, beam1)
-    m2 = PolarizedField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
+    m1 = CovField("143_hm1", mask1_T, mask1_P, unit_var, unit_var, unit_var, beam1, beam1)
+    m2 = CovField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
     workspace = CovarianceWorkspace(m1, m2, m1, m2)
 
     C = AngularPowerSpectra.compute_coupled_covmat_TTTT(workspace, spectra, r_coeff);

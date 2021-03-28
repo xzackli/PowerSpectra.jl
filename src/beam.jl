@@ -2,8 +2,8 @@
 @doc raw"""
     Ξsum(alm₁, alm₂, w3j₁, w3j₂)
 
-Sum over ``\ell`` and ``m`` of two ``a_{\ell m}`` and nontrivial Wigner-3j vectors. This is 
-a step in computing the ``\mathbf{\Xi}`` matrix. The ``\rho`` factors are not 
+Sum over ``\ell`` and ``m`` of two ``a_{\ell m}`` and nontrivial Wigner-3j vectors. This is
+a step in computing the ``\mathbf{\Xi}`` matrix. The ``\rho`` factors are not
 in this summation, as they can be pulled out.
 
 ```math
@@ -30,10 +30,11 @@ end
 @doc raw"""
     quickpolW(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}})
 
-Computes a scaled spectrum of the scanned pattern.
+Computes a scaled spectrum of the scan pattern.
 
 ```math
-W_{\ell'}^{\nu_1,\nu_2,s_1,s_2,j_1,j_2} = \sum_{m^\prime=-\ell^\prime}^{\ell^\prime}  \left(_{s_1+\nu_1}\tilde{\omega}^{(j_1)}_{\ell^\prime m^\prime}\right)
+W_{\ell'}^{\nu_1,\nu_2,s_1,s_2,j_1,j_2} = \sum_{m^\prime=-\ell^\prime}^{\ell^\prime}
+    \left(_{s_1+\nu_1}\tilde{\omega}^{(j_1)}_{\ell^\prime m^\prime}\right)
     \left(_{s_2+\nu_2}\tilde{\omega}^{(j_2)}_{\ell^\prime m^\prime}\right)^*
 ```
 """
@@ -69,7 +70,7 @@ absorbed into the ``\omega`` terms.
  - `ω₂`: effective scan weights with spin s₂ + ν₂
 """
 function quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂, ω₁::Alm, ω₂::Alm,
-                    buf1::Array{Array{T,1},1}, 
+                    buf1::Array{Array{T,1},1},
                     buf2::Array{Array{T,1},1}) where {T, AA<:SpectralArray{T,2}}
     # make some basic checks
     size(𝚵,1) != size(𝚵,2) && throw(ArgumentError("𝚵 is not square."))

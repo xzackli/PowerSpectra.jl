@@ -29,8 +29,8 @@ With this definition, the beam matrices ``\mathbf{B}`` are sub-blocks of the lin
 Note that the inner sum is just a matrix-vector multiplication.
 
 
-
 ```@docs
 quickpolΞ!
 quickpolW
+kᵤ
 ``` 

@@ -30,15 +30,15 @@ workspace = SpectralWorkspace(m1, m2, m1, m2)
 @time mcm12 = compute_mcm_TT(workspace, "143_hm1", "143_hm2")
 
 ##
-m1_P = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-m2_P = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m1_P = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m2_P = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
 workspace_P = PolarizedSpectralWorkspace(m1, m2, m1, m2)
 @time mcm12 = compute_mcm_EE(workspace, "143_hm1", "143_hm2")
 # @time factorized_mcm12 = lu(mcm12.parent);
 
 ##
-m1_P = PolarizedField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-m2_P = PolarizedField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m1_P = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+m2_P = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
 workspace_P = PolarizedSpectralWorkspace(m1_P, m2_P, m1_P, m2_P)
 @time mcm12 = compute_mcm_TE(workspace_P, "143_hm1", "143_hm2")
 # @time factorized_mcm12 = lu(mcm12.parent);
@@ -199,7 +199,7 @@ gcf()
 
 
 
-## 
+##
 nmt = pyimport("pymaster")
 f_0 = nmt.NmtField(mask.pixels, [mask.pixels])
 b = nmt.NmtBin.from_nside_linear(nside, 1)
@@ -227,12 +227,12 @@ covar_00_00 = nmt.gaussian_covariance(cw,
 using Statistics
 clf()
 
-# plot( ( diag(covar_00_00) ./ diag(C.parent)[3:(3nside)])[2:2nside], 
+# plot( ( diag(covar_00_00) ./ diag(C.parent)[3:(3nside)])[2:2nside],
 #     label=raw"$\mathrm{Var}^{\mathrm{nmt}}(C_{\ell}) / \mathrm{Var}^{\mathrm{planck}}(C_{\ell})$")
 
-plot( (Statistics.var(sims, dims=2) ./ diag(C.parent))[1:2nside], 
+plot( (Statistics.var(sims, dims=2) ./ diag(C.parent))[1:2nside],
     label=raw"$\mathrm{Var}^{\mathrm{sim}}(C_{\ell}) / \mathrm{Var}^{\mathrm{planck}}(C_{\ell})$")
-plot( 2:(2nside+1), (Statistics.var(sims, dims=2)[3:(3nside)] ./ diag(covar_00_00))[1:2nside], 
+plot( 2:(2nside+1), (Statistics.var(sims, dims=2)[3:(3nside)] ./ diag(covar_00_00))[1:2nside],
     label=raw"$\mathrm{Var}^{\mathrm{sim}}(C_{\ell}) / \mathrm{Var}^{\mathrm{nmt}}(C_{\ell})$")
 legend()
 xlabel(raw"Multipole moment, $\ell$")

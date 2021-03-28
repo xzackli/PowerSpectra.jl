@@ -91,7 +91,7 @@ end
 function compute_mcm_TT(workspace::SpectralWorkspace{T},
                         name_i::String, name_j::String; lmax::Int=0) where {T}
     lmax = iszero(lmax) ? workspace.lmax : lmax
-    Vᵢⱼ = SpectralVector(alm2cl(workspace.mask_alm[name_i, TT], workspace.mask_alm[name_j, TT]))
+    Vᵢⱼ = SpectralVector(alm2cl(workspace.mask_alm[name_i, :TT], workspace.mask_alm[name_j, :TT]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_TT!(𝐌, lmax, Vᵢⱼ)
 end
@@ -124,8 +124,8 @@ function compute_mcm_EE(workspace::SpectralWorkspace{T},
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     Vᵢⱼ = SpectralVector(alm2cl(
-        workspace.mask_alm[name_i, PP],
-        workspace.mask_alm[name_j, PP]))
+        workspace.mask_alm[name_i, :PP],
+        workspace.mask_alm[name_j, :PP]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_EE!(𝐌, lmax, Vᵢⱼ)
 end
@@ -169,8 +169,8 @@ function compute_mcm_TE(workspace::SpectralWorkspace{T},
     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
 
     Vᵢⱼ = SpectralVector(alm2cl(
-        workspace.mask_alm[name_i, TT],
-        workspace.mask_alm[name_j, PP]))
+        workspace.mask_alm[name_i, :TT],
+        workspace.mask_alm[name_j, :PP]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_TE!(𝐌, lmax, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
 end
@@ -183,8 +183,8 @@ function compute_mcm_ET(workspace::SpectralWorkspace{T},
     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
 
     Vᵢⱼ = SpectralVector(alm2cl(
-        workspace.mask_alm[name_i, PP],
-        workspace.mask_alm[name_j, TT]))
+        workspace.mask_alm[name_i, :PP],
+        workspace.mask_alm[name_j, :TT]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_TE!(𝐌, lmax, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
 end
@@ -217,15 +217,15 @@ function compute_mcm_EB(workspace::SpectralWorkspace{T},
 
     lmax = iszero(lmax) ? workspace.lmax : lmax
     Vᵢⱼ = SpectralVector(alm2cl(
-        workspace.mask_alm[name_i, PP],
-        workspace.mask_alm[name_j, PP]))
+        workspace.mask_alm[name_i, :PP],
+        workspace.mask_alm[name_j, :PP]))
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
     return loop_mcm_EB!(𝐌, lmax, Vᵢⱼ)
 end
 
 
 """
-    mcm(workspace::SpectralWorkspace{T}, spec::MapType, f1_name::String, f2_name::String) where {T}
+    mcm(workspace::SpectralWorkspace{T}, spec::Symbol, f1_name::String, f2_name::String) where {T}
 
 # Arguments:
 - `workspace::SpectralWorkspace{T}`: stores the SHTs of the masks
@@ -238,8 +238,8 @@ end
 
 # Examples
 ```julia
-m1 = PolarizedField("field1", mask1_T, mask1_P)
-m2 = PolarizedField("field2", mask2_T, mask2_P)
+m1 = CovField("field1", mask1_T, mask1_P)
+m2 = CovField("field2", mask2_T, mask2_P)
 workspace = SpectralWorkspace(m1, m2)
 𝐌 = mcm(workspace, spec, "field1", "field2")
 ```
@@ -261,10 +261,10 @@ function mcm(workspace::SpectralWorkspace{T}, spec::String,
     end
 end
 function mcm(workspace::SpectralWorkspace{T}, spec::String,
-             f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+             f1::CovField{T}, f2::CovField{T}) where {T}
     return mcm(workspace, spec, f1.name, f2.name)
 end
-function mcm(spec::String, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+function mcm(spec::String, f1::CovField{T}, f2::CovField{T}) where {T}
     workspace = SpectralWorkspace(f1, f2)
     return mcm(workspace, spec, f1, f2)
 end
@@ -272,7 +272,7 @@ end
 
 # EXPERIMENTAL
 # EE and BB with coupling between them!
-function mcm22(workspace, f1::PolarizedField{T}, f2::PolarizedField{T}) where {T}
+function mcm22(workspace, f1::CovField{T}, f2::CovField{T}) where {T}
     M_EE = mcm(workspace, "EE", f1.name, f2.name).parent
     M_EB = mcm(workspace, "EB", f1.name, f2.name).parent
     num_ell = size(M_EE,1)
