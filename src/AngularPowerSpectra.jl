@@ -12,6 +12,7 @@ import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
+import OffsetArrays
 
 using BandedMatrices
 using LinearAlgebra

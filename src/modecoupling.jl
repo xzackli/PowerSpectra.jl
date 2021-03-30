@@ -75,11 +75,11 @@ function fill_3j!(buffer::Array{T,N}, ℓ₁, ℓ₂, m₁, m₂) where {T,N}
 end
 
 # inner MCM loop TT
-function inner_mcm⁰⁰!(𝐌::SpectralArray{T,2}, lmax::Integer,
+function inner_mcm⁰⁰!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in lmin:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w3j²₀₀ = fill_3j!(buffer, ℓ₁, ℓ₂, 0, 0)
@@ -96,11 +96,11 @@ end
 
 
 # inner MCM loop TE and TB
-function inner_mcm⁰²!(𝐌::SpectralArray{T,2}, lmax::Integer,
+function inner_mcm⁰²!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in lmin:lmax
         tid = Threads.threadid()
         buffer0 = thread_buffers_0[tid]
         buffer2 = thread_buffers_2[tid]
@@ -121,11 +121,11 @@ end
 
 
 # inner MCM loop for spin 2, called "EE" in Planck notation
-function inner_mcm⁺⁺!(𝐌::SpectralArray{T,2}, lmax::Integer,
+function inner_mcm⁺⁺!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in lmin:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w3j²₂₂ = fill_3j!(buffer, ℓ₁, ℓ₂, -2, 2)
@@ -142,11 +142,11 @@ end
 
 
 # inner MCM loop for spin 2
-function inner_mcm⁻⁻!(𝐌::SpectralArray{T,2}, lmax::Integer,
+function inner_mcm⁻⁻!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
-    @qthreads for ℓ₁ in 2:lmax
+    @qthreads for ℓ₁ in lmin:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
             w3j²₂₂ = fill_3j!(buffer, ℓ₁, ℓ₂, -2, 2)
@@ -178,21 +178,22 @@ end
 """
 function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
              lmin=2, lmax=nothing) where T
-    if isnothing(lmax)
+    if isnothing(lmax)  # use alm lmax if an lmax is not specified
         lmax = min(alm₁.lmax, alm₂.lmax)
     end
     Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂))
 
     if spec == :TT
         𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-        inner_mcm⁰⁰!(𝐌, lmax, Vᵢⱼ)
+        return inner_mcm⁰⁰!(𝐌, lmin, lmax, Vᵢⱼ)
     elseif spec ∈ (:TE, :ET, :TB, :BT)
         𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-        inner_mcm⁰²!(𝐌, lmax, Vᵢⱼ)
+        inner_mcm⁰²!(𝐌, lmin, lmax, Vᵢⱼ)
     elseif spec == :EE
         𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-        inner_mcm⁺⁺!(𝐌, lmax, Vᵢⱼ)
+        inner_mcm⁺⁺!(𝐌, lmin, lmax, Vᵢⱼ)
     end
+
 end
 
 # convenience function
