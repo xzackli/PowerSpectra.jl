@@ -112,7 +112,7 @@ end
 
 
     # test decoupling
-    𝐌 = mcm("EE", m1, m2)
+    𝐌 = mcm(:EE, m1.maskP, m2.maskP)
     C_decoupled = decouple_covmat(C, 𝐌, 𝐌; lmin1=2, lmin2=2)
 
     # # by default, decouple has lmin=2

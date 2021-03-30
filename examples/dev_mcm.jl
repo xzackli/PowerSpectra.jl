@@ -11,7 +11,7 @@ a2 = map2alm(mask2)
 M = mcm(:TE, a1, a2)
 
 ##
-
+M = mcm(:ET, a1, a2)
 
 
 ##

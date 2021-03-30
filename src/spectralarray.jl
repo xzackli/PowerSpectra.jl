@@ -1,5 +1,5 @@
 import LinearAlgebra: inv
-import Base: parent
+import Base: parent, similar
 
 # an OffsetArray that defaults to zero-based indexing.
 struct SpectralArray{T,N,AA<:AbstractArray} <: AbstractArray{T,N}
@@ -28,6 +28,18 @@ function SpectralVector(A::AbstractArray{T,1}, offsets) where {T,N}
 end
 
 Base.parent(A::SpectralArray) = parent(A.parent)
+
+Base.similar(A::SpectralArray, ::Type{T}, dims::Dims) where T =
+    similar_SA(parent(A), T, dims)
+function similar_SA(A::AbstractArray, ::Type{T}, inds::Tuple) where T
+    B = similar(A, T, map(_indexlength, inds))
+    return SpectralArray(OffsetArray(B, map(_offset, axes(B), inds)))
+end
+Base.BroadcastStyle(::Type{<:SpectralArray}) = Broadcast.ArrayStyle{SpectralArray}()
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{SpectralArray}}, ::Type{ElType}) where ElType
+    SpectralArray(similar(Array{ElType}, axes(bc)))
+end
+
 
 # function LinearAlgebra.lu(a::SpectralArray{T,2,AA}) where {T,AA}
 #     return LinearAlgebra.lu(a.parent::AA)

@@ -176,18 +176,21 @@ end
 # Returns:
 - `SpectralArray{T,2}`: the index where `val` is located in the `array`
 """
-function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}; lmax=nothing) where T
+function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
+             lmin=2, lmax=nothing) where T
     if isnothing(lmax)
         lmax = min(alm₁.lmax, alm₂.lmax)
     end
     Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂))
-    𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
 
     if spec == :TT
+        𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
         inner_mcm⁰⁰!(𝐌, lmax, Vᵢⱼ)
     elseif spec ∈ (:TE, :ET, :TB, :BT)
+        𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
         inner_mcm⁰²!(𝐌, lmax, Vᵢⱼ)
     elseif spec == :EE
+        𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
         inner_mcm⁺⁺!(𝐌, lmax, Vᵢⱼ)
     end
 end
@@ -388,7 +391,7 @@ function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::AbstractA
     return alm2cl(alm₁, alm₂, lu(mcm))
 end
 
-function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::OffsetArray) where {T<:Number}
+function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::SpectralArray) where {T<:Number}
     return alm2cl(alm₁, alm₂, lu(parent(mcm)))
 end
 
