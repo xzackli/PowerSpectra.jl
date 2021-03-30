@@ -190,7 +190,7 @@ gcf()
 
 using Statistics
 clf()
-plot( (Statistics.var(sims, dims=2) ./ diag(C.parent))[2:2nside] )
+plot( (Statistics.var(sims, dims=2) ./ diag(parent(C)))[2:2nside] )
 # plot( 1 ./ wl.parent .^ 4)
 ylabel(raw"$\mathrm{Var}^{\mathrm{sim}}(C_{\ell}) / \mathrm{Var}^{\mathrm{analytic}}(C_{\ell})$")
 xlabel(raw"Multipole moment, $\ell$")
@@ -227,10 +227,10 @@ covar_00_00 = nmt.gaussian_covariance(cw,
 using Statistics
 clf()
 
-# plot( ( diag(covar_00_00) ./ diag(C.parent)[3:(3nside)])[2:2nside],
+# plot( ( diag(covar_00_00) ./ diag(parent(C))[3:(3nside)])[2:2nside],
 #     label=raw"$\mathrm{Var}^{\mathrm{nmt}}(C_{\ell}) / \mathrm{Var}^{\mathrm{planck}}(C_{\ell})$")
 
-plot( (Statistics.var(sims, dims=2) ./ diag(C.parent))[1:2nside],
+plot( (Statistics.var(sims, dims=2) ./ diag(parent(C)))[1:2nside],
     label=raw"$\mathrm{Var}^{\mathrm{sim}}(C_{\ell}) / \mathrm{Var}^{\mathrm{planck}}(C_{\ell})$")
 plot( 2:(2nside+1), (Statistics.var(sims, dims=2)[3:(3nside)] ./ diag(covar_00_00))[1:2nside],
     label=raw"$\mathrm{Var}^{\mathrm{sim}}(C_{\ell}) / \mathrm{Var}^{\mathrm{nmt}}(C_{\ell})$")
@@ -249,7 +249,7 @@ gcf()
 
 # m.pixels .*= mask.pixels
 # Cl_hat = (alm2cl(map2alm(m; niter=3)))
-# Cl_hat = inv(Symmetric(M.parent)) * Cl_hat
+# Cl_hat = inv(Symmetric(parent(M))) * Cl_hat
 
 # println(sum(Cl_hat[100:300]) / 200)
 ##
@@ -270,7 +270,7 @@ gcf()
 using LinearAlgebra
 using PyPlot
 plt.clf()
-plt.plot(diag(M.parent,4))
+plt.plot(diag(parent(M),4))
 plt.gcf()
 ##
 

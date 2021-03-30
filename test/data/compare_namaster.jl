@@ -58,7 +58,7 @@ M_EE = mcm(workspace, "EE", "143_hm1", "143_hm2").parent
 M_EB = mcm(workspace, "EB", "143_hm1", "143_hm2").parent
 M = M_EE - M_EB * inv(M_EE) * M_EB
 M[1,1], M[2,2] = 1.0, 1.0
-# Cl_hat = alm2cl(a1[2], a2[2], lu(M.parent), flat_beam, flat_beam)
+# Cl_hat = alm2cl(a1[2], a2[2], lu(parent(M)), flat_beam, flat_beam)
 Cl_hat = alm2cl(a1[2], a2[2], M)
 
 ##
@@ -149,7 +149,7 @@ M_EE = mcm(workspace, "EE", "143_hm1", "143_hm2")
 M_EB = mcm(workspace, "EB", "143_hm1", "143_hm2")
 
 ##
-# mcm_aps = M.parent
+# mcm_aps = parent(M)
 M₊ = w.get_coupling_matrix()[1:4:4lmax+1, 1:4:4lmax+1][3:end,3:end]
 M₋ = w.get_coupling_matrix()[1:4:4lmax+1, 4:4:4lmax+4][3:end,3:end]
 

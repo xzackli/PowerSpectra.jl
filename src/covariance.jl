@@ -8,9 +8,9 @@ by mutating M. Zeros out ℓ₁, ℓ₂ within BOTH lmin1 and lmin2 (i.e the cor
 function decouple_covmat(Y::SA, B1::SA, B2::SA; lmin1=2, lmin2=2) where {T, SA <: SpectralArray{T,2}}
     M = deepcopy(Y)
     M[0:(lmin1-1), 0:(lmin2-1)] .= zero(T)
-    C = M.parent
-    rdiv!(C', lu(B1.parent'))
-    rdiv!(C, lu(B2.parent'))
+    C = parent(M)
+    rdiv!(C', lu(parent(B1)'))
+    rdiv!(C, lu(parent(B2)'))
     return M
 end
 

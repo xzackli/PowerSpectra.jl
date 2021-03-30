@@ -65,18 +65,24 @@ function Ξ_TE(𝐖::SpectralVector{T, AA},
     return Ξ / (4π)
 end
 
+# use a view of a memory buffer and fill with wigner 3j
+function fill_3j!(buffer::Array{T,N}, ℓ₁, ℓ₂, m₁, m₂) where {T,N}
+    w = WignerF(T, ℓ₁, ℓ₂, m₁, m₂)  # set up the wigner recurrence
+    buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
+    w3j = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
+    wigner3j_f!(w, w3j)  # deposit symbols into buffer
+    return w3j
+end
+
 # inner MCM loop TT
-function loop_mcm_TT!(𝐌::SpectralArray{T,2}, lmax::Integer,
+function inner_mcm⁰⁰!(𝐌::SpectralArray{T,2}, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
     @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
-            w = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
-            buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-            w3j²₀₀ = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-            wigner3j_f!(w, w3j²₀₀)  # deposit symbols into buffer
+            w3j²₀₀ = fill_3j!(buffer, ℓ₁, ℓ₂, 0, 0)
             w3j²₀₀.symbols .= w3j²₀₀.symbols .^ 2  # square the symbols
             Ξ = Ξ_TT(Vᵢⱼ, w3j²₀₀, ℓ₁, ℓ₂)
             𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
@@ -88,17 +94,41 @@ function loop_mcm_TT!(𝐌::SpectralArray{T,2}, lmax::Integer,
     return 𝐌
 end
 
-function loop_mcm_EE!(𝐌::SpectralArray{T,2}, lmax::Integer,
+
+# inner MCM loop TE and TB
+function inner_mcm⁰²!(𝐌::SpectralArray{T,2}, lmax::Integer,
+                      Vᵢⱼ::SpectralVector{T}) where {T}
+    thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
+    thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
+    @qthreads for ℓ₁ in 2:lmax
+        tid = Threads.threadid()
+        buffer0 = thread_buffers_0[tid]
+        buffer2 = thread_buffers_2[tid]
+        for ℓ₂ in ℓ₁:lmax
+            w3j₀₀ = fill_3j!(buffer0, ℓ₁, ℓ₂, 0, 0)
+            w3j₂₂ = fill_3j!(buffer2, ℓ₁, ℓ₂, -2, 2)
+            w3j₀₀₂₂ = w3j₀₀
+            w3j₀₀₂₂.symbols .*= w3j₂₂.symbols
+            Ξ = Ξ_TE(Vᵢⱼ, w3j₀₀₂₂, ℓ₁, ℓ₂)
+            𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
+            𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
+        end
+    end
+    𝐌[0,0] = one(T)
+    𝐌[1,1] = one(T)
+    return 𝐌
+end
+
+
+# inner MCM loop for spin 2, called "EE" in Planck notation
+function inner_mcm⁺⁺!(𝐌::SpectralArray{T,2}, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
     @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
-            w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-            buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-            w3j²₂₂ = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-            wigner3j_f!(w, w3j²₂₂)  # deposit symbols into buffer
+            w3j²₂₂ = fill_3j!(buffer, ℓ₁, ℓ₂, -2, 2)
             w3j²₂₂.symbols .= w3j²₂₂.symbols .^ 2  # square the symbols
             Ξ = Ξ_EE(Vᵢⱼ, w3j²₂₂, ℓ₁, ℓ₂)
             𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
@@ -111,50 +141,15 @@ function loop_mcm_EE!(𝐌::SpectralArray{T,2}, lmax::Integer,
 end
 
 
-
-function loop_mcm_TE!(𝐌::SpectralArray{T,2}, lmax::Integer,
-                      thread_buffers_0, thread_buffers_2,
-                      Vᵢⱼ::SpectralVector{T}) where {T}
-
-    @qthreads for ℓ₁ in 2:lmax
-        buffer0 = thread_buffers_0[Threads.threadid()]
-        buffer2 = thread_buffers_2[Threads.threadid()]
-
-        for ℓ₂ in ℓ₁:lmax
-            w₀₀ = WignerF(T, ℓ₁, ℓ₂, 0, 0)  # set up the wigner recurrence
-            w₂₂ = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-            buffer_view_0 = uview(buffer0, 1:(w₀₀.nₘₐₓ - w₀₀.nₘᵢₙ + 1))  # preallocated buffer
-            buffer_view_2 = uview(buffer2, 1:(w₂₂.nₘₐₓ - w₂₂.nₘᵢₙ + 1))  # preallocated buffer
-            w3j₀₀ = WignerSymbolVector(buffer_view_0, w₀₀.nₘᵢₙ:w₀₀.nₘₐₓ)
-            w3j₂₂ = WignerSymbolVector(buffer_view_2, w₂₂.nₘᵢₙ:w₂₂.nₘₐₓ)
-            wigner3j_f!(w₀₀, w3j₀₀)  # deposit symbols into buffer
-            wigner3j_f!(w₂₂, w3j₂₂)  # deposit symbols into buffer
-
-            w3j₀₀₂₂ = w3j₀₀
-            w3j₀₀₂₂.symbols .*= w3j₂₂.symbols
-            Ξ = Ξ_TE(Vᵢⱼ, w3j₀₀₂₂, ℓ₁, ℓ₂)
-            𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
-            𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
-
-        end
-    end
-    𝐌[0,0] = one(T)
-    𝐌[1,1] = one(T)
-    return 𝐌
-end
-
-
-function loop_mcm_EB!(𝐌::SpectralArray{T,2}, lmax::Integer,
+# inner MCM loop for spin 2
+function inner_mcm⁻⁻!(𝐌::SpectralArray{T,2}, lmax::Integer,
                       Vᵢⱼ::SpectralVector{T}) where {T}
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
     @qthreads for ℓ₁ in 2:lmax
         buffer = thread_buffers[Threads.threadid()]
         for ℓ₂ in ℓ₁:lmax
-            w = WignerF(T, ℓ₁, ℓ₂, -2, 2)  # set up the wigner recurrence
-            buffer_view = uview(buffer, 1:length(w.nₘᵢₙ:w.nₘₐₓ))  # preallocated buffer
-            w3j²₂₂ = WignerSymbolVector(buffer_view, w.nₘᵢₙ:w.nₘₐₓ)
-            wigner3j_f!(w, w3j²₂₂)  # deposit symbols into buffer
+            w3j²₂₂ = fill_3j!(buffer, ℓ₁, ℓ₂, -2, 2)
             w3j²₂₂.symbols .= w3j²₂₂.symbols .^ 2  # square the symbols
             Ξ = Ξ_EB(Vᵢⱼ, w3j²₂₂, ℓ₁, ℓ₂)
             𝐌[ℓ₁, ℓ₂] = (2ℓ₂ + 1) * Ξ
@@ -181,7 +176,7 @@ end
 # Returns:
 - `SpectralArray{T,2}`: the index where `val` is located in the `array`
 """
-function mcm(spec::Symbol, alm₁::Alm, alm₂::Alm; lmax=nothing)
+function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}; lmax=nothing) where T
     if isnothing(lmax)
         lmax = min(alm₁.lmax, alm₂.lmax)
     end
@@ -189,17 +184,17 @@ function mcm(spec::Symbol, alm₁::Alm, alm₂::Alm; lmax=nothing)
     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
 
     if spec == :TT
-        loop_mcm_TT!(𝐌, lmax, Vᵢⱼ)
-    elseif spec == :TE
-        loop_mcm_TE!(𝐌, lmax, Vᵢⱼ)
-    elseif spec == :ET
-        loop_mcm_ET!(𝐌, lmax, Vᵢⱼ)
+        inner_mcm⁰⁰!(𝐌, lmax, Vᵢⱼ)
+    elseif spec ∈ (:TE, :ET, :TB, :BT)
+        inner_mcm⁰²!(𝐌, lmax, Vᵢⱼ)
     elseif spec == :EE
-        loop_mcm_EE!(𝐌, lmax, Vᵢⱼ)
+        inner_mcm⁺⁺!(𝐌, lmax, Vᵢⱼ)
     end
-
-
 end
+
+# convenience function
+mcm(spec::Symbol, m₁::Map, m₂::Map; lmax=nothing) =
+    mcm(spec, map2alm(m₁), map2alm(m₂); lmax=lmax)
 
 # Workspace mode-coupling routines
 
@@ -311,32 +306,33 @@ end
 
 # EXPERIMENTAL
 # EE and BB with coupling between them!
-function mcm22(workspace, f1::CovField{T}, f2::CovField{T}) where {T}
-    M_EE = mcm(workspace, "EE", f1.name, f2.name).parent
-    M_EB = mcm(workspace, "EB", f1.name, f2.name).parent
-    num_ell = size(M_EE,1)
-    M22 = zeros(2num_ell, 2num_ell)
+# function mcm22(workspace, f1::CovField{T}, f2::CovField{T}) where {T}
+#     M_EE = parent(mcm(workspace, "EE", f1.name, f2.name))
+#     M_EB = parent(mcm(workspace, "EB", f1.name, f2.name))
+#     num_ell = size(M_EE,1)
+#     M22 = zeros(2num_ell, 2num_ell)
 
-    M22[1:num_ell,1:num_ell] .= M_EE
-    M22[num_ell+1:2num_ell,num_ell+1:2num_ell] .= M_EE
-    M22[1:num_ell,num_ell+1:2num_ell] .= M_EB
-    M22[num_ell+1:2num_ell,1:num_ell] .= M_EB
+#     M22[1:num_ell,1:num_ell] .= M_EE
+#     M22[num_ell+1:2num_ell,num_ell+1:2num_ell] .= M_EE
+#     M22[1:num_ell,num_ell+1:2num_ell] .= M_EB
+#     M22[num_ell+1:2num_ell,1:num_ell] .= M_EB
 
-    return M22  # probably need to do pivoted qr as this may be nearly rank deficient
-end
-function mcm22(workspace, f1_name::String, f2_name::String) where {T}
-    M_EE = mcm(workspace, "EE", f1_name, f2_name).parent
-    M_EB = mcm(workspace, "EB", f1_name, f2_name).parent
-    num_ell = size(M_EE,1)
-    M22 = zeros(2num_ell, 2num_ell)
+#     return M22  # probably need to do pivoted qr as this may be nearly rank deficient
+# end
+# function mcm22(workspace, f1_name::String, f2_name::String) where {T}
+#     M_EE = parent(mcm(workspace, "EE", f1_name, f2_name))
+#     M_EB = parent(mcm(workspace, "EB", f1_name, f2_name))
+#     num_ell = size(M_EE,1)
+#     M22 = zeros(2num_ell, 2num_ell)
 
-    M22[1:num_ell,1:num_ell] .= M_EE
-    M22[num_ell+1:2num_ell,num_ell+1:2num_ell] .= M_EE
-    M22[1:num_ell,num_ell+1:2num_ell] .= M_EB
-    M22[num_ell+1:2num_ell,1:num_ell] .= M_EB
+#     M22[1:num_ell,1:num_ell] .= M_EE
+#     M22[num_ell+1:2num_ell,num_ell+1:2num_ell] .= M_EE
+#     M22[1:num_ell,num_ell+1:2num_ell] .= M_EB
+#     M22[num_ell+1:2num_ell,1:num_ell] .= M_EB
 
-    return M22  # probably need to do pivoted qr as this may be nearly rank deficient
-end
+#     return M22  # probably need to do pivoted qr as this may be nearly rank deficient
+# end
+
 # mcm22(f1, f2) = mcm22(SpectralWorkspace(f1, f2), f1, f2)
 
 # i.e.
@@ -377,7 +373,7 @@ function alm2cl(
         alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}},
         factorized_mcm::Factorization, Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
     Cl_hat = alm2cl(alm_1, alm_2, factorized_mcm)
-    return Cl_hat ./ (Bℓ_1.parent .* Bℓ_2.parent)
+    return Cl_hat ./ (parent(Bℓ_1) .* parent(Bℓ_2))
 end
 
 
@@ -393,7 +389,7 @@ function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::AbstractA
 end
 
 function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::OffsetArray) where {T<:Number}
-    return alm2cl(alm₁, alm₂, lu(mcm.parent))
+    return alm2cl(alm₁, alm₂, lu(parent(mcm)))
 end
 
 

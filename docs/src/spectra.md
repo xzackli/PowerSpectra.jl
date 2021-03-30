@@ -44,7 +44,7 @@ M = mcm(:TT, map2alm(mask1), map2alm(mask2))
 ```
 
 Similarly, one could have specified the symbol `:TE`, `:TE`, or `:ET` for other types of cross-spectra[^1].
-The function `mcm` returns a `SpectralArray{T,2}`, which is just a simple array wrapper that makes the array 0-indexed. That means `M[ℓ₁, ℓ₂]` corresponds to the mode-coupling matrix entry ``\mathbf{M}_{\ell_1, \ell_2}``. If you want to access the underlying array, you can use `mcm.parent`. One can optionally truncate the computation with the `lmax` keyword, i.e. `mcm(:TT, mask1, mask2; lmax=10)`. 
+The function `mcm` returns a `SpectralArray{T,2}`, which is just a simple array wrapper that makes the array 0-indexed. That means `M[ℓ₁, ℓ₂]` corresponds to the mode-coupling matrix entry ``\mathbf{M}_{\ell_1, \ell_2}``. If you want to access the underlying array, you can use `parent(mcm).`. One can optionally truncate the computation with the `lmax` keyword, i.e. `mcm(:TT, mask1, mask2; lmax=10)`. 
 
 [^1]: You can combine symbols, in cases where you're looping over combinations of spectra, by using `Symbol`.
     ```julia-repl
@@ -71,7 +71,7 @@ pCl = SpectralVector(alm2cl(alm1, alm2))
 # decouple the spectrum
 Cl = M \ pCl
 ```
-**Note that this performs the linear solve starting at** ``\mathbf{\ell = 2}``, setting ``\hat{C}_{\ell < 2} = 0``. The linear solve operator on `SpectralArrays` is specialized to do this. Most of the time you want to avoid the monopole and dipole, which tend to be very large relative to anisotropies. **You should subtract the monopole and dipole from your maps.** If you really want to perform the linear solve on the monopole and dipole, you can use the underlying arrays to decouple the spectrum, i.e. `Cl_starting_from_zero = M.parent \ pCl.parent`. 
+**Note that this performs the linear solve starting at** ``\mathbf{\ell = 2}``, setting ``\hat{C}_{\ell < 2} = 0``. The linear solve operator on `SpectralArrays` is specialized to do this. Most of the time you want to avoid the monopole and dipole, which tend to be very large relative to anisotropies. **You should subtract the monopole and dipole from your maps.** If you really want to perform the linear solve on the monopole and dipole, you can use the underlying arrays to decouple the spectrum, i.e. `Cl_starting_from_zero = parent(M) \ parent(pCl)`. 
 
 ## Mode Coupling for EE, EB, BB
 

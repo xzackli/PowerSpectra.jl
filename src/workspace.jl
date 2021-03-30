@@ -1,12 +1,12 @@
 
 abstract type AbstractField{T} end
 
-struct Field{T} <: AbstractField{T}
-    name::String
-    maskT::Map{T}
-    σ²::Map{T}
-    beam::SpectralVector{T}
-end
+# struct Field{T} <: AbstractField{T}
+#     name::String
+#     maskT::Map{T}
+#     σ²::Map{T}
+#     beam::SpectralVector{T}
+# end
 
 struct CovField{T} <: AbstractField{T}
     name::String

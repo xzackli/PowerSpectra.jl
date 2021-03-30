@@ -15,20 +15,13 @@ using NPZ
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m1 = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = SpectralWorkspace(m1, m2)
-    M = mcm(workspace, "TT", "143_hm1", "143_hm2")
-
+    M = mcm(:TT, m1.maskT, m2.maskT)
     reference = readdlm("data/mcm_TT_diag.txt")
-    @test all(reference .≈ diag(M.parent)[3:767])
+    @test all(reference .≈ diag(parent(M))[3:767])
     map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
-    Cl_hat = map2cl(map1 * mask, map1 * mask, lu(M.parent), flat_beam, flat_beam)
+    Cl_hat = map2cl(map1 * mask, map1 * mask, lu(parent(M)), flat_beam, flat_beam)
     reference_spectrum = readdlm("data/example_TT_spectrum.txt")
     @test all(reference_spectrum .≈ Cl_hat[3:end])
-
-    # test direct interface
-    M = mcm(:TT, map2alm(mask), map2alm(mask))
-    @test all(reference .≈ diag(M.parent)[3:767])
-
 end
 
 ##
@@ -39,12 +32,10 @@ end
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m1 = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = SpectralWorkspace(m1, m2)
-    M = mcm(workspace, "EE", "143_hm1", "143_hm2")
-    factorized_mcm12 = lu(M.parent)
-
+    M = mcm(:EE, m1.maskP, m2.maskP)
+    factorized_mcm12 = lu(parent(M))
     reference = readdlm("data/mcm_EE_diag.txt")
-    @test all(reference .≈ diag(M.parent)[3:767])
+    @test all(reference .≈ diag(parent(M))[3:767])
 end
 
 ##
@@ -55,14 +46,13 @@ end
     flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     m1 = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    workspace = SpectralWorkspace(m1, m2)
-    M = mcm(workspace, "TE", "143_hm1", "143_hm2")
+    M = mcm(:TE, m1.maskT, m2.maskP)
     reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(M.parent)[3:767])
+    @test all(reference .≈ diag(parent(M))[3:767])
 
-    M = mcm(workspace, "ET", "143_hm1", "143_hm2")
+    M = mcm(:ET, m1.maskP, m2.maskT)
     reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(M.parent)[3:767])
+    @test all(reference .≈ diag(parent(M))[3:767])
 end
 
 ##
@@ -76,28 +66,27 @@ end
     unit_beam = SpectralVector(ones(3*nside))
     m1 = CovField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
     m2 = CovField("143_hm2", mask2_T, mask2_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
-    workspace = SpectralWorkspace(m1, m2)
 
-    M = mcm(workspace, "TT", "143_hm1", "143_hm2")
+    M = mcm(:TT, m1.maskT, m2.maskT)
     M_ref = npzread("data/mcmTT.npy")
-    @test all(isapprox(M.parent[3:end, 3:end], M_ref[3:end, 3:end], atol=1e-11))
+    @test all(isapprox(parent(M)[3:end, 3:end], M_ref[3:end, 3:end], atol=1e-11))
 
-    M = mcm(workspace, "TE", "143_hm1", "143_hm2")
+    M = mcm(:TE, m1.maskT, m2.maskP)
     M_ref = npzread("data/mcmTE.npy")
     for k in 0:3nside
-        @test all(isapprox(diag(M.parent, k)[3:end], diag(M_ref, k)[3:end]))
+        @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 
-    M = mcm(workspace, "ET", "143_hm1", "143_hm2")
+    M = mcm(:ET, m1.maskP, m2.maskT)
     M_ref = npzread("data/mcmET.npy")
 
     for k in 0:3nside
-        @test all(isapprox(diag(M.parent, k)[3:end], diag(M_ref, k)[3:end]))
+        @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 
-    M = mcm(workspace, "EE", "143_hm1", "143_hm2")
+    M = mcm(:EE, m1.maskP, m2.maskP)
     M_ref = npzread("data/mcmEE.npy")
     for k in 0:3nside
-        @test all(isapprox(diag(M.parent, k)[3:end], diag(M_ref, k)[3:end]))
+        @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 end

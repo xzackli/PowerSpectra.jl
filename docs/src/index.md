@@ -8,6 +8,6 @@ CurrentModule = AngularPowerSpectra
 
 ### Conventions: SpectralArray and SpectralVector
 
-This package wraps outputs in a custom `SpectralArray`, which is a simple array type that just makes the array 0-indexed. This is very useful for manipulating angular spectra, as multipoles start with the monopole ``\ell = 0``. The type `SpectralVector` is an alias for a one-dimensional array, `SpectralArray{T,1}`. The one major difference is that matrix multiplication and linear solve operator `\` are specialized for `SpectralArray` to ignore the monopole and dipole, as pseudo-``C_{\ell}`` methods do not handle those multipoles very well.
+This package wraps outputs in a custom `SpectralArray`, which is a simple array type that makes the array 0-indexed. This is useful for manipulating angular spectra, as although Julia's indices start at 1, multipoles start with the monopole ``\ell = 0``. The type `SpectralVector` is an alias for a one-dimensional array, `SpectralArray{T,1}`. The one major difference is that matrix multiplication and linear solve operator `\` are specialized for `SpectralArray` to ignore the monopole and dipole, as pseudo-``C_{\ell}`` methods do not handle those multipoles very well.
 
 You can wrap an array `A` without copying by just calling `SpectralArray(A)`.

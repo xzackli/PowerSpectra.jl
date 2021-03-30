@@ -55,8 +55,8 @@ end
 
 # loop over nonzero elements of a banded SpectralArray
 function specrowrange(𝚵::SpectralArray, r)
-    start = max(2,BandedMatrices.rowstart(𝚵.parent,r+1)-1)
-    stop = BandedMatrices.rowstop(𝚵.parent,r+1)-1
+    start = max(2,BandedMatrices.rowstart(parent(𝚵),r+1)-1)
+    stop = BandedMatrices.rowstop(parent(𝚵),r+1)-1
     return start:stop
 end
 
