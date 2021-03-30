@@ -73,30 +73,30 @@ const SpectrumName = Tuple{Symbol, String, String}
 # Index for the covariance's weighted mask spectra W, indexed X, Y, i, j, α, p, q, β
 const WIndex = Tuple{Symbol, Symbol, String, String, Symbol, String, String, Symbol}
 
-struct SpectralWorkspace{T <: Real}
-    field_names::NTuple{2, String}
-    lmax::Int
+# struct SpectralWorkspace{T <: Real}
+#     field_names::NTuple{2, String}
+#     lmax::Int
 
-    mask_alm::Dict{Tuple{String, Symbol}, Alm{Complex{T}}}  # T and P alms for i and j
-end
+#     mask_alm::Dict{Tuple{String, Symbol}, Alm{Complex{T}}}  # T and P alms for i and j
+# end
 
 
-function SpectralWorkspace(m_i::CovField{T}, m_j::CovField{T}; lmax::Int=0) where {T}
-    field_names = (m_i.name, m_j.name)
-    (m_i.maskT.resolution.nside != m_i.maskP.resolution.nside) && throw(
-        ArgumentError("m_i temperature and polarization nside do not match."))
-    (m_j.maskT.resolution.nside != m_j.maskP.resolution.nside) && throw(
-        ArgumentError("m_j temperature and polarization nside do not match."))
-    lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
+# function SpectralWorkspace(m_i::CovField{T}, m_j::CovField{T}; lmax::Int=0) where {T}
+#     field_names = (m_i.name, m_j.name)
+#     (m_i.maskT.resolution.nside != m_i.maskP.resolution.nside) && throw(
+#         ArgumentError("m_i temperature and polarization nside do not match."))
+#     (m_j.maskT.resolution.nside != m_j.maskP.resolution.nside) && throw(
+#         ArgumentError("m_j temperature and polarization nside do not match."))
+#     lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
 
-    mask_alm = Dict{Tuple{String, Symbol}, Alm{Complex{T}}}(
-        (m_i.name, :TT) => map2alm(m_i.maskT),
-        (m_j.name, :TT) => map2alm(m_j.maskT),
-        (m_i.name, :PP) => map2alm(m_i.maskP),
-        (m_j.name, :PP) => map2alm(m_j.maskP))
+#     mask_alm = Dict{Tuple{String, Symbol}, Alm{Complex{T}}}(
+#         (m_i.name, :TT) => map2alm(m_i.maskT),
+#         (m_j.name, :TT) => map2alm(m_j.maskT),
+#         (m_i.name, :PP) => map2alm(m_i.maskP),
+#         (m_j.name, :PP) => map2alm(m_j.maskP))
 
-    return SpectralWorkspace{T}(field_names, lmax, mask_alm)
-end
+#     return SpectralWorkspace{T}(field_names, lmax, mask_alm)
+# end
 
 
 struct CovarianceWorkspace{T <: Real}
@@ -222,7 +222,6 @@ function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p
     workspace.W_spectra[X, Y, i, j, α, p, q, β] = result
     return result
 end
-
 
 
 # Allocate Vector{T} of a given size for each thread.

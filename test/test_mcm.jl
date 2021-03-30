@@ -8,7 +8,7 @@ using DelimitedFiles
 using NPZ
 
 ##
-@testset "Mode Coupling Matrix TT" begin
+@testset "Mode Coupling Matrix TT with Workspace" begin
     nside = 256
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
@@ -24,10 +24,15 @@ using NPZ
     Cl_hat = map2cl(map1 * mask, map1 * mask, lu(M.parent), flat_beam, flat_beam)
     reference_spectrum = readdlm("data/example_TT_spectrum.txt")
     @test all(reference_spectrum .≈ Cl_hat[3:end])
+
+    # test direct interface
+    M = mcm(:TT, map2alm(mask), map2alm(mask))
+    @test all(reference .≈ diag(M.parent)[3:767])
+
 end
 
 ##
-@testset "Mode Coupling Matrix Diag EE" begin
+@testset "Mode Coupling Matrix Diag EE with Workspace" begin
     nside = 256
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
@@ -43,7 +48,7 @@ end
 end
 
 ##
-@testset "Mode Coupling Matrix Diag TE/ET" begin
+@testset "Mode Coupling Matrix Diag TE/ET with Workspace" begin
     nside = 256
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
@@ -61,7 +66,7 @@ end
 end
 
 ##
-@testset "Full Non-Trivial MCM" begin
+@testset "Full Non-Trivial MCM with Workspace" begin
     nside = 256
     mask1_T = readMapFromFITS("data/mask1_T.fits", 1, Float64)
     mask2_T = readMapFromFITS("data/mask2_T.fits", 1, Float64)
