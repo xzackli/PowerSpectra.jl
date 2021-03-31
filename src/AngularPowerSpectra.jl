@@ -32,7 +32,7 @@ include("beam.jl")
 
 export mcm, decouple_covmat, mask!, map2cl, alm2cl
 export compute_covmat_TTTT, compute_covmat_EEEE
-export SpectralVector, SpectralArray
+export SpectralVector, SpectralArray, spectralzeros
 export channelindex
 
 export CovField

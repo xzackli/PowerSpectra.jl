@@ -1,6 +1,7 @@
 import LinearAlgebra: inv, lu, lutype, copy_oftype, \
+using Base: @propagate_inbounds
 
-# an OffsetArray that defaults to zero-based indexing.
+
 struct SpectralArray{T,N,AA<:AbstractArray} <: AbstractArray{T,N}
     parent::OffsetArray{T,N,AA}
 end
@@ -11,10 +12,21 @@ end
 
 const SpectralVector{T,AA<:AbstractArray} = SpectralArray{T,1,AA}
 
-# """Zero-based vector for representing spectra."""
 SpectralVector(A::AbstractVector) = SpectralArray(OffsetArray(A, 0:(length(A)-1)))
 
-"""Zero-based array for representing spectra matrices."""
+# UnitRange slicing yields the parent array
+@propagate_inbounds Base.getindex(x::SpectralArray, r::Vararg{UnitRange}) =
+    (x.parent[r...])
+
+# other slicing yields a SpectralArray
+@propagate_inbounds Base.getindex(x::SpectralArray, r::Vararg{AbstractRange}) =
+    SpectralArray(x.parent[r...])
+
+"""
+    SpectralArray(A::AbstractArray, [ranges])
+
+A renamed OffsetArray. By default, it produces a 0-indexed array.
+"""
 function SpectralArray(A::AbstractArray{T,N}) where {T,N}
     SpectralArray{T,N,typeof(A)}(OffsetArray(A, map(x->-1, size(A))))
 end
@@ -57,6 +69,27 @@ function LinearAlgebra.inv(a::SpectralArray{T,2,AA}) where {T,AA}
     return SpectralArray(LinearAlgebra.inv(a.parent.parent::AA),
         a.parent.offsets)
 end
+
+"""
+    spectralzeros(size1, size2, ...)
+    spectralzeros(range1, range2, ...)
+
+Utility function for generating a SpectralArray by passing arguments of
+ranges or sizes, just like zeros.
+"""
+spectralzeros(r::Vararg{Int}) = SpectralArray(zeros(r), map(x->-1, r))
+spectralzeros(r::Vararg{AbstractRange}) = SpectralArray(zeros(r))
+
+
+"""
+    spectralones(size1, size2, ...)
+    spectralones(range1, range2, ...)
+
+Utility function for generating a SpectralArray by passing arguments of
+ranges or sizes, just like ones.
+"""
+spectralones(r::Vararg{Int}) = SpectralArray(ones(r), map(x->-1, r))
+spectralones(r::Vararg{AbstractRange}) = SpectralArray(ones(r))
 
 
 # a contiguous matrix with some ell information slapped on for safety

@@ -178,16 +178,15 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
     if isnothing(lmax)  # use alm lmax if an lmax is not specified
         lmax = min(alm₁.lmax, alm₂.lmax)
     end
-    Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂)[1:(lmax+1)], 0:lmax)
-    num_ell = length(lmin:lmax)
+    Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂)[1:(lmax+1)])  # zero-indexed
     if spec == :TT
-        𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
+        𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁰⁰!(𝐌, Vᵢⱼ)
     elseif spec ∈ (:TE, :ET, :TB, :BT)
-        𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
+        𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁰²!(𝐌, Vᵢⱼ)
     elseif spec == :EE
-        𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
+        𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁺⁺!(𝐌, Vᵢⱼ)
     end
 end
