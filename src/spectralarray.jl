@@ -1,4 +1,4 @@
-import LinearAlgebra: inv
+import LinearAlgebra: inv, lu, lutype, copy_oftype, \
 
 # an OffsetArray that defaults to zero-based indexing.
 struct SpectralArray{T,N,AA<:AbstractArray} <: AbstractArray{T,N}
@@ -24,7 +24,7 @@ function SpectralArray(A::AbstractArray{T,N}, offsets) where {T,N}
 end
 
 function SpectralVector(A::AbstractArray{T,1}, offsets) where {T,N}
-    SpectralVector(SpectralVector(A, offsets))
+    SpectralVector(OffsetArray(A, offsets))
 end
 
 @inline SpectralArray(A::AbstractArray, inds::Vararg) = SpectralArray(OffsetArray(A, inds))
@@ -36,8 +36,9 @@ parenttype(::Type{SpectralArray{T,N,AA}}) where {T,N,AA} = AA
 parenttype(A::SpectralArray) = parenttype(typeof(A))
 
 
-# Base.similar(A::SpectralArray, ::Type{T}, dims::Dims) where T =
-#     similar_SA(parent(A), T, dims)
+function Base.similar(A::SpectralArray)
+    return SpectralArray(similar(parent(A)), A.parent.offsets)
+end
 # function similar_SA(A::AbstractArray, ::Type{T}, inds::Tuple) where T
 #     B = similar(A, T, map(OffsetArray._indexlength, inds))
 #     return SpectralArray(OffsetArray(B, map(OffsetArray._offset, axes(B), inds)))
@@ -110,12 +111,34 @@ function Base.show(io::IO, m::MIME"text/plain",
     Base.show(io, m, parent(ba))
 end
 
-# function BlockSpectralMatrix(A₁₁::SA, A₁₂::SA,
-#         A₂₁::SA, A₂₂::SA) where {T, SA<:SpectralArray{T,2}}
-#     𝐀 = [
-#         parent(A₁₁)  parent(A₁₂);
-#         parent(A₂₁)  parent(A₂₂)
-#     ]
-#     m_ells = (axes(A₁₁,1), axes(A₂₁,1))
-#     n_ells = (axes(A₁₁,2), axes(A₁₂,2))
+
+struct SpectralFactorization{T,F<:Factorization{T}} <: Factorization{T}
+    parent::F
+    offsets::NTuple{2,Int}
+end
+
+function LinearAlgebra.lu(A::SpectralArray{T,2}, pivot::Union{Val{false}, Val{true}}=Val(true);
+            check::Bool = true) where T
+    S = lutype(T)
+    pA = parent(A)
+    F = lu!(copy_oftype(pA, S), pivot; check = check)
+    return SpectralFactorization(F, A.parent.offsets)
+end
+
+function LinearAlgebra.inv(A::SpectralArray{T,2}) where T
+    return SpectralArray(inv(parent(A)), A.parent.offsets)
+end
+
+function LinearAlgebra.inv(F::SpectralFactorization)
+    return SpectralArray(inv(F), F.offsets)
+end
+
+# function (\)(F::SpectralFactorization, B::SpectralVector{T}) where T
+#     @assert F.offsets[2] == B.parent.offsets
+#     Y =
+#     ldiv!()
+# end
+
+# function (\)(A::SpectralArray, B::SpectralVector{T}) where T
+#     return lu(A) \ B
 # end

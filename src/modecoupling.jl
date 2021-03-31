@@ -75,8 +75,11 @@ function fill_3j!(buffer::Array{T,N}, ℓ₁, ℓ₂, m₁, m₂) where {T,N}
 end
 
 # inner MCM loop TT
-function inner_mcm⁰⁰!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
+function inner_mcm⁰⁰!(𝐌::SpectralArray{T,2},
                       Vᵢⱼ::SpectralVector{T}) where {T}
+    @assert axes(𝐌, 1) == axes(𝐌, 2)
+    lmin = first(axes(𝐌, 1))
+    lmax = last(axes(𝐌, 1))
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
     @qthreads for ℓ₁ in lmin:lmax
@@ -89,8 +92,6 @@ function inner_mcm⁰⁰!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer
             𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
-    𝐌[0,0] = one(T)
-    𝐌[1,1] = one(T)
     return 𝐌
 end
 
@@ -114,8 +115,6 @@ function inner_mcm⁰²!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
             𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
-    𝐌[0,0] = one(T)
-    𝐌[1,1] = one(T)
     return 𝐌
 end
 
@@ -135,8 +134,6 @@ function inner_mcm⁺⁺!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer
             𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
-    𝐌[0,0] = one(T)
-    𝐌[1,1] = one(T)
     return 𝐌
 end
 
@@ -156,8 +153,6 @@ function inner_mcm⁻⁻!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer
             𝐌[ℓ₂, ℓ₁] = (2ℓ₁ + 1) * Ξ
         end
     end
-    𝐌[0,0] = one(T)
-    𝐌[1,1] = one(T)
     return 𝐌
 end
 
@@ -181,16 +176,16 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
     if isnothing(lmax)  # use alm lmax if an lmax is not specified
         lmax = min(alm₁.lmax, alm₂.lmax)
     end
-    Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂))
-
+    Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂)[1:(lmax+1)], 0:lmax)
+    num_ell = length(lmin:lmax)
     if spec == :TT
-        𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-        return inner_mcm⁰⁰!(𝐌, lmin, lmax, Vᵢⱼ)
+        𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
+        return inner_mcm⁰⁰!(𝐌, Vᵢⱼ)
     elseif spec ∈ (:TE, :ET, :TB, :BT)
-        𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+        𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
         inner_mcm⁰²!(𝐌, lmin, lmax, Vᵢⱼ)
     elseif spec == :EE
-        𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+        𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
         inner_mcm⁺⁺!(𝐌, lmin, lmax, Vᵢⱼ)
     end
 
