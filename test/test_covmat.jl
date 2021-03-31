@@ -13,16 +13,15 @@ using NPZ
     B1 = [1.2 0.6 0.1; 0.3 1.4 0.5; 0.44 0.2 1.3]
     B2 = [1.6 0.4 0.1; 0.3 1.4 0.9; 0.45 0.8 1.7]
     Cref = inv(B1) * (A) * (inv(B2)')
-    C = decouple_covmat(SpectralArray(deepcopy(A)), SpectralArray(B1), SpectralArray(B2);
-        lmin1=0, lmin2=0)
+    C = decouple_covmat(SpectralArray(deepcopy(A)), SpectralArray(B1), SpectralArray(B2))
     @test all(Cref .≈ parent(C))
 
-    A₀ = deepcopy(A)
-    A₀[1,1] = 0.0
-    Cref = inv(B1) * A₀ * (inv(B2)')
-    C = decouple_covmat(SpectralArray(deepcopy(A)), SpectralArray(B1), SpectralArray(B2);
-        lmin1=1, lmin2=1)
-    @test all(Cref .≈ parent(C))
+    # A₀ = deepcopy(A)
+    # A₀[1,1] = 0.0
+    # Cref = inv(B1) * A₀ * (inv(B2)')
+    # C = decouple_covmat(SpectralArray(deepcopy(A)), SpectralArray(B1), SpectralArray(B2);
+    #     lmin1=1, lmin2=1)
+    # @test all(Cref .≈ parent(C))
 end
 
 ##

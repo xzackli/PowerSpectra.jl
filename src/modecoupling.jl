@@ -78,8 +78,7 @@ end
 function inner_mcm⁰⁰!(𝐌::SpectralArray{T,2},
                       Vᵢⱼ::SpectralVector{T}) where {T}
     @assert axes(𝐌, 1) == axes(𝐌, 2)
-    lmin = first(axes(𝐌, 1))
-    lmax = last(axes(𝐌, 1))
+    lmin, lmax = first(axes(𝐌, 1)), last(axes(𝐌, 1))
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
     @qthreads for ℓ₁ in lmin:lmax
@@ -97,8 +96,9 @@ end
 
 
 # inner MCM loop TE and TB
-function inner_mcm⁰²!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
-                      Vᵢⱼ::SpectralVector{T}) where {T}
+function inner_mcm⁰²!(𝐌::SpectralArray{T,2}, Vᵢⱼ::SpectralVector{T}) where {T}
+    @assert axes(𝐌, 1) == axes(𝐌, 2)
+    lmin, lmax = first(axes(𝐌, 1)), last(axes(𝐌, 1))
     thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
     @qthreads for ℓ₁ in lmin:lmax
@@ -120,8 +120,9 @@ end
 
 
 # inner MCM loop for spin 2, called "EE" in Planck notation
-function inner_mcm⁺⁺!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
-                      Vᵢⱼ::SpectralVector{T}) where {T}
+function inner_mcm⁺⁺!(𝐌::SpectralArray{T,2}, Vᵢⱼ::SpectralVector{T}) where {T}
+    @assert axes(𝐌, 1) == axes(𝐌, 2)
+    lmin, lmax = first(axes(𝐌, 1)), last(axes(𝐌, 1))
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
     @qthreads for ℓ₁ in lmin:lmax
@@ -139,8 +140,9 @@ end
 
 
 # inner MCM loop for spin 2
-function inner_mcm⁻⁻!(𝐌::SpectralArray{T,2}, lmin::Integer, lmax::Integer,
-                      Vᵢⱼ::SpectralVector{T}) where {T}
+function inner_mcm⁻⁻!(𝐌::SpectralArray{T,2}, Vᵢⱼ::SpectralVector{T}) where {T}
+    @assert axes(𝐌, 1) == axes(𝐌, 2)
+    lmin, lmax = first(axes(𝐌, 1)), last(axes(𝐌, 1))
     thread_buffers = get_thread_buffers(T, 2lmax+1)
 
     @qthreads for ℓ₁ in lmin:lmax
@@ -183,12 +185,11 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
         return inner_mcm⁰⁰!(𝐌, Vᵢⱼ)
     elseif spec ∈ (:TE, :ET, :TB, :BT)
         𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
-        inner_mcm⁰²!(𝐌, lmin, lmax, Vᵢⱼ)
+        return inner_mcm⁰²!(𝐌, Vᵢⱼ)
     elseif spec == :EE
         𝐌 = SpectralArray(zeros(T, num_ell, num_ell), lmin:lmax, lmin:lmax)
-        inner_mcm⁺⁺!(𝐌, lmin, lmax, Vᵢⱼ)
+        return inner_mcm⁺⁺!(𝐌, Vᵢⱼ)
     end
-
 end
 
 # convenience function
@@ -196,111 +197,6 @@ mcm(spec::Symbol, m₁::Map, m₂::Map; lmax=nothing) =
     mcm(spec, map2alm(m₁), map2alm(m₂); lmax=lmax)
 
 # Workspace mode-coupling routines
-
-# function compute_mcm_TT(workspace::SpectralWorkspace{T},
-#                         name_i::String, name_j::String; lmax::Int=0) where {T}
-#     lmax = iszero(lmax) ? workspace.lmax : lmax
-#     Vᵢⱼ = SpectralVector(alm2cl(workspace.mask_alm[name_i, :TT], workspace.mask_alm[name_j, :TT]))
-#     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-#     return loop_mcm_TT!(𝐌, lmax, Vᵢⱼ)
-# end
-
-# function compute_mcm_EE(workspace::SpectralWorkspace{T},
-#                         name_i::String, name_j::String; lmax::Int=0) where {T}
-
-#     lmax = iszero(lmax) ? workspace.lmax : lmax
-#     Vᵢⱼ = SpectralVector(alm2cl(
-#         workspace.mask_alm[name_i, :PP],
-#         workspace.mask_alm[name_j, :PP]))
-#     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-#     return loop_mcm_EE!(𝐌, lmax, Vᵢⱼ)
-# end
-
-# function compute_mcm_TE(workspace::SpectralWorkspace{T},
-#                         name_i::String, name_j::String; lmax::Int=0) where {T}
-
-#     lmax = iszero(lmax) ? workspace.lmax : lmax
-#     thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
-#     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
-
-#     Vᵢⱼ = SpectralVector(alm2cl(
-#         workspace.mask_alm[name_i, :TT],
-#         workspace.mask_alm[name_j, :PP]))
-#     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-#     return loop_mcm_TE!(𝐌, lmax, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
-# end
-
-
-# function compute_mcm_ET(workspace::SpectralWorkspace{T},
-#                      name_i::String, name_j::String; lmax::Int=0) where {T}
-
-#     lmax = iszero(lmax) ? workspace.lmax : lmax
-#     thread_buffers_0 = get_thread_buffers(T, 2lmax+1)
-#     thread_buffers_2 = get_thread_buffers(T, 2lmax+1)
-
-#     Vᵢⱼ = SpectralVector(alm2cl(
-#         workspace.mask_alm[name_i, :PP],
-#         workspace.mask_alm[name_j, :TT]))
-#     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-#     return loop_mcm_TE!(𝐌, lmax, thread_buffers_0, thread_buffers_2, Vᵢⱼ)
-# end
-
-# function compute_mcm_EB(workspace::SpectralWorkspace{T},
-#                         name_i::String, name_j::String; lmax::Int=0) where {T}
-
-#     lmax = iszero(lmax) ? workspace.lmax : lmax
-#     Vᵢⱼ = SpectralVector(alm2cl(
-#         workspace.mask_alm[name_i, :PP],
-#         workspace.mask_alm[name_j, :PP]))
-#     𝐌 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
-#     return loop_mcm_EB!(𝐌, lmax, Vᵢⱼ)
-# end
-
-
-# """
-#     mcm(workspace::SpectralWorkspace{T}, spec::Symbol, f1_name::String, f2_name::String) where {T}
-
-# # Arguments:
-# - `workspace::SpectralWorkspace{T}`: stores the SHTs of the masks
-# - `spec::String`: the spectrum to compute, such as "TT", "TE", or "EE"
-# - `f1_name::String`: the name of the first field
-# - `f2_name::String`: the name of the second field
-
-# # Returns:
-# - `SpectralArray{T,2}`: zero-indexed array containing the mode-coupling matrix
-
-# # Examples
-# ```julia
-# m1 = CovField("field1", mask1_T, mask1_P)
-# m2 = CovField("field2", mask2_T, mask2_P)
-# workspace = SpectralWorkspace(m1, m2)
-# 𝐌 = mcm(workspace, spec, "field1", "field2")
-# ```
-# """
-# function mcm(workspace::SpectralWorkspace{T}, spec::String,
-#              f1_name::String, f2_name::String) where {T}
-#     if spec == "TT"
-#         return compute_mcm_TT(workspace, f1_name, f2_name)
-#     elseif spec == "TE"
-#         return compute_mcm_TE(workspace, f1_name, f2_name)
-#     elseif spec == "ET"
-#         return compute_mcm_ET(workspace, f1_name, f2_name)
-#     elseif spec == "EE"
-#         return compute_mcm_EE(workspace, f1_name, f2_name)
-#     elseif spec == "EB"
-#         return compute_mcm_EB(workspace, f1_name, f2_name)
-#     else
-#         throw(ArgumentError("Spectrum requested is not implemented."))
-#     end
-# end
-# function mcm(workspace::SpectralWorkspace{T}, spec::String,
-#              f1::CovField{T}, f2::CovField{T}) where {T}
-#     return mcm(workspace, spec, f1.name, f2.name)
-# end
-# function mcm(spec::String, f1::CovField{T}, f2::CovField{T}) where {T}
-#     workspace = SpectralWorkspace(f1, f2)
-#     return mcm(workspace, spec, f1, f2)
-# end
 
 
 # EXPERIMENTAL
@@ -390,7 +286,6 @@ end
 function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::SpectralArray) where {T<:Number}
     return alm2cl(alm₁, alm₂, lu(parent(mcm)))
 end
-
 
 
 function alm2cl(a1_E_B::Tuple{Alm, Alm}, a2_E_B::Tuple{Alm, Alm}, mcm)
