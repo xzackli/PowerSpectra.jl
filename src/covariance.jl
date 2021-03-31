@@ -39,7 +39,7 @@ function coupledcov(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace{T},
     𝐂 = spectralzeros(lmin:lmax, lmin:lmax)
 
     if length(noise_ratios) == 0  # by default, do not rescale for noise
-        identity_spectrum = SpectralVector(ones(lmax+1))
+        identity_spectrum = spectralones(0:lmax)
         noise_ratios = DefaultDict(identity_spectrum)
     end
 

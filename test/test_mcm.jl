@@ -66,7 +66,7 @@ end
     mask1_P = readMapFromFITS("data/mask1_P.fits", 1, Float64)
     mask2_P = readMapFromFITS("data/mask2_P.fits", 1, Float64)
     unit_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    unit_beam = SpectralVector(ones(3*nside))
+    unit_beam = spectralones(0:(3nside-1))
     m1 = CovField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
     m2 = CovField("143_hm2", mask2_T, mask2_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
 
