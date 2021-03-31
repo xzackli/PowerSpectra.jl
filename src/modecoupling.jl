@@ -174,7 +174,7 @@ end
 - `SpectralArray{T,2}`: the index where `val` is located in the `array`
 """
 function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
-             lmin=2, lmax=nothing) where T
+             lmin=0, lmax=nothing) where T
     if isnothing(lmax)  # use alm lmax if an lmax is not specified
         lmax = min(alm₁.lmax, alm₂.lmax)
     end

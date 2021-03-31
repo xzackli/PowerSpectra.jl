@@ -17,7 +17,7 @@ using NPZ
     # m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     M = mcm(:TT, mask, mask)
     reference = readdlm("data/mcm_TT_diag.txt")
-    @test all(reference .≈ diag(parent(M))[1:end-1])
+    @test all(reference .≈ diag(parent(M))[3:767])
     # map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
     pCl = SpectralVector(alm2cl(map2alm(flat_map)))
     # lu(M)
@@ -38,7 +38,7 @@ end
     M = mcm(:EE, m1.maskP, m2.maskP)
     factorized_mcm12 = lu(parent(M))
     reference = readdlm("data/mcm_EE_diag.txt")
-    @test all(reference .≈ diag(parent(M))[1:end-1])
+    @test all(reference .≈ diag(parent(M))[3:767])
 end
 
 ##
@@ -51,11 +51,11 @@ end
     m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
     M = mcm(:TE, m1.maskT, m2.maskP)
     reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(parent(M))[1:end-1])
+    @test all(reference .≈ diag(parent(M))[3:767])
 
     M = mcm(:ET, m1.maskP, m2.maskT)
     reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(parent(M))[1:end-1])
+    @test all(reference .≈ diag(parent(M))[3:767])
 end
 
 ##
@@ -72,24 +72,24 @@ end
 
     M = mcm(:TT, m1.maskT, m2.maskT)
     M_ref = npzread("data/mcmTT.npy")
-    @test all(isapprox(parent(M), M_ref[3:end, 3:end], atol=1e-11))
+    @test all(isapprox(parent(M)[3:end, 3:end], M_ref[3:end, 3:end], atol=1e-11))
 
     M = mcm(:TE, m1.maskT, m2.maskP)
     M_ref = npzread("data/mcmTE.npy")
     for k in 0:3nside
-        @test all(isapprox(diag(parent(M), k), diag(M_ref, k)[3:end]))
+        @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 
     M = mcm(:ET, m1.maskP, m2.maskT)
     M_ref = npzread("data/mcmET.npy")
 
     for k in 0:3nside
-        @test all(isapprox(diag(parent(M), k), diag(M_ref, k)[3:end]))
+        @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 
     M = mcm(:EE, m1.maskP, m2.maskP)
     M_ref = npzread("data/mcmEE.npy")
     for k in 0:3nside
-        @test all(isapprox(diag(parent(M), k), diag(M_ref, k)[3:end]))
+        @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 end

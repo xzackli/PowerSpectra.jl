@@ -43,7 +43,7 @@ f3 = f1
 f4 = f2
 
 # compute covariance between the (f1 × f2) spectrum and (f3 × f4) spectrum  
-w = CovarianceWorkspace(f1, f2, f3, f4)
+workspace = CovarianceWorkspace(f1, f2, f3, f4)
 ```
 A covariance matrix calculation needs an assumed signal spectrum for each channel you want. 
 You need to generate a dictionary that maps the names of various cross-spectra to [`SpectralVector`](@ref).
@@ -65,7 +65,7 @@ spectra = Dict{SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
 Now all that remains is to compute the coupled covmat.
 
 ```julia
-C = coupledcov(:TT, :TT, "143_hm1", "143_hm2", w, spectra)
+C = coupledcov(:TT, :TT, workspace, spectra)
 ```
 
 ```@docs
