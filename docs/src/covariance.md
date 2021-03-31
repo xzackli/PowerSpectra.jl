@@ -68,6 +68,8 @@ Now all that remains is to compute the coupled covmat.
 C = coupledcov(:TT, :TT, workspace, spectra)
 ```
 
+## API
+
 ```@docs
 CovField
 CovarianceWorkspace

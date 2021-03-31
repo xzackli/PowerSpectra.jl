@@ -30,6 +30,8 @@ end
     x = spectralzeros(0:4)
     @test all(parent(x) .== zeros(5))
     @test all(x[0] == 0.0)
+
+    @test all(x .== SpectralVector(zeros(5), -1))
 end
 
 ##

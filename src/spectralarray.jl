@@ -62,12 +62,8 @@ end
 Broadcast.broadcast_unalias(dest::SpectralArray, src::SpectralArray) =
     parent(dest) === parent(src) ? src : Broadcast.unalias(dest, src)
 
-# function LinearAlgebra.lu(a::SpectralArray{T,2,AA}) where {T,AA}
-#     return LinearAlgebra.lu(a.parent::AA)
-# end
-function LinearAlgebra.inv(a::SpectralArray{T,2,AA}) where {T,AA}
-    return SpectralArray(LinearAlgebra.inv(a.parent.parent::AA),
-        a.parent.offsets)
+function LinearAlgebra.inv(A::SpectralArray{T,2}) where T
+    return SpectralArray(inv(parent(A)), A.parent.offsets)
 end
 
 """
@@ -158,9 +154,6 @@ function LinearAlgebra.lu(A::SpectralArray{T,2}, pivot::Union{Val{false}, Val{tr
     return SpectralFactorization(F, A.parent.offsets)
 end
 
-function LinearAlgebra.inv(A::SpectralArray{T,2}) where T
-    return SpectralArray(inv(parent(A)), A.parent.offsets)
-end
 
 function LinearAlgebra.inv(F::SpectralFactorization)
     return SpectralArray(inv(F), F.offsets)
