@@ -79,32 +79,32 @@ end
     m2 = CovField("143_hm2", mask2_T, mask2_P, unit_var, unit_var, unit_var, beam2, beam2)
     workspace = CovarianceWorkspace(m1, m2, m1, m2)
 
-    C = AngularPowerSpectra.compute_coupledcov_TTTT(workspace, spectra, r_coeff);
+    C = coupledcov(:TT, :TT, workspace, spectra, r_coeff)
     C_ref = npzread("data/covar_TT_TT.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupledcov_TTTE(workspace, spectra, r_coeff);
+    C = coupledcov(:TT, :TE, workspace, spectra, r_coeff)
     C_ref = npzread("data/covar_TT_TE.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupledcov_TETE(workspace, spectra, r_coeff);
+    C = coupledcov(:TE, :TE, workspace, spectra, r_coeff)
     C_ref = npzread("data/covar_TE_TE.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupledcov_TTEE(workspace, spectra, r_coeff);
+    C = coupledcov(:TT, :EE, workspace, spectra, r_coeff)
     C_ref = npzread("data/covar_TT_EE.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupledcov_TEEE(workspace, spectra, r_coeff; planck=false);
+    AngularPowerSpectra.coupledcovTEEE!(C, workspace, spectra, r_coeff; planck=false);
     C_ref = npzread("data/covar_TE_EE.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 
-    C = AngularPowerSpectra.compute_coupledcov_EEEE(workspace, spectra, r_coeff);
+    C = coupledcov(:EE, :EE, workspace, spectra, r_coeff)
     C_ref = npzread("data/covar_EE_EE.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 
     # test that planck approx is kind of close at high ell
-    C = AngularPowerSpectra.compute_coupledcov_TEEE(workspace, spectra, r_coeff; planck=true);
+    C = coupledcov(:TE, :EE, workspace, spectra, r_coeff)
     C_ref = npzread("data/covar_TE_EE.npy")
     @test isapprox(diag(parent(C))[30:end], diag(C_ref)[30:end], rtol=0.01)
 end
@@ -120,7 +120,6 @@ end
     C_coupled.parent.parent .= X'*X
     C_decoupled = decouple_covmat(C_coupled, 𝐌, 𝐌)
 
-    # # # by default, decouple has lmin=2
     @test isapprox(parent(C_coupled),
         parent(𝐌) * parent(C_decoupled) * parent(𝐌)' )
 end
