@@ -8,7 +8,6 @@ using DelimitedFiles
 using NPZ
 
 
-
 @testset "Basic Covmat Mode Decoupling" begin
     A = [1.0 0.2 0.3; 0.4 2.0 0.15; 0.3 0.1 1.44]
     B1 = [1.2 0.6 0.1; 0.3 1.4 0.5; 0.44 0.2 1.3]
@@ -109,13 +108,20 @@ end
     C = AngularPowerSpectra.compute_coupledcov_TEEE(workspace, spectra, r_coeff; planck=true);
     C_ref = npzread("data/covar_TE_EE.npy")
     @test isapprox(diag(parent(C))[30:end], diag(C_ref)[30:end], rtol=0.01)
+end
 
-
+##
+@testset "Covariance Matrix Decoupling" begin
+    mask1_T = readMapFromFITS("data/mask1_T.fits", 1, Float64)
+    mask2_T = readMapFromFITS("data/mask2_T.fits", 1, Float64)
     # test decoupling
-    𝐌 = mcm(:EE, m1.maskP, m2.maskP)
-    C_decoupled = decouple_covmat(C, 𝐌, 𝐌; lmin1=2, lmin2=2)
+    𝐌 = mcm(:TT, mask1_T, mask2_T)
+    C_coupled = similar(𝐌)
+    X=rand(size(parent(𝐌))...)
+    C_coupled.parent.parent .= X'*X
+    C_decoupled = decouple_covmat(C_coupled, 𝐌, 𝐌)
 
-    # # by default, decouple has lmin=2
-    @test isapprox(C[2:end,2:end],
-        𝐌[2:end,2:end] * C_decoupled[2:end,2:end] * (𝐌[2:end,2:end]') )
+    # # # by default, decouple has lmin=2
+    @test isapprox(parent(C_coupled),
+        parent(𝐌) * parent(C_decoupled) * parent(𝐌)' )
 end

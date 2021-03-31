@@ -23,7 +23,7 @@ function SpectralArray(A::AbstractArray{T,N}, offsets) where {T,N}
     SpectralArray(OffsetArray(A, offsets))
 end
 
-function SpectralVector(A::AbstractArray{T,1}, offsets) where {T,N}
+function SpectralVector(A::AbstractArray{T,1}, offsets) where T
     SpectralVector(OffsetArray(A, offsets))
 end
 

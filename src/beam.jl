@@ -100,7 +100,7 @@ function quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂, ω₁::Alm, ω₂::Alm,
     return 𝚵
 end
 function quickpolΞ!(𝚵::AA, ν₁, ν₂, s₁, s₂,
-                    ω₁::Alm, ω₂::Alm) where {T, AA<:SpectralArray{T,2}, SV<:SpectralVector}
+                    ω₁::Alm, ω₂::Alm) where {T, AA<:SpectralArray{T,2}}
     lmax = lastindex(𝚵,1)  # indexed 0:lmax
     buf1 = get_thread_buffers(T, 2lmax+1)
     buf2 = get_thread_buffers(T, 2lmax+1)
