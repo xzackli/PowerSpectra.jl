@@ -67,15 +67,12 @@ using IdentityRanges
     nside = 256
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
-    flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    M = mcm(:TT, mask, mask; lmin=2)
-    reference = readdlm("data/mcm_TT_diag.txt")
-    @test all(reference .≈ diag(parent(M))[1:end-1])
-    map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
-    pCl = SpectralVector(alm2cl(map2alm(map1 * mask)))
-    Cl_hat = M \ pCl[IdentityRange(2:end)]
-
-    reference_spectrum = readdlm("data/example_TT_spectrum.txt")
-    @test all(reference_spectrum .≈ Cl_hat[2:end])
+    flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    m1 = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
+    M = mcm(:M⁺⁺, m1.maskP, m2.maskP)
+    # factorized_mcm12 = lu(parent(M))
+    reference = readdlm("data/mcm_EE_diag.txt")
+    @test all(reference .≈ diag(parent(M))[3:767])
 
 # plot([reference_spectrum ./ parent(Cl_hat)], labels=["ref/Cl"], ylim=(0,2))
