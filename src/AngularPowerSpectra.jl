@@ -25,6 +25,7 @@ using Lazy: @forward
 
 include("util.jl")
 include("spectralarray.jl")
+include("blockspectralmatrix.jl")
 include("workspace.jl")
 include("modecoupling.jl")
 include("covariance.jl")
@@ -32,7 +33,8 @@ include("beam.jl")
 
 export mcm, decouple_covmat, mask!, map2cl, alm2cl
 export compute_covmat_TTTT, compute_covmat_EEEE
-export SpectralVector, SpectralArray, spectralzeros, spectralones
+export SpectralVector, SpectralArray, BlockSpectralMatrix
+export spectralzeros, spectralones
 export channelindex
 
 export CovField

@@ -26,43 +26,4 @@ julia> cl[0]
 1
 ```
 
-You can also specify arbitrary indices, like OffsetArray. In the next example, we index the rows by the range `0:1` and the columns by `5:8`.
-
-```julia-repl
-julia> A = SpectralArray(ones(2,4), 0:1, 5:8)
-2×4 SpectralArray{Float64, 2, Matrix{Float64}} with indices 0:1×5:8:
- 1.0  1.0  1.0  1.0
- 1.0  1.0  1.0  1.0
-
-julia> A[0, 8]
-1.0
-```
-Slicing a [`SpectralArray`](@ref) makes that sliced dimension become 1-indexed, which loses the index information. For example, slicing a `SpectraVector` just produces a Vector. If you want to produce a SpectralArray that preserves the indices, you can use `IdentityRange` from IdentityRanges.jl.
-
-```julia-repl
-julia> x = SpectralVector(ones(4), 0:3)
-4-element SpectralVector{Float64, Vector{Float64}} with indices 0:3:
- 1.0
- 1.0
- 1.0
- 1.0
-
-julia> x[2:3]
-2-element Vector{Float64}:
- 1.0
- 1.0
-
-julia> using IdentityRanges
-
-julia> x[IdentityRange(2:3)]
-2-element SpectralVector{Float64, Vector{Float64}} with indices 2:3:
- 1.0
- 1.0
-
-```
-
-
-
-The one major difference is that matrix multiplication and linear solve operator `\` are specialized for `SpectralArray` to ignore the monopole and dipole, as pseudo-``C_{\ell}`` methods do not handle those multipoles very well.
-
-You can wrap an array `A` without copying by just calling `SpectralArray(A)`.
+The SpectralArray has special operations defined on it, for the manipulation and application of mode-coupling matrices. For the majority of tasks, you will want to have ``\ell_{\mathrm{min}}=0``, so it's sufficient to just wrap your array without any other arguments, i.e. `SpectralArray(A)` or `SpectralVector(v)`. For advanced use, take a look at [SpectralArray and SpectralVector](@ref).

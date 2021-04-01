@@ -61,12 +61,14 @@ end
     @test all(A.parent.offsets .== (34, 4))
     A = SpectralArray(ones(5,5), (34, 4))
     @test all(A.parent.offsets .== (34, 4))
+
+    @test first(axes(SpectralVector(ones(5),1),1)) == 2
 end
 
 ##
 @testset "SpectralArray linear algebra" begin
     A = spectralzeros(5:10,15:20)
-    A.parent.parent .= 2Matrix(LinearAlgebra.I, 6, 6)
+    parent(A) .= 2Matrix(LinearAlgebra.I, 6, 6)
     Ainv = inv(A)
     @test all(parent(A) .== 4parent(Ainv))
     @test all(A.parent.offsets .== Ainv.parent.offsets)

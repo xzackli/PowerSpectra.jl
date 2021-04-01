@@ -44,7 +44,7 @@ M = mcm(:TT, map2alm(mask1), map2alm(mask2))
 ```
 
 Similarly, one could have specified the symbol `:TE`, `:TE`, or `:ET` for other types of cross-spectra[^1].
-The function `mcm` returns a `SpectralArray{T,2}`, which is just a simple array wrapper that makes the array 0-indexed. That means `M[ℓ₁, ℓ₂]` corresponds to the mode-coupling matrix entry ``\mathbf{M}_{\ell_1, \ell_2}``. If you want to access the underlying array, you can use `parent(mcm).`. One can optionally truncate the computation with the `lmax` keyword, i.e. `mcm(:TT, mask1, mask2; lmax=10)`. 
+The function `mcm` returns a `SpectralArray{T,2}`, which is an array type that contains elements in ``\ell_{\mathrm{min}} \leq \ell_1, \ell_2 \leq \ell_{\mathrm{max}}``. The important thing about `SpectralArray` is that indices correspond to ``\ell``, such that `M[ℓ₁, ℓ₂]` corresponds to the mode-coupling matrix entry ``\mathbf{M}_{\ell_1, \ell_2}``. If you want to access the underlying array, you can use `parent(mcm).`. One can optionally truncate the computation with the `lmax` keyword, i.e. `mcm(:TT, mask1, mask2; lmin=2, lmax=10)`. 
 
 [^1]: You can combine symbols, in cases where you're looping over combinations of spectra, by using `Symbol`.
     ```julia-repl
@@ -52,7 +52,10 @@ The function `mcm` returns a `SpectralArray{T,2}`, which is just a simple array 
     :TT
     ```
 
-Now one can apply a linear solve to decouple the mask.
+Now one can apply a linear solve to decouple the mask. We define a special operator `Cl = M \ₘ pCl` to perform mode decoupling on `SpectralArray` and `SpectralVector`. This operation performs a linear solve on ``\ell_{\mathrm{min}} \leq \ell \leq \ell_{\mathrm{max}}``, the minimum and maximum indices of the mode-coupling matrix. It leaves the elements outside of those ``\ell``-ranges untouched in `pCl`.
+
+Here's an example that uses the mode-coupling matrix from above to obtain spectra from masked maps.
+
 ```julia
 # generate two uniform maps
 nside = mask1.resolution.nside
@@ -69,7 +72,7 @@ alm1, alm2 = map2alm(map1), map2alm(map2)
 pCl = SpectralVector(alm2cl(alm1, alm2))
 
 # decouple the spectrum
-Cl = M \ pCl
+Cl = M \ₘ pCl
 ```
 **Note that this performs the linear solve starting at** ``\mathbf{\ell = 2}``, setting ``\hat{C}_{\ell < 2} = 0``. The linear solve operator on `SpectralArrays` is specialized to do this. Most of the time you want to avoid the monopole and dipole, which tend to be very large relative to anisotropies. **You should subtract the monopole and dipole from your maps.** If you really want to perform the linear solve on the monopole and dipole, you can use the underlying arrays to decouple the spectrum, i.e. `Cl_starting_from_zero = parent(M) \ parent(pCl)`. 
 

@@ -6,6 +6,7 @@ using LinearAlgebra
 using DataFrames
 using DelimitedFiles
 using NPZ
+using IdentityRanges
 
 ##
 @testset "Mode Coupling Matrix TT" begin
@@ -13,18 +14,15 @@ using NPZ
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
     flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    # m1 = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    # m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    M = mcm(:TT, mask, mask)
+    M = mcm(:TT, mask, mask; lmin=2)
     reference = readdlm("data/mcm_TT_diag.txt")
-    @test all(reference .≈ diag(parent(M))[3:767])
-    # map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
-    pCl = SpectralVector(alm2cl(map2alm(flat_map)))
-    # lu(M)
-    # Cl_hat = M \ pCl
-    # Cl_hat = map2cl(map1 * mask, map1 * mask, lu(parent(M)), flat_beam, flat_beam)
-    # reference_spectrum = readdlm("data/example_TT_spectrum.txt")
-    # @test all(reference_spectrum .≈ Cl_hat[3:end])
+    @test all(reference .≈ diag(parent(M))[1:end-1])
+    map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
+    pCl = SpectralVector(alm2cl(map2alm(map1 * mask)))
+    Cl_hat = M \ pCl[IdentityRange(2:end)]
+    reference_spectrum = readdlm("data/example_TT_spectrum.txt")
+    @test all(reference_spectrum .≈ Cl_hat[2:end])
+    @test all(reference_spectrum .≈ Cl_hat[2:end])
 end
 
 ##
@@ -46,16 +44,14 @@ end
     nside = 256
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
-    flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
-    m1 = CovField("143_hm1", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    m2 = CovField("143_hm2", mask, mask, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
-    M = mcm(:TE, m1.maskT, m2.maskP)
-    reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(parent(M))[3:767])
-
-    M = mcm(:ET, m1.maskP, m2.maskT)
-    reference = readdlm("data/mcm_TE_diag.txt")
-    @test all(reference .≈ diag(parent(M))[3:767])
+    flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    M = mcm(:TT, mask, mask; lmin=2)
+    reference = readdlm("data/mcm_TT_diag.txt")
+    @test all(reference .≈ diag(parent(M))[1:end-1])
+    map1 = readMapFromFITS("data/example_map.fits", 1, Float64)
+    pCl = SpectralVector(alm2cl(map2alm(map1 * mask)))
+    Cl_hat = M \ pCl
+    reference_spectrum = readdlm("data/example_TT_spectrum.txt")
 end
 
 ##

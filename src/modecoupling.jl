@@ -185,15 +185,19 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
     elseif spec ∈ (:TE, :ET, :TB, :BT)
         𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁰²!(𝐌, Vᵢⱼ)
-    elseif spec == :EE
+    elseif spec == :M⁺⁺
         𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁺⁺!(𝐌, Vᵢⱼ)
+    elseif spec == :M⁻⁻
+        𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
+        return inner_mcm⁻⁻!(𝐌, Vᵢⱼ)
     end
 end
 
+
 # convenience function
-mcm(spec::Symbol, m₁::Map, m₂::Map; lmax=nothing) =
-    mcm(spec, map2alm(m₁), map2alm(m₂); lmax=lmax)
+mcm(spec::Symbol, m₁::Map, m₂::Map; lmin=0, lmax=nothing) =
+    mcm(spec, map2alm(m₁), map2alm(m₂); lmin=lmin, lmax=lmax)
 
 # Workspace mode-coupling routines
 
@@ -278,24 +282,24 @@ mcm(spec::Symbol, m₁::Map, m₂::Map; lmax=nothing) =
 #     return Cl_hat
 # end
 
-function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::AbstractArray) where {T<:Number}
-    return alm2cl(alm₁, alm₂, lu(mcm))
-end
+# function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::AbstractArray) where {T<:Number}
+#     return alm2cl(alm₁, alm₂, lu(mcm))
+# end
 
-function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::SpectralArray) where {T<:Number}
-    return alm2cl(alm₁, alm₂, lu(parent(mcm)))
-end
+# function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::SpectralArray) where {T<:Number}
+#     return alm2cl(alm₁, alm₂, lu(parent(mcm)))
+# end
 
 
-function alm2cl(a1_E_B::Tuple{Alm, Alm}, a2_E_B::Tuple{Alm, Alm}, mcm)
-    ĉ_EE = alm2cl(a1_E_B[1], a2_E_B[1])
-    ĉ_BB = alm2cl(a1_E_B[2], a2_E_B[2])
-    num_ell = size(ĉ_EE, 1)
-    ctot = qr(mcm, Val(true)) \ vcat(ĉ_EE, ĉ_BB)
-    c_EE = ctot[1:num_ell]
-    c_BB = ctot[num_ell+1:2num_ell]
-    return c_EE, c_BB
-end
+# function alm2cl(a1_E_B::Tuple{Alm, Alm}, a2_E_B::Tuple{Alm, Alm}, mcm)
+#     ĉ_EE = alm2cl(a1_E_B[1], a2_E_B[1])
+#     ĉ_BB = alm2cl(a1_E_B[2], a2_E_B[2])
+#     num_ell = size(ĉ_EE, 1)
+#     ctot = qr(mcm, Val(true)) \ vcat(ĉ_EE, ĉ_BB)
+#     c_EE = ctot[1:num_ell]
+#     c_BB = ctot[num_ell+1:2num_ell]
+#     return c_EE, c_BB
+# end
 
 
 """
