@@ -92,30 +92,62 @@ function LinearAlgebra.lu(A::SpectralArray{T,2,AA}) where {T,AA}
         (UnitRange(axes(A,1)),), (UnitRange(axes(A,2)),))
 end
 
+function LinearAlgebra.lu(A::BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}) where {T,M_BLOCKS,N_BLOCKS,AA}
+    F = lu(parent(A))
+    return BlockSpectralFactorization{T,M_BLOCKS,N_BLOCKS,AA,typeof(F)}(F,
+        A.m_ells, A.n_ells)
+end
+
 function (\)(F::BlockSpectralFactorization, B::SpectralVector{T}) where T
     x = parent(F) \ parent(B)
-    SpectralVector(x, B.parent.offsets)
+    return SpectralVector(x, B.parent.offsets)
 end
 
 function (\)(F::BlockSpectralFactorization,
         B::BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}) where {T,M_BLOCKS,N_BLOCKS,AA}
     x = parent(F) \ parent(B)
-    BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}(x, B.m_ells, B.n_ells)
+    return BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}(x, B.m_ells, B.n_ells)
+end
+
+
+function (\)(A::BlockSpectralMatrix,
+        B::BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}) where {T,M_BLOCKS,N_BLOCKS,AA}
+    F = lu(A)
+    x = parent(F) \ parent(B)
+    return BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}(x, B.m_ells, B.n_ells)
 end
 
 function (\)(A::SpectralArray{T,2}, B::SpectralVector{T}) where T
     F = lu(A)
     x = parent(F) \ parent(B)
-    @show B.parent.offsets
-    SpectralVector(x, B.parent.offsets)
+    return SpectralVector(x, B.parent.offsets)
 end
 
-# function (\)(F::SpectralFactorization, B::SpectralVector{T}) where T
-#     @assert F.offsets[2] == B.parent.offsets
-#     Y =
-#     ldiv!()
-# end
 
-# function (\)(A::SpectralArray, B::SpectralVector{T}) where T
-#     return lu(A) \ B
-# end
+function getblock(A::BlockSpectralMatrix{T,M_BLOCKS,1}, i) where {T,M_BLOCKS}
+    @assert i ≤ M_BLOCKS
+    offset = 0
+    for block_i in 1:(i-1)
+        offset += length(A.m_ells[block_i])
+    end
+    return parent(A)[(1+offset):(length(A.m_ells[i])+offset)]
+end
+
+
+# based on UnPack's macro
+macro spectra(args)
+    args.head!=:(=) && error("Expression needs to be of form `a, b = c`")
+    items, suitcase = args.args
+    @show suitcase
+    items = isa(items, Symbol) ? [items] : items.args
+    suitcase_instance = gensym()
+    kd = [:( $key = AngularPowerSpectra.getblock($suitcase_instance, $i) ) for (i, key) in enumerate(items)]
+    kdblock = Expr(:block, kd...)
+    expr = quote
+        local $suitcase_instance = $suitcase # handles if suitcase is not a variable but an expression
+        $kdblock
+        $suitcase_instance # return RHS of `=` as standard in Julia
+    end
+    @show expr
+    esc(expr)
+end

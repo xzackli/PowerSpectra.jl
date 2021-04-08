@@ -52,14 +52,26 @@ M \ pCl
 ##
 
 ##
-M⁻⁻ = mcm(:M⁻⁻, a1, a1; lmin=2)
-M⁺⁺ = mcm(:M⁺⁺, a1, a1; lmin=2)
+M⁻⁻ = mcm(:M⁻⁻, a1, a1)
+M⁺⁺ = mcm(:M⁺⁺, a1, a1)
 
 M_EE_BB = [ M⁺⁺  M⁻⁻;
             M⁻⁻  M⁺⁺ ]
 
 # plot([diag(parent(M⁻⁻)), diag(parent(M⁺⁺))]; ylim=(-1,2))
 # heatmap(M_EE_BB, aspectratio=1)
+
+Cls = M_EE_BB \ [pCl; pCl]
+
+
+# @spectra a, b = Cls
+
+@spectra Cl_EE, Cl_BB = Cls
+
+##
+AngularPowerSpectra.getblock([spectralones(2); spectralzeros(3); 3spectralones(1)], 3)
+
+
 
 ##
 

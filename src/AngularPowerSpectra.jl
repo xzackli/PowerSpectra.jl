@@ -32,6 +32,7 @@ include("covariance.jl")
 include("beam.jl")
 
 export mcm, decouple_covmat, mask!, map2cl, alm2cl
+export @spectra
 export compute_covmat_TTTT, compute_covmat_EEEE
 export SpectralVector, SpectralArray, BlockSpectralMatrix
 export spectralzeros, spectralones
