@@ -2,8 +2,10 @@
 
 using Healpix, AngularPowerSpectra
 using LinearAlgebra
-cd("test")
+# cd("test")
 
+
+##
 mask1 = readMapFromFITS("data/mask1_T.fits", 1, Float64)
 mask2 = readMapFromFITS("data/mask2_T.fits", 1, Float64)
 
@@ -67,11 +69,12 @@ Cls = M_EE_BB \ [pCl; pCl]
 # @spectra a, b = Cls
 
 @spectra Cl_EE, Cl_BB = Cls
+##
+@spectra Cl_EE, Cl_BB = mcm(:EE_BB, a1, a1) \ [pCl; pCl]
+Cl_EE ≈ Cl_BB
 
 ##
 AngularPowerSpectra.getblock([spectralones(2); spectralzeros(3); 3spectralones(1)], 3)
-
-
 
 ##
 
@@ -88,3 +91,16 @@ using IdentityRanges
     @test all(reference .≈ diag(parent(M))[3:767])
 
 # plot([reference_spectrum ./ parent(Cl_hat)], labels=["ref/Cl"], ylim=(0,2))
+##
+using IdentityRanges
+a1 = map2alm(mask1)
+a2 = map2alm(mask2)
+M = mcm(:TT, a1, a2; lmin=2)
+pCl = SpectralVector(alm2cl(a1, a2))[IdentityRange(2:end)]
+M \ pCl
+
+
+##
+
+
+##

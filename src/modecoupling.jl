@@ -191,6 +191,39 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
     elseif spec == :M⁻⁻
         𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁻⁻!(𝐌, Vᵢⱼ)
+    elseif spec == :EE_BB
+        𝐌⁺⁺ = spectralzeros(lmin:lmax, lmin:lmax)
+        𝐌⁻⁻ = spectralzeros(lmin:lmax, lmin:lmax)
+        inner_mcm⁺⁺!(𝐌⁺⁺, Vᵢⱼ)
+        inner_mcm⁻⁻!(𝐌⁻⁻, Vᵢⱼ)
+        return [ 𝐌⁺⁺  𝐌⁻⁻;
+                 𝐌⁻⁻  𝐌⁺⁺ ]
+    elseif spec == :EB_BE
+        𝐌⁺⁺ = spectralzeros(lmin:lmax, lmin:lmax)
+        𝐌⁻⁻ = spectralzeros(lmin:lmax, lmin:lmax)
+        inner_mcm⁺⁺!(𝐌⁺⁺, Vᵢⱼ)
+        inner_mcm⁻⁻!(𝐌⁻⁻, Vᵢⱼ)
+        return [ 𝐌⁺⁺   (-𝐌⁻⁻);
+                (-𝐌⁻⁻)   𝐌⁺⁺ ]
+    end
+end
+
+function mcm(spec::Tuple{Symbol,Symbol}, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
+             lmin=0, lmax=nothing) where T
+    if isnothing(lmax)  # use alm lmax if an lmax is not specified
+        lmax = min(alm₁.lmax, alm₂.lmax)
+    end
+    Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂)[1:(lmax+1)])  # zero-indexed
+    if spec == (:EE_BB, :EB_BE)
+        𝐌⁺⁺ = spectralzeros(lmin:lmax, lmin:lmax)
+        𝐌⁻⁻ = spectralzeros(lmin:lmax, lmin:lmax)
+        inner_mcm⁺⁺!(𝐌⁺⁺, Vᵢⱼ)
+        inner_mcm⁻⁻!(𝐌⁻⁻, Vᵢⱼ)
+        EE_BB = [ 𝐌⁺⁺  𝐌⁻⁻;
+                  𝐌⁻⁻  𝐌⁺⁺ ]  
+        EB_BE = [ 𝐌⁺⁺   (-𝐌⁻⁻);
+                 (-𝐌⁻⁻)   𝐌⁺⁺ ]
+        return EE_BB, EB_BE
     end
 end
 

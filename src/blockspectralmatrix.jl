@@ -112,12 +112,17 @@ end
 
 function (\)(A::BlockSpectralMatrix,
         B::BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}) where {T,M_BLOCKS,N_BLOCKS,AA}
+    # check dims match
+    for blockindex = 1:N_BLOCKS 
+        @assert A.n_ells[blockindex] == B.m_ells[blockindex]
+    end
     F = lu(A)
     x = parent(F) \ parent(B)
     return BlockSpectralMatrix{T,M_BLOCKS,N_BLOCKS,AA}(x, B.m_ells, B.n_ells)
 end
 
 function (\)(A::SpectralArray{T,2}, B::SpectralVector{T}) where T
+    @assert firstindex(A,2) == firstindex(B,1)
     F = lu(A)
     x = parent(F) \ parent(B)
     return SpectralVector(x, B.parent.offsets)
@@ -138,7 +143,6 @@ end
 macro spectra(args)
     args.head!=:(=) && error("Expression needs to be of form `a, b = c`")
     items, suitcase = args.args
-    @show suitcase
     items = isa(items, Symbol) ? [items] : items.args
     suitcase_instance = gensym()
     kd = [:( $key = AngularPowerSpectra.getblock($suitcase_instance, $i) ) for (i, key) in enumerate(items)]
@@ -148,6 +152,5 @@ macro spectra(args)
         $kdblock
         $suitcase_instance # return RHS of `=` as standard in Julia
     end
-    @show expr
     esc(expr)
 end
