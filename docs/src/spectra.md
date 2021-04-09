@@ -3,7 +3,7 @@ CurrentModule = AngularPowerSpectra
 ```
 
 # Spectral Analysis
-In this section, we describe how one can estimate unbiased cross-spectra from masked maps using this package. We expand fluctuations on the sphere in terms of spherial harmonics, with coefficients 
+In this section, we describe how one can estimate unbiased cross-spectra from masked maps using this package. We expand fluctuations on the sphere in terms of spherical harmonics, with coefficients 
 
 ```math
 a_{\ell m} = \iint \Theta(\mathbf{\hat{n}}) Y_{\ell m}^* (\mathbf{\hat{n}}) \, d\Omega.
@@ -76,7 +76,7 @@ Cl = M \ pCl
 ```
 
 
-**You should subtract the monopole and dipole from your maps.** Note that you can pass `lmin` to [`mcm`](@ref). Most other mode-coupling codes start the mode-coupling calculation at ``\ell_{\mathrm{min}} = 2``. 
+**You should subtract the monopole and dipole from your maps.** Note that you can pass `lmin` to [`mcm`](@ref). Most other mode-coupling codes start the mode-coupling calculation at ``\ell_{\mathrm{min}} = 2``. In order to imitate this behavior, you must specify `lmin=2` and truncate the `SpectralVector` to remove the monopole and dipole.
 
 ```julia
 using IdentityRanges  # range for preserving SpectralArrays index info in slices
