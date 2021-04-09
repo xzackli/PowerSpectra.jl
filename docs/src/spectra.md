@@ -72,9 +72,18 @@ alm1, alm2 = map2alm(map1), map2alm(map2)
 pCl = SpectralVector(alm2cl(alm1, alm2))
 
 # decouple the spectrum
-Cl = M \ₘ pCl
+Cl = M \ pCl
 ```
-**Note that this performs the linear solve starting at** ``\mathbf{\ell = 2}``, setting ``\hat{C}_{\ell < 2} = 0``. The linear solve operator on `SpectralArrays` is specialized to do this. Most of the time you want to avoid the monopole and dipole, which tend to be very large relative to anisotropies. **You should subtract the monopole and dipole from your maps.** If you really want to perform the linear solve on the monopole and dipole, you can use the underlying arrays to decouple the spectrum, i.e. `Cl_starting_from_zero = parent(M) \ parent(pCl)`. 
+
+
+**You should subtract the monopole and dipole from your maps.** Note that you can pass `lmin` to [`mcm`](@ref). Most other mode-coupling codes start the mode-coupling calculation at ``\ell_{\mathrm{min}} = 2``. 
+
+```julia
+using IdentityRanges  # range for preserving SpectralArrays index info in slices
+pCl = SpectralVector(alm2cl(alm1, alm2))[IdentityRange(2:end)]  # start at dipole
+M = mcm(:TT, map2alm(mask1), map2alm(mask2); lmin=2)            # start at dipole
+Cl = M \ pCl  # SpectralArray with indices 2:end
+```
 
 ## Mode Coupling for EE, EB, BB
 
@@ -175,7 +184,25 @@ These matrices are defined such that
 ```
 You can compute these matrices by passing `:EE_BB` and `:EB_BE` as the first argument to [`mcm`](@ref). You can produce both matrices at once by passing a Tuple, `(:EE_BB, :EB_BE)` and get back a tuple containing the two matrices, which can be efficient since the these two block matrices share the same blocks. You can also obtain the sub-blocks ``\mathbf{M}^{\nu_{1}\nu_{2}++}_{\ell_1 \ell_{2}}`` and ``\mathbf{M}^{\nu_{1}\nu_{2}--}_{\ell_1 \ell_{2}}`` by passing to [`mcm`](@ref) the symbols `:M⁺⁺` and `:M⁻⁻` (note the Unicode superscripts). 
 
+```julia
+# compute stacked EE,BB mode-coupling matrix from mask alm
+M_EE_BB = mcm(:EE_BB, map2alm(mask1), map2alm(mask2))
 
+# make up some coupled pseudo-spectra
+pCl_EE, pCl_BB = pCl, pCl
+
+# apply the 2×2 block mode-coupling matrix to the stacked EE and BB spectra
+@spectra Cl_EE, Cl_BB = M_EE_BB \ [pCl_EE; pCl_BB]
+```
+
+The [`@spectra`](@ref) macro unpacks the blocks of the block-vector[^2]. The matrix syntax in Julia performs concatenation when the inputs are arrays, so `[pCl_EE; pCl_BB]` stacks the vectors vertically.
+
+
+[^2]: The `@spectra` macro used there is equivalent to
+    ```julia
+    Cl = M_EE_BB \ [pCl_EE; pCl_BB]
+    Cl_EE, Cl_BB = getblock(Cl, 1), getblock(Cl, 2)
+    ```
 
 ## API
 

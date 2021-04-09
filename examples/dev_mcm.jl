@@ -104,3 +104,34 @@ M \ pCl
 
 
 ##
+# get some example masks
+using Healpix, AngularPowerSpectra
+mask1 = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
+mask2 = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
+
+# compute TT mode-coupling matrix from mask harmonic coefficients
+M = mcm(:TT, map2alm(mask1), map2alm(mask2))
+
+##
+# generate two uniform maps
+nside = mask1.resolution.nside
+npix = nside2npix(nside)
+map1 = Map{Float64, RingOrder}(ones(npix))
+map2 = Map{Float64, RingOrder}(ones(npix))
+
+# mask the maps with different masks
+map1.pixels .*= mask1.pixels
+map2.pixels .*= mask2.pixels
+
+# compute the pseudo-spectrum, and wrap it in a SpectralVector
+alm1, alm2 = map2alm(map1), map2alm(map2)
+pCl = SpectralVector(alm2cl(alm1, alm2))
+
+# decouple the spectrum
+Cl = M \ pCl
+
+
+##
+
+
+##

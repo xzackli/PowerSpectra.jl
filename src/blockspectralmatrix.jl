@@ -129,7 +129,20 @@ function (\)(A::SpectralArray{T,2}, B::SpectralVector{T}) where T
 end
 
 
-function getblock(A::BlockSpectralMatrix{T,M_BLOCKS,1}, i) where {T,M_BLOCKS}
+"""
+    getblock(A::BlockSpectralMatrix{T,M_BLOCKS,1}, i) where {T,M_BLOCKS}
+
+Extract a sub-block from a `BlockSpectralMatrix`.
+
+# Arguments:
+- `A::BlockSpectralMatrix{T,M_BLOCKS,1}`: array to extract from
+- `i::Int`: index of the sub-block (1-indexed)
+
+# Returns: 
+- `Array{T,2}`: sub-blocks
+"""
+function getblock(A::BlockSpectralMatrix{T,M_BLOCKS,1}, 
+                  i::Int) where {T,M_BLOCKS}
     @assert i ≤ M_BLOCKS
     offset = 0
     for block_i in 1:(i-1)
@@ -140,6 +153,12 @@ end
 
 
 # based on UnPack's macro
+@doc raw"""
+    @spectra
+
+Unpack a block vector. This is equivalent to calling `getblock` for all the 
+sub-blocks and putting them in a Tuple.
+"""
 macro spectra(args)
     args.head!=:(=) && error("Expression needs to be of form `a, b = c`")
     items, suitcase = args.args

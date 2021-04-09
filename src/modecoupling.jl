@@ -159,19 +159,35 @@ function inner_mcm⁻⁻!(𝐌::SpectralArray{T,2}, Vᵢⱼ::SpectralVector{T}) 
 end
 
 
-"""
+@doc raw"""
     mcm(spec::Symbol, alm₁::Alm{T}, alm₂::Alm{T}; lmax=nothing)
 
+Compute the mode-coupling matrix. See the [Spectral Analysis](@ref)
+section in the documentation for examples. These are used by applying the 
+linear solve operator `\` to a `SpectralArray{T,1}`.
+
+Choices for `spec`:
+
+* `:TT`, identical to `M⁰⁰`
+* `:TE`, identical to `:ET`, `:TB`, `:BT`, `:M⁰²`, `:M²⁰`
+* `:EE_BB`, returns coupling matrix for stacked EE and BB vectors
+* `:EB_BE`, returns coupling matrix for stacked EB and BE vectors
+* `:M⁺⁺`, sub-block of spin-2 mode-coupling matrices
+* `:M⁻⁻`, sub-block of spin-2 mode-coupling matrices
+
 # Arguments:
-- `spec::Symbol`: cross-spectrum, i.e. `:TE`
+- `spec::Symbol`: cross-spectrum of the mode-coupling matrix
 - `alm₁::Alm{T}`: first mask's spherical harmonic coefficients
 - `alm₂::Alm{T}`: second mask's spherical harmonic coefficients
 
 # Keywords
+- `lmin=0`: minimum multiple for mode-coupling matrix
 - `lmax=nothing`: maximum multipole for mode-coupling matrix
 
 # Returns:
-- `SpectralArray{T,2}`: the index where `val` is located in the `array`
+- the mode coupling matrix. for single symbols, this returns a 
+    `SpectralArray{T,2}`. if spec is `:EE_BB` or `:EB_BE`, returns a 
+    `BlockSpectralMatrix{T}` with 2×2 blocks.
 """
 function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
              lmin=0, lmax=nothing) where T
@@ -179,10 +195,10 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
         lmax = min(alm₁.lmax, alm₂.lmax)
     end
     Vᵢⱼ = SpectralVector(alm2cl(alm₁, alm₂)[1:(lmax+1)])  # zero-indexed
-    if spec == :TT
+    if spec ∈ (:TT, :M⁰⁰)
         𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁰⁰!(𝐌, Vᵢⱼ)
-    elseif spec ∈ (:TE, :ET, :TB, :BT)
+    elseif spec ∈ (:TE, :ET, :TB, :BT, :M⁰², :M²⁰)
         𝐌 = spectralzeros(lmin:lmax, lmin:lmax)
         return inner_mcm⁰²!(𝐌, Vᵢⱼ)
     elseif spec == :M⁺⁺
@@ -207,6 +223,7 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
                 (-𝐌⁻⁻)   𝐌⁺⁺ ]
     end
 end
+
 
 function mcm(spec::Tuple{Symbol,Symbol}, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
              lmin=0, lmax=nothing) where T

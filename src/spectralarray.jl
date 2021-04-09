@@ -12,6 +12,7 @@ end
 
 const SpectralVector{T,AA<:AbstractArray} = SpectralArray{T,1,AA}
 
+"""Alias for `SpectralArray{T,1}`"""
 SpectralVector(A::AbstractVector) = SpectralArray(OffsetArray(A, 0:(length(A)-1)))
 
 # UnitRange slicing yields the parent array
