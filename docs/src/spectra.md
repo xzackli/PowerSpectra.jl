@@ -52,8 +52,7 @@ The function `mcm` returns a `SpectralArray{T,2}`, which is an array type that c
     :TT
     ```
 
-Now one can apply a linear solve to decouple the mask. We define a special operator `Cl = M \ₘ pCl` to perform mode decoupling on `SpectralArray` and `SpectralVector`. This operation performs a linear solve on ``\ell_{\mathrm{min}} \leq \ell \leq \ell_{\mathrm{max}}``, the minimum and maximum indices of the mode-coupling matrix. It leaves the elements outside of those ``\ell``-ranges untouched in `pCl`.
-
+Now one can apply a linear solve to decouple the mask. We apply the linear solve operator `Cl = M \ pCl` to perform mode decoupling on `SpectralArray` and `SpectralVector`.
 Here's an example that uses the mode-coupling matrix from above to obtain spectra from masked maps.
 
 ```julia
@@ -75,8 +74,8 @@ pCl = SpectralVector(alm2cl(alm1, alm2))
 Cl = M \ pCl
 ```
 
-
-**You should subtract the monopole and dipole from your maps.** Note that you can pass `lmin` to [`mcm`](@ref). Most other mode-coupling codes start the mode-coupling calculation at ``\ell_{\mathrm{min}} = 2``. In order to imitate this behavior, you must specify `lmin=2` and truncate the `SpectralVector` to remove the monopole and dipole.
+### Custom Multipole Ranges
+The majority of the time, you want ``\ell_{\mathrm{min}}=0``, and you should subtract the monopole and dipole from your maps. Note that you can pass `lmin` to [`mcm`](@ref). Most other mode-coupling codes start the mode-coupling calculation at ``\ell_{\mathrm{min}} = 2``. In order to imitate this behavior, you must specify `lmin=2` and truncate the `SpectralVector` to remove the monopole and dipole.
 
 ```julia
 using IdentityRanges  # range for preserving SpectralArrays index info in slices
@@ -182,11 +181,12 @@ These matrices are defined such that
 \end{array}
 \right].
 ```
-You can compute these matrices by passing `:EE_BB` and `:EB_BE` as the first argument to [`mcm`](@ref). You can produce both matrices at once by passing a Tuple, `(:EE_BB, :EB_BE)` and get back a tuple containing the two matrices, which can be efficient since the these two block matrices share the same blocks. You can also obtain the sub-blocks ``\mathbf{M}^{\nu_{1}\nu_{2}++}_{\ell_1 \ell_{2}}`` and ``\mathbf{M}^{\nu_{1}\nu_{2}--}_{\ell_1 \ell_{2}}`` by passing to [`mcm`](@ref) the symbols `:M⁺⁺` and `:M⁻⁻` (note the Unicode superscripts). 
+You can compute these matrices by passing `:EE_BB` and `:EB_BE` as the first argument to [`mcm`](@ref). 
+For these coupled channels, the [`@spectra`](@ref) macro can be helpful for writing clear and concise code. It unpacks the blocks of the resulting block-vector[^2] after mode decoupling. The matrix syntax in Julia performs concatenation when the inputs are arrays, so `[pCl_EE; pCl_BB]` stacks the coupled spectra vectors vertically.
 
 ```julia
 # compute stacked EE,BB mode-coupling matrix from mask alm
-M_EE_BB = mcm(:EE_BB, map2alm(mask1), map2alm(mask2))
+M_EE_BB = mcm(:EE_BB, alm1, alm2)
 
 # make up some coupled pseudo-spectra
 pCl_EE, pCl_BB = pCl, pCl
@@ -194,8 +194,16 @@ pCl_EE, pCl_BB = pCl, pCl
 # apply the 2×2 block mode-coupling matrix to the stacked EE and BB spectra
 @spectra Cl_EE, Cl_BB = M_EE_BB \ [pCl_EE; pCl_BB]
 ```
+In this case, `M_EE_BB` is a big matrix with blocks corresponding to ``\mathbf{M}^{\nu_{1}\nu_{2}++}_{\ell_1 \ell_{2}}`` and ``\mathbf{M}^{\nu_{1}\nu_{2}--}_{\ell_1 \ell_{2}}``. `mcm` wraps that matrix in a special `Array` type that keeps tracks of indices and blocks, which is used to unpack the results.
 
-The [`@spectra`](@ref) macro unpacks the blocks of the block-vector[^2]. The matrix syntax in Julia performs concatenation when the inputs are arrays, so `[pCl_EE; pCl_BB]` stacks the vectors vertically.
+You can produce both matrices at once by passing a Tuple, `(:EE_BB, :EB_BE)` and get back a tuple containing the two matrices, which can be efficient since the these two block matrices share the same blocks. 
+
+```julia
+M_EE_BB, M_EB_BE = mcm((:EE_BB, :EB_BE), alm1, alm2)
+```
+
+You can also obtain the sub-blocks ``\mathbf{M}^{\nu_{1}\nu_{2}++}_{\ell_1 \ell_{2}}`` and ``\mathbf{M}^{\nu_{1}\nu_{2}--}_{\ell_1 \ell_{2}}`` by passing to [`mcm`](@ref) the symbols `:M⁺⁺` and `:M⁻⁻` (note the Unicode superscripts). 
+
 
 
 [^2]: The `@spectra` macro used there is equivalent to

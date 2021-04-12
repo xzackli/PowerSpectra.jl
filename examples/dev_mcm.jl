@@ -2,7 +2,7 @@
 
 using Healpix, AngularPowerSpectra
 using LinearAlgebra
-# cd("test")
+cd("test")
 
 
 ##
@@ -132,6 +132,6 @@ Cl = M \ pCl
 
 
 ##
-
+M_EE_BB, M_EB_BE = mcm((:EE_BB, :EB_BE), map2alm(mask1), map2alm(mask2))
 
 ##

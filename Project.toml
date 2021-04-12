@@ -40,7 +40,7 @@ ThreadPools = "1, 1.1"
 ThreadSafeDicts = "≥ 0.0.1"
 UnsafeArrays = "1.0"
 WignerFamilies = "1"
-julia = "1.4"
+julia = "1.6"
 
 [extras]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"

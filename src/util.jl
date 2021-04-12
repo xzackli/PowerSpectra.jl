@@ -82,8 +82,44 @@ end
 max_lmax(nside) = 3nside - 1
 
 
+"""
+    fill_single_alm!(𝐦::Map{T}, ℓ, m) where T
+
+Fills a map with a single spherical harmonic.
+
+# Arguments:
+- `𝐦::Map{T}`: map to fill
+- `ℓ`: quantum number
+- `m`: quantum number
+"""
+function fill_single_alm!(𝐦::Map{T}, ℓ, m) where T
+    for i in 1:nside2npix(𝐦.resolution.nside)
+        θ, ϕ = pix2ang(𝐦, i)
+        𝐦.pixels[i] = sphevaluate(θ, ϕ, ℓ, m)
+    end
+    if m != 0
+        fact = (-1)^m #* √2
+        𝐦.pixels .*= fact
+    end
+    return 𝐦
+end
 
 
+@doc raw"""
+    function fitdipole(m::Map{T}, w::Map{T}) where T
+
+Fit the monopole and dipole of a map.
+
+# Arguments:
+- `m::Map{T}`: map to fit
+- `w::Map{T}`: weight map
+
+# Returns: 
+- `Tuple{T, NTuple{3,T}}`: (monopole, (dipole x, dipole y, dipole z))
+"""
+fitdipole
+
+# basic reference, from  https://healpix.jpl.nasa.gov/html/subroutinesnode86.htm
 @refimpl function fitdipole(m::Map{T}, w::Map{T}) where T
     upA = zeros(T,4,4)  # upper triangular version of A
     b = zeros(T, 4)
@@ -101,6 +137,7 @@ max_lmax(nside) = 3nside - 1
     return f[1], (f[2], f[3], f[4])  # monopole, dipole
 end
 
+# more accurate version
 function fitdipole(m::Map{T}, w::Map{T}) where T
     # A and b 
     upA = zeros(T,4,4)  # upper triangular version of A
