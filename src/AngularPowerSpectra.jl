@@ -13,6 +13,7 @@ import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_arra
 import FillArrays: Zeros
 import OffsetArrays: OffsetArray, OffsetVector
 import OffsetArrays
+import StaticArrays: SA
 
 using BandedMatrices
 using LinearAlgebra
@@ -20,6 +21,7 @@ using LinearAlgebra
 using Random
 using CSV, DataFrames
 using Lazy: @forward
+using ReferenceImplementations
 # import LoopVectorization: @avx
 
 

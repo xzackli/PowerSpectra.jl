@@ -82,6 +82,69 @@ end
 max_lmax(nside) = 3nside - 1
 
 
+
+
+@refimpl function fitdipole(m::Map{T}, w::Map{T}) where T
+    upA = zeros(T,4,4)  # upper triangular version of A
+    b = zeros(T, 4)
+    for p ∈ eachindex(m.pixels)
+        x, y, z = pix2vecRing(m.resolution, p)
+        s = SA[one(T), x, y, z]
+        for i ∈ 1:4
+            b[i] += s[i] * w.pixels[p] * m.pixels[p]
+            for j ∈ i:4
+                upA[i,j] += s[i] * w.pixels[p] * s[j]
+            end
+        end
+    end
+    f = Symmetric(upA) \ b
+    return f[1], (f[2], f[3], f[4])  # monopole, dipole
+end
+
+function fitdipole(m::Map{T}, w::Map{T}) where T
+    # A and b 
+    upA = zeros(T,4,4)  # upper triangular version of A
+    b = zeros(T, 4)
+
+    # carry bits
+    cA = zeros(T,4,4)
+    cb = zeros(T,4)
+
+    # using the Kahan-Babuska-Neumaier (KBN) algorithm for additional precision
+    for p ∈ eachindex(m.pixels)
+        x, y, z = pix2vecRing(m.resolution, p)
+        s = SA[one(T), x, y, z]
+        for i ∈ 1:4
+            inpb = s[i] * w.pixels[p] * m.pixels[p]
+            sumb = b[i]
+            tb = sumb + inpb
+            if abs(sumb) ≥ abs(inpb)
+                cb[i] += (sumb - tb) + inpb
+            else
+                cb[i] += (inpb - tb) + sumb
+            end
+            b[i] = tb
+
+            for j ∈ i:4
+                inpA = s[i] * w.pixels[p] * s[j]
+                sumA = upA[i,j]
+                tA = sumA + inpA
+                if abs(sumA) ≥ abs(inpA)
+                    cA[i,j] += (sumA - tA) + inpA
+                else
+                    cA[i,j] += (inpA - tA) + sumA
+                end
+                upA[i,j] = tA
+            end
+        end
+    end
+    f = Symmetric(upA .+ cA) \ (b .+ cb)
+    return f[1], (f[2], f[3], f[4])  # monopole, dipole
+end
+
+
+
+
 """
     synalm([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, nside::Int) where T
 
