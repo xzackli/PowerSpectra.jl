@@ -45,7 +45,7 @@ end
 @testset "fit_dipole" begin
     𝓂, 𝒹 = (0.5913756583917124, 
         (0.0010145299203208928, 0.0009034021919689896, -0.07481236768343041))
-    mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64) 
+    mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64) 
     𝓂′, 𝒹′ = fitdipole(mask)
     @test 𝓂 ≈ 𝓂′
     @test collect(𝒹) ≈ collect(𝒹′)
@@ -53,7 +53,7 @@ end
 
 ##
 @testset "subtract monopole dipole" begin
-    mask = readMapFromFITS("test/data/example_mask_1.fits", 1, Float64) 
+    mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64) 
     𝓂, 𝒹 = fitdipole(mask)
     subtract_monopole_dipole!(mask, 𝓂, 𝒹)
     𝓂′, 𝒹′ = fitdipole(mask)
