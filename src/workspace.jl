@@ -1,20 +1,13 @@
 
 abstract type AbstractField{T} end
 
-# struct Field{T} <: AbstractField{T}
-#     name::String
-#     maskT::Map{T}
-#     σ²::Map{T}
-#     beam::SpectralVector{T}
-# end
-
-struct CovField{T} <: AbstractField{T}
+struct CovField{T, AAT, AAP, AAσ, AA_BEAM} <: AbstractField{T}
     name::String
-    maskT::Map{T}
-    maskP::Map{T}
-    σ²::PolarizedMap{T}
-    beamT::SpectralVector{T}
-    beamP::SpectralVector{T}
+    maskT::Map{T, RingOrder, AAT}
+    maskP::Map{T, RingOrder, AAP}
+    σ²::PolarizedMap{T, RingOrder, AAσ}
+    beamT::SpectralVector{T, AA_BEAM}
+    beamP::SpectralVector{T, AA_BEAM}
 end
 
 
@@ -36,20 +29,17 @@ involving this field.
 """
 function CovField end
 
-function CovField(name::String, maskT::Map{T}, maskP::Map{T},
-        σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA},
-        beamT::SpectralVector{T}, beamP::SpectralVector{T}) where {T, O, AA}
-    σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
-    return CovField{T}(name, maskT, maskP, σ², beamT, beamP)
+
+function CovField(name::String, maskT::Map{T}, maskP::Map{T}, σ²::PolarizedMap) where T
+    nside = maskT.resolution.nside
+    return CovField(name, maskT, maskP, σ², 
+        SpectralVector(ones(3nside)), SpectralVector(ones(3nside)))
 end
 
 function CovField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA},
         σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA}) where {T, O, AA}
-    nside = maskT.resolution.nside
-    one_beam = SpectralVector(ones(3nside))
-    zero_map = Map{T, O, AA}(zeros(nside2npix(nside)))
     σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
-    return CovField{T}(name, maskT, maskP, σ², one_beam, one_beam)
+    return CovField(name, maskT, maskP, σ²)
 end
 
 function CovField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA}) where {T, O, AA}
@@ -57,7 +47,7 @@ function CovField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA}) wher
     one_beam = SpectralVector(ones(3nside))
     zero_map = Map{T, O, AA}(zeros(nside2npix(nside)))
     σ² = PolarizedMap{T, O, AA}(zero_map, zero_map, zero_map)
-    return CovField{T}(name, maskT, maskP, σ², one_beam, one_beam)
+    return CovField(name, maskT, maskP, σ², one_beam, one_beam)
 end
 
 
@@ -73,41 +63,22 @@ const SpectrumName = Tuple{Symbol, String, String}
 # Index for the covariance's weighted mask spectra W, indexed X, Y, i, j, α, p, q, β
 const WIndex = Tuple{Symbol, Symbol, String, String, Symbol, String, String, Symbol}
 
-# struct SpectralWorkspace{T <: Real}
-#     field_names::NTuple{2, String}
-#     lmax::Int
 
-#     mask_alm::Dict{Tuple{String, Symbol}, Alm{Complex{T}}}  # T and P alms for i and j
-# end
-
-
-# function SpectralWorkspace(m_i::CovField{T}, m_j::CovField{T}; lmax::Int=0) where {T}
-#     field_names = (m_i.name, m_j.name)
-#     (m_i.maskT.resolution.nside != m_i.maskP.resolution.nside) && throw(
-#         ArgumentError("m_i temperature and polarization nside do not match."))
-#     (m_j.maskT.resolution.nside != m_j.maskP.resolution.nside) && throw(
-#         ArgumentError("m_j temperature and polarization nside do not match."))
-#     lmax = iszero(lmax) ? 3 * m_i.maskT.resolution.nside - 1 : lmax
-
-#     mask_alm = Dict{Tuple{String, Symbol}, Alm{Complex{T}}}(
-#         (m_i.name, :TT) => map2alm(m_i.maskT),
-#         (m_j.name, :TT) => map2alm(m_j.maskT),
-#         (m_i.name, :PP) => map2alm(m_i.maskP),
-#         (m_j.name, :PP) => map2alm(m_j.maskP))
-
-#     return SpectralWorkspace{T}(field_names, lmax, mask_alm)
-# end
-
-
-struct CovarianceWorkspace{T <: Real}
+struct CovarianceWorkspace{T <: Real, MT, WT, EWT, WST}
     field_names::NTuple{4, String}
     lmax::Int
-    mask_p::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
-    weight_p::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
-    effective_weights::ThreadSafeDict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}}}
-    W_spectra::ThreadSafeDict{WIndex, SpectralVector{T}}
+    mask_p::MT                  #::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
+    weight_p::WT                 #::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
+    effective_weights::EWT       #::ThreadSafeDict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}}}
+    W_spectra::WST               #::ThreadSafeDict{WIndex, SpectralVector{T}}
 end
 
+function CovarianceWorkspace(T::Type, field_names::NTuple{4, String}, lmax::Int, mask_p::MT, 
+        weight_p::WT, effective_weights::EWT, W_spectra::WST) where {MT, WT, EWT, WST}
+    CovarianceWorkspace{T, MT, WT, EWT, WST}(field_names, lmax, mask_p, weight_p, 
+        effective_weights, W_spectra)
+end
+    
 
 """
     CovarianceWorkspace(m_i, m_j, m_p, m_q; lmax::Int=0)
@@ -140,13 +111,14 @@ function CovarianceWorkspace(m_i::CovField{T}, m_j::CovField{T},
         (m_p.name, :II) => m_p.σ².i, (m_p.name, :QQ) => m_p.σ².q, (m_p.name, :UU) => m_p.σ².u,
         (m_q.name, :II) => m_q.σ².i, (m_q.name, :QQ) => m_q.σ².q, (m_q.name, :UU) => m_q.σ².u)
 
-    return CovarianceWorkspace{T}(
+    return CovarianceWorkspace(
+        T,
         field_names,
         lmax,
         mask_p,
         weight_p,
-        ThreadSafeDict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}}}(),
-        ThreadSafeDict{WIndex, SpectralVector{T}}())
+        ThreadSafeDict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}, Vector{Complex{T}}}}(),
+        ThreadSafeDict{WIndex, SpectralVector{T, Vector{T}}}())
 end
 
 

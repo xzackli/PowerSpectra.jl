@@ -15,7 +15,7 @@ However, these are only sufficient for a description of a homogeneous survey wit
 
 The basic calculation is essentially a mode-coupling calculation, and mode-coupling matrices are themselves used to correct the covariance matrix at the end. The methods in this package were written to match the analysis of the *Planck* satellite, and we provide a more detailed description of these methods in Li et al. 2020 (in prep). The derivation of these covariance matrices, in the limit of uniform noise, are available in Thibaut Louis's excellent [notes](https://pspy.readthedocs.io/en/latest/scientific_doc.pdf).
 
-The mode-coupling matrix is essentially a linear operator on the cross-spectrum of the masks. In contrast, the expressions for the covariance matrix tend to reuse the same expressions many times, and one tends also to compute several different covariance matrices (i.e. TTTT, TETE, TTTE) on the same maps. The covariance calculation in AngularPowerSpectra.jl is centered around the [`CovarianceWorkspace`](@ref), which caches the various quantities that are re-used during covariance estimation.
+The expressions for the covariance matrix tend to reuse the same expressions many times, and one tends also to compute several different related covariance matrices (i.e. TTTT, TETE, TTTE) on the same maps. The covariance calculation in AngularPowerSpectra.jl is centered around the [`CovarianceWorkspace`](@ref), which caches the various quantities that are re-used during covariance estimation.
 
 ## Computing the Covariance
 
@@ -28,6 +28,7 @@ mask1_P = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
 mask2_P = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
 
 # for this example, pixel variance = 1
+nside = mask1_T.resolution.nside
 unit_var = PolarizedMap{Float64, RingOrder}(nside)
 unit_var.i .= 1.0
 unit_var.q .= 1.0
@@ -48,8 +49,7 @@ workspace = CovarianceWorkspace(f1, f2, f3, f4)
 A covariance matrix calculation needs an assumed signal spectrum for each channel you want. 
 You need to generate a dictionary that maps the names of various cross-spectra to [`SpectralVector`](@ref).
 ```julia
-nside = mask1.resolution.nside
-cl_th = SpectralVector(ones(nside2lmax(nside)))
+cl_th = SpectralVector(ones(max_lmax(nside)+1))
 
 spectra = Dict{SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
     (:TT, "143_hm1", "143_hm1") => cl_th, (:TT, "143_hm1", "143_hm2") => cl_th,

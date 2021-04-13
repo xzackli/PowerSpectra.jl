@@ -39,7 +39,7 @@ export compute_covmat_TTTT, compute_covmat_EEEE
 export SpectralVector, SpectralArray, BlockSpectralMatrix
 export spectralzeros, spectralones
 export channelindex
-export fitdipole, subtract_monopole_dipole!
+export fitdipole, subtract_monopole_dipole!, max_lmax
 
 export CovField
 export CovarianceWorkspace, coupledcov
