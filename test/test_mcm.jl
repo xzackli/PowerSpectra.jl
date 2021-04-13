@@ -58,27 +58,25 @@ end
     mask2_P = readMapFromFITS("data/mask2_P.fits", 1, Float64)
     unit_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
     unit_beam = spectralones(0:(3nside-1))
-    m1 = CovField("143_hm1", mask1_T, mask1_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
-    m2 = CovField("143_hm2", mask2_T, mask2_P, unit_map, unit_map, unit_map, unit_beam, unit_beam)
 
-    M = mcm(:TT, m1.maskT, m2.maskT)
+    M = mcm(:TT, mask1_T, mask2_T)
     M_ref = npzread("data/mcmTT.npy")
     @test all(isapprox(parent(M)[3:end, 3:end], M_ref[3:end, 3:end], atol=1e-11))
 
-    M = mcm(:TE, m1.maskT, m2.maskP)
+    M = mcm(:TE, mask1_T, mask2_P)
     M_ref = npzread("data/mcmTE.npy")
     for k in 0:3nside
         @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 
-    M = mcm(:ET, m1.maskP, m2.maskT)
+    M = mcm(:ET, mask1_P, mask2_T)
     M_ref = npzread("data/mcmET.npy")
 
     for k in 0:3nside
         @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
     end
 
-    M = mcm(:M⁺⁺, m1.maskP, m2.maskP)
+    M = mcm(:M⁺⁺, mask1_P, mask2_P)
     M_ref = npzread("data/mcmEE.npy")
     for k in 0:3nside
         @test all(isapprox(diag(parent(M), k)[3:end], diag(M_ref, k)[3:end]))
