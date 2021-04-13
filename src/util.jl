@@ -78,41 +78,22 @@ function channelindex(s)
 end
 
 
-# get the Nyquist frequency from nside
+@doc raw"""
+    max_lmax(nside)
+
+Get the Nyquist frequency from nside, ``3n_{\mathrm{side}} - 1``.
+"""
 max_lmax(nside) = 3nside - 1
 
 
-"""
-    fill_single_alm!(𝐦::Map{T}, ℓ, m) where T
-
-Fills a map with a single spherical harmonic.
-
-# Arguments:
-- `𝐦::Map{T}`: map to fill
-- `ℓ`: quantum number
-- `m`: quantum number
-"""
-function fill_single_alm!(𝐦::Map{T}, ℓ, m) where T
-    for i in 1:nside2npix(𝐦.resolution.nside)
-        θ, ϕ = pix2ang(𝐦, i)
-        𝐦.pixels[i] = sphevaluate(θ, ϕ, ℓ, m)
-    end
-    if m != 0
-        fact = (-1)^m #* √2
-        𝐦.pixels .*= fact
-    end
-    return 𝐦
-end
-
-
 @doc raw"""
-    function fitdipole(m::Map{T}, w::Map{T}) where T
+    function fitdipole(m::Map{T}, [w::Map{T}=1]) where T
 
-Fit the monopole and dipole of a map.
+Fit the monopole and dipole of a map. 
 
 # Arguments:
 - `m::Map{T}`: map to fit
-- `w::Map{T}`: weight map
+- `w::Map{T}`: weight map. Defaults to a FillArray of ones.
 
 # Returns: 
 - `Tuple{T, NTuple{3,T}}`: (monopole, (dipole x, dipole y, dipole z))
@@ -137,7 +118,7 @@ fitdipole
     return f[1], (f[2], f[3], f[4])  # monopole, dipole
 end
 
-# more accurate version
+# more accurate version using carry bits
 function fitdipole(m::Map{T}, w::Map{T}) where T
     # A and b 
     upA = zeros(T,4,4)  # upper triangular version of A
@@ -152,6 +133,7 @@ function fitdipole(m::Map{T}, w::Map{T}) where T
         x, y, z = pix2vecRing(m.resolution, p)
         s = SA[one(T), x, y, z]
         for i ∈ 1:4
+            # sum the b vector
             inpb = s[i] * w.pixels[p] * m.pixels[p]
             sumb = b[i]
             tb = sumb + inpb
@@ -179,7 +161,29 @@ function fitdipole(m::Map{T}, w::Map{T}) where T
     return f[1], (f[2], f[3], f[4])  # monopole, dipole
 end
 
+function fitdipole(m::Map{T,O}) where {T,O}
+    fitdipole(m, Map{T,O}(Ones(length(m.pixels))))
+end
 
+
+"""
+    subtract_monopole_dipole!(map_in, monopole, dipole)
+
+# Arguments:
+- `map_in::Map`: the map to modify
+- `monopole::T`: monopole value
+- `dipole::NTuple{3,T}`: dipole value
+"""
+function subtract_monopole_dipole!(map_in::Map, 
+        monopole::T, dipole::NTuple{3,T}) where T 
+    res = map_in.resolution
+    for p ∈ eachindex(map_in.pixels)
+        x, y, z = pix2vecRing(res, p)
+        t = monopole + dipole[1]*x + dipole[2]*y + dipole[3]*z
+        map_in.pixels[p] -= t
+    end
+    map_in
+end
 
 
 """

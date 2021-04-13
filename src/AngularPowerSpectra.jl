@@ -8,9 +8,9 @@ import ThreadSafeDicts: ThreadSafeDict
 import DataStructures: DefaultDict
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
-    RingInfo, getringinfo!, almIndex, alm2map, nside2npix
+    RingInfo, getringinfo!, almIndex, alm2map, nside2npix, pix2ang, pix2vecRing
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array
-import FillArrays: Zeros
+import FillArrays: Zeros, Ones
 import OffsetArrays: OffsetArray, OffsetVector
 import OffsetArrays
 import StaticArrays: SA
@@ -39,6 +39,7 @@ export compute_covmat_TTTT, compute_covmat_EEEE
 export SpectralVector, SpectralArray, BlockSpectralMatrix
 export spectralzeros, spectralones
 export channelindex
+export fitdipole, subtract_monopole_dipole!
 
 export CovField
 export CovarianceWorkspace, coupledcov
