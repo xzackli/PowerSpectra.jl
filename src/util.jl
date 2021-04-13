@@ -1,4 +1,4 @@
-
+# utilities for power spectrum estimation
 
 function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing)
     nbins = length(left_bins)
@@ -31,50 +31,6 @@ function read_commented_header(filename; delim=" ", strip_spaces=true)
     table = CSV.read(filename, DataFrame; comment="#", header=headers, delim=delim,
         ignorerepeated=true)
     return table
-end
-
-# convenience functions for interacting with Alm using a[ℓ, m] indices
-@inline function Base.setindex!(A::Alm{T,AA}, val, ℓ::Int, m::Int) where {T,AA}
-    i = almIndex(A, ℓ, m)
-    A.alm[i] = val
-end
-@inline function Base.getindex(A::Alm{T,AA}, ℓ::Int, m::Int) where {T, AA}
-    i = almIndex(A, ℓ, m)
-    A.alm[i]
-end
-
-# copying functions
-function Base.copyto!(m1::Map{T,O}, m2::Map{T,O}) where {T, O}
-    copyto!(m1.pixels, m2.pixels)
-end
-
-function Base.copyto!(m1::PolarizedMap{T,O}, m2::PolarizedMap{T,O}) where {T, O}
-    copyto!(m1.i.pixels, m2.i.pixels)
-    copyto!(m1.q.pixels, m2.q.pixels)
-    copyto!(m1.u.pixels, m2.u.pixels)
-end
-
-"""
-    channelindex(s)
-
-Convert string/char T,E,B => 1,2,3
-
-# Examples
-```julia-repl
-julia> channelindex("E")
-2
-```
-"""
-function channelindex(s)
-    s = string(s)
-    if s == "T"
-        return 1
-    elseif s == "E"
-        return 2
-    elseif s == "B"
-        return 3
-    end
-    throw(ArgumentError("unknown spectrum"))
 end
 
 
