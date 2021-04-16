@@ -1,6 +1,7 @@
-[pixwin]
-git-tree-sha1 = "d11923cfa0b2d87d5bb8898ea574b8a9b2a114fc"
+[plancklowres]
+git-tree-sha1 = "55aefe5af2a7c81db192de15d553ab00da56ca58"
+lazy = true
 
-    [[pixwin.download]]
-    url = "https://github.com/xzackli/HEALPix_data/raw/master/pixwin.tar.gz"
-    sha256 = "986792ca52a53d8cf34b2e0fa18d5c1a9aebdfd0167edfb1fc472daf1965ab07"
+    [[plancklowres.download]]
+    url = "https://github.com/xzackli/PSPipePlanckRender.jl/releases/download/v0.1/plancklowres.tar.gz"
+    sha256 = "8e420d81db37d3d2ae93390e927cd20400a08bef018ca8ed81e079bbd3b0f4e7"
