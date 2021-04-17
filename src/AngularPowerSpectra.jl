@@ -9,12 +9,13 @@ import DataStructures: DefaultDict
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
     RingInfo, getringinfo!, almIndex, alm2map, nside2npix, pix2ang, pix2vecRing
-import Healpix: readMapFromFITS
+import Healpix: readMapFromFITS, nest2ring
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array
 import FillArrays: Zeros, Ones
 import OffsetArrays: OffsetArray, OffsetVector
 import OffsetArrays
 import StaticArrays: SA
+import FITSIO: FITS
 
 using BandedMatrices
 using LinearAlgebra
@@ -43,7 +44,7 @@ export compute_covmat_TTTT, compute_covmat_EEEE
 export SpectralVector, SpectralArray, BlockSpectralMatrix
 export spectralzeros, spectralones
 export channelindex
-export fitdipole, subtract_monopole_dipole!, max_lmax
+export fitdipole, subtract_monopole_dipole!, nside2lmax
 
 export CovField
 export CovarianceWorkspace, coupledcov

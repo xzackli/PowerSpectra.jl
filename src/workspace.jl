@@ -99,7 +99,7 @@ noise-weighted masks.
 function CovarianceWorkspace(m_i::CovField{T}, m_j::CovField{T},
                              m_p::CovField{T}, m_q::CovField{T}; lmax::Int=0) where {T}
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
-    lmax = iszero(lmax) ? max_lmax(m_i.maskT.resolution.nside) : lmax  # set an lmax if not specified
+    lmax = iszero(lmax) ? nside2lmax(m_i.maskT.resolution.nside) : lmax  # set an lmax if not specified
     mask_p = Dict{Tuple{String, Symbol},Map{T,RingOrder}}(
         (m_i.name, :TT) => m_i.maskT, (m_j.name, :TT) => m_j.maskT,
         (m_p.name, :TT) => m_p.maskT, (m_q.name, :TT) => m_q.maskT,

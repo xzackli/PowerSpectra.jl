@@ -49,7 +49,7 @@ workspace = CovarianceWorkspace(f1, f2, f3, f4)
 A covariance matrix calculation needs an assumed signal spectrum for each channel you want. 
 You need to generate a dictionary that maps the names of various cross-spectra to [`SpectralVector`](@ref).
 ```julia
-cl_th = SpectralVector(ones(max_lmax(nside)+1))
+cl_th = SpectralVector(ones(nside2lmax(nside)+1))
 
 spectra = Dict{SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
     (:TT, "143_hm1", "143_hm1") => cl_th, (:TT, "143_hm1", "143_hm2") => cl_th,

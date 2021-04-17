@@ -35,11 +35,11 @@ end
 
 
 @doc raw"""
-    max_lmax(nside)
+    nside2lmax(nside)
 
 Get the Nyquist frequency from nside, ``3n_{\mathrm{side}} - 1``.
 """
-max_lmax(nside) = 3nside - 1
+nside2lmax(nside) = 3nside - 1
 
 
 @doc raw"""
