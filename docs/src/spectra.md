@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = AngularPowerSpectra
+CurrentModule = PowerSpectra
 ```
 
 # Spectral Analysis
@@ -35,7 +35,7 @@ A basic functionality of this package is to compute this matrix. Let's look at a
 
 ```julia
 # get some example masks
-using Healpix, AngularPowerSpectra
+using Healpix, PowerSpectra
 mask1 = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
 mask2 = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
 

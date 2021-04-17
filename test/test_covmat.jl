@@ -1,4 +1,4 @@
-using AngularPowerSpectra
+using PowerSpectra
 using Healpix
 using CSV
 using Test
@@ -47,7 +47,7 @@ end
 
     # this test specifies a map with unit variance. the corresponding white noise level is divided out in r_coeff
     N_white = 4π / nside2npix(nside)
-    r_coeff = Dict{AngularPowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
+    r_coeff = Dict{PowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
         (:TT, "143_hm1", "143_hm1") => sqrt.(nltt ./ N_white),
         (:TT, "143_hm1", "143_hm2") => identity_spectrum,
         (:TT, "143_hm2", "143_hm1") => identity_spectrum,
@@ -58,7 +58,7 @@ end
         (:EE, "143_hm2", "143_hm1") => identity_spectrum,
         (:EE, "143_hm2", "143_hm2") => sqrt.(nlee ./ N_white))
 
-    spectra = Dict{AngularPowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
+    spectra = Dict{PowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
         (:TT, "143_hm1", "143_hm1") => cltt,
         (:TT, "143_hm1", "143_hm2") => cltt,
         (:TT, "143_hm2", "143_hm1") => cltt,
@@ -96,7 +96,7 @@ end
     C_ref = npzread("data/covar_TT_EE.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 
-    AngularPowerSpectra.coupledcovTEEE!(C, workspace, spectra, r_coeff; planck=false);
+    PowerSpectra.coupledcovTEEE!(C, workspace, spectra, r_coeff; planck=false);
     C_ref = npzread("data/covar_TE_EE.npy")
     @test isapprox(diag(parent(C))[3:end], diag(C_ref)[3:end])
 

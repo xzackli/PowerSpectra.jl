@@ -4,7 +4,7 @@
 This package wraps outputs in a custom [`SpectralArray`](@ref) (based on [OffsetArray](https://github.com/JuliaArrays/OffsetArrays.jl)), which provides arbitrary indexing but by default makes an array 0-indexed. This is useful for manipulating angular spectra, as although Julia's indices start at 1, multipoles start with the monopole ``\ell = 0``. The type [`SpectralVector`](@ref) is an alias for a one-dimensional SpectralArray, i.e., `SpectralArray{T,1}`. 
 
 ```julia-repl
-julia> using AngularPowerSpectra
+julia> using PowerSpectra
 
 julia> cl = SpectralVector([1,2,3,4])
 4-element SpectralVector{Int64, Vector{Int64}} with indices 0:3:

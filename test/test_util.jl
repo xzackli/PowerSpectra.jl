@@ -1,5 +1,5 @@
 using Test
-using AngularPowerSpectra
+using PowerSpectra
 using Healpix
 using StableRNGs
 

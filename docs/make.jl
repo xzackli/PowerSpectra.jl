@@ -1,14 +1,14 @@
-using AngularPowerSpectra
+using PowerSpectra
 using Documenter
 
 makedocs(;
-    modules=[AngularPowerSpectra],
+    modules=[PowerSpectra],
     authors="Zack Li",
-    repo="https://github.com/xzackli/AngularPowerSpectra.jl/blob/{commit}{path}#L{line}",
-    sitename="AngularPowerSpectra.jl",
+    repo="https://github.com/xzackli/PowerSpectra.jl/blob/{commit}{path}#L{line}",
+    sitename="PowerSpectra.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://xzackli.github.io/AngularPowerSpectra.jl",
+        canonical="https://xzackli.github.io/PowerSpectra.jl",
         assets=String[],
     ),
     pages=[
@@ -22,5 +22,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/xzackli/AngularPowerSpectra.jl",
+    repo="github.com/xzackli/PowerSpectra.jl",
 )

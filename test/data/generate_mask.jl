@@ -1,5 +1,5 @@
 ## load in the data
-using AngularPowerSpectra
+using PowerSpectra
 using Healpix
 using PyCall, PyPlot
 using CSV, DataFrames, LinearAlgebra
@@ -8,7 +8,7 @@ ENV["OMP_NUM_THREADS"] = 16
 hp = pyimport("healpy")
 nmt = pyimport("pymaster")
 
-data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
+data_dir = "/home/zequnl/.julia/dev/PowerSpectra/notebooks/data/"
 # mask = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 nside = 256
 lmax = 3 * nside - 1
@@ -58,7 +58,7 @@ clf(); hp.mollview(mask.pixels); gcf()
 using CSV 
 using DataFrames
 
-data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
+data_dir = "/home/zequnl/.julia/dev/PowerSpectra/notebooks/data/"
 theory = CSV.File(data_dir * "theory.csv") |> DataFrame  
 m0 = hp.synfast(theory.cltt, nside=nside, verbose=false, pixwin=true, new=true)
 saveToFITS(Map{Float64, RingOrder}(m0), "test/example_map.fits")

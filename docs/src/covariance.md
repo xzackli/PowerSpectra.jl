@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = AngularPowerSpectra
+CurrentModule = PowerSpectra
 ```
 
 # Covariance Estimation
@@ -15,13 +15,13 @@ However, these are only sufficient for a description of a homogeneous survey wit
 
 The basic calculation is essentially a mode-coupling calculation, and mode-coupling matrices are themselves used to correct the covariance matrix at the end. The methods in this package were written to match the analysis of the *Planck* satellite, and we provide a more detailed description of these methods in Li et al. 2020 (in prep). The derivation of these covariance matrices, in the limit of uniform noise, are available in Thibaut Louis's excellent [notes](https://pspy.readthedocs.io/en/latest/scientific_doc.pdf).
 
-The expressions for the covariance matrix tend to reuse the same expressions many times, and one tends also to compute several different related covariance matrices (i.e. TTTT, TETE, TTTE) on the same maps. The covariance calculation in AngularPowerSpectra.jl is centered around the [`CovarianceWorkspace`](@ref), which caches the various quantities that are re-used during covariance estimation.
+The expressions for the covariance matrix tend to reuse the same expressions many times, and one tends also to compute several different related covariance matrices (i.e. TTTT, TETE, TTTE) on the same maps. The covariance calculation in PowerSpectra.jl is centered around the [`CovarianceWorkspace`](@ref), which caches the various quantities that are re-used during covariance estimation.
 
 ## Computing the Covariance
 
 First, let's set up the required data -- masks and variances. The variance is a [`Healpix.PolarizedMap`](https://ziotom78.github.io/Healpix.jl/dev/mapfunc/#Healpix.PolarizedMap) containing the fields `i`, `q`, `u`. In this example, we read the masks from disk, but set the variances for everything to 1.
 ```julia
-using Healpix, AngularPowerSpectra
+using Healpix, PowerSpectra
 mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
 mask2_T = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
 mask1_P = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)

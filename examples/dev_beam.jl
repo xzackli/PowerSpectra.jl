@@ -14,8 +14,8 @@ end
 a = rand(8,8)
 f'(a)
 ##
-using AngularPowerSpectra
-using AngularPowerSpectra: get_thread_buffers, quickpol𝚵!
+using PowerSpectra
+using PowerSpectra: get_thread_buffers, quickpol𝚵!
 using Healpix
 using WignerFamilies, Random
 
@@ -33,7 +33,7 @@ rand!(ω₂.alm)
 b₁ = SpectralVector(ones(50))
 b₂ = SpectralVector(ones(50))
 
-AngularPowerSpectra.Ξsum(ω₁, ω₂, wigner3j_f(4,6,-2,0), wigner3j_f(4,6,-2,0) )
+PowerSpectra.Ξsum(ω₁, ω₂, wigner3j_f(4,6,-2,0), wigner3j_f(4,6,-2,0) )
 
 ##
 

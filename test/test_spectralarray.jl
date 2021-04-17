@@ -1,5 +1,5 @@
 using Test
-using AngularPowerSpectra
+using PowerSpectra
 using Healpix
 using StableRNGs
 using IdentityRanges
@@ -47,8 +47,8 @@ end
 @testset "SpectralArray typing and index style" begin
     A = spectralones(35:39,5:9)
     @test Base.IndexStyle(typeof(A)) == Base.IndexStyle(typeof(ones(5,5)))
-    @test AngularPowerSpectra.parenttype(typeof(A)) == typeof(ones(5,5))
-    @test AngularPowerSpectra.parenttype(A) == typeof(ones(5,5))
+    @test PowerSpectra.parenttype(typeof(A)) == typeof(ones(5,5))
+    @test PowerSpectra.parenttype(A) == typeof(ones(5,5))
 end
 
 ##

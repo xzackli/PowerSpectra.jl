@@ -39,7 +39,7 @@ mb.pixels .= w.pixels
 # fill_single_alm!(mb, 1, 1)
 
 ##
-using AngularPowerSpectra
+using PowerSpectra
 using BenchmarkTools
 using StaticArrays
 using ReferenceImplementations

@@ -1,4 +1,4 @@
-module AngularPowerSpectra
+module PowerSpectra
 
 import ThreadPools: @qthreads
 import Base.Threads: @threads

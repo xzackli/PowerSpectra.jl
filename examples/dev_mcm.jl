@@ -1,6 +1,6 @@
 # get some example masks
 
-using Healpix, AngularPowerSpectra
+using Healpix, PowerSpectra
 using LinearAlgebra
 cd("test")
 
@@ -74,7 +74,7 @@ Cls = M_EE_BB \ [pCl; pCl]
 Cl_EE ≈ Cl_BB
 
 ##
-AngularPowerSpectra.getblock([spectralones(2); spectralzeros(3); 3spectralones(1)], 3)
+PowerSpectra.getblock([spectralones(2); spectralzeros(3); 3spectralones(1)], 3)
 
 ##
 
@@ -105,7 +105,7 @@ M \ pCl
 
 ##
 # get some example masks
-using Healpix, AngularPowerSpectra
+using Healpix, PowerSpectra
 mask1 = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
 mask2 = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
 

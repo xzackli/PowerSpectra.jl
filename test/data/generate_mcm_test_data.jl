@@ -1,6 +1,6 @@
 ## load in the data
 ENV["OMP_NUM_THREADS"] = 6
-using AngularPowerSpectra
+using PowerSpectra
 using Healpix
 using PyCall, PyPlot
 using CSV, DataFrames, LinearAlgebra
@@ -8,7 +8,7 @@ using BenchmarkTools
 hp = pyimport("healpy")
 nmt = pyimport("pymaster")
 
-data_dir = "/home/zequnl/.julia/dev/AngularPowerSpectra/notebooks/data/"
+data_dir = "/home/zequnl/.julia/dev/PowerSpectra/notebooks/data/"
 # mask = readMapFromFITS(data_dir * "mask.fits", 1, Float64)
 nside = 256
 lmax = 3 * nside - 1
@@ -136,10 +136,10 @@ workspace = SpectralWorkspace(m1, m2, m1, m2)
 
 
 ##
-import AngularPowerSpectra: TT
+import PowerSpectra: TT
 
 cltt = SpectralVector(convert(Vector, theory.cltt))
-spectra = Dict{AngularPowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
+spectra = Dict{PowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
     (TT, "143_hm1", "143_hm1") => cltt,
     (TT, "143_hm2", "143_hm2") => cltt,
     (TT, "143_hm1", "143_hm2") => cltt,
@@ -274,8 +274,8 @@ plt.plot(diag(parent(M),4))
 plt.gcf()
 ##
 
-AngularPowerSpectra.effective_weights!(workspace, m1, m2, m1, m2)
-AngularPowerSpectra.W_spectra!(workspace)
+PowerSpectra.effective_weights!(workspace, m1, m2, m1, m2)
+PowerSpectra.W_spectra!(workspace)
 
 using BenchmarkTools
 # @btime cov($workspace, $m1, $m2, $m1, $m2)

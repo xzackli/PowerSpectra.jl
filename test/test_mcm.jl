@@ -1,4 +1,4 @@
-using AngularPowerSpectra
+using PowerSpectra
 using Healpix
 using CSV
 using Test

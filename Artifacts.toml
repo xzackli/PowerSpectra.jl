@@ -3,7 +3,7 @@ git-tree-sha1 = "fa9cb260bc1d1c324b0c694c357e3b89ce969a20"
 lazy = true
 
     [[plancklowres.download]]
-    url = "https://github.com/xzackli/AngularPowerSpectra.jl/releases/download/v0.0.1/plancklowres.tar.gz"
+    url = "https://github.com/xzackli/PowerSpectra.jl/releases/download/v0.0.1/plancklowres.tar.gz"
     sha256 = "3e05203140e53316c1bd2444560d5725730cf63f23a1c400525a4cb1c7745dae"
 
 [planck_pr3_beams]
@@ -11,12 +11,12 @@ git-tree-sha1 = "4e546e76ad331ddacfd39a18d8e3e33d065a0179"
 lazy = true
 
     [[planck_pr3_beams.download]]
-    url = "https://github.com/xzackli/AngularPowerSpectra.jl/releases/download/v0.0.1/planckbeams_plikmask.tar.gz"
+    url = "https://github.com/xzackli/PowerSpectra.jl/releases/download/v0.0.1/planckbeams_plikmask.tar.gz"
     sha256 = "aec56143f8d243d06fde87853767f43119421d0e124466e429d2cc48275f79c6"
 
 [planck_pr3_theory]
 git-tree-sha1 = "6b3a735d6cf71e7642259ab2752d8f05216bf359"
 
     [[planck_pr3_theory.download]]
-    url = "https://github.com/xzackli/AngularPowerSpectra.jl/releases/download/v0.0.1/plancktheory.tar.gz"
+    url = "https://github.com/xzackli/PowerSpectra.jl/releases/download/v0.0.1/plancktheory.tar.gz"
     sha256 = "02f63d6cd73ce76694260491a886d6bb838ea1f95100f5c553bad4804bd25041"

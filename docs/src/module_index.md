@@ -4,5 +4,5 @@
 ```
 
 ```@autodocs
-Modules = [AngularPowerSpectra]
+Modules = [PowerSpectra]
 ```
