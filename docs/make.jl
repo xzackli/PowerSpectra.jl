@@ -1,6 +1,5 @@
 using PowerSpectra
 using Documenter
-using Plots.PlotMeasures: mm
 
 ENV["PLOTS_DEFAULT_BACKEND"] = "GR"
 ENV["GKSwstype"]="nul"
@@ -8,7 +7,8 @@ const PLOTS_DEFAULTS = Dict(:theme=>:default, :fontfamily => "Computer Modern",
     :linewidth=>1.5,
     :titlefontsize=>(16+8), :guidefontsize=>(11+5), 
     :tickfontsize=>(8+4), :legendfontsize=>(8+4),
-    :left_margin=>5mm, :right_margin=>5mm)
+    # :left_margin=>5mm, :right_margin=>5mm
+    )
 using Plots
 
 makedocs(;
