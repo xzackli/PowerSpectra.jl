@@ -49,33 +49,48 @@ FITS file column numbers are
 # Returns: 
 - `Map{T, RingOrder}`: the map
 """
-function planck256_map(freq::String, split, col, type::Type=Float64)
+function planck256_map(freq::String, split, col, T::Type=Float64)
     if typeof(col) != Int
         col = planck_FITS_name_to_col(col)
     end
     @assert split[1:2] == "hm"
     rootpath = planck256_mapdir()
     fname = "nside256_HFI_SkyMap_$(freq)_2048_R3.01_halfmission-$(split[3]).fits"
-    return nest2ring(readMapFromFITS(joinpath(rootpath, "plancklowres", fname), col, type))
+    return nest2ring(readMapFromFITS(joinpath(rootpath, "plancklowres", fname), col, T))
 end
 
-function planck256_polmap(freq, split, type::Type=Float64)
+function planck256_polmap(freq, split, T::Type=Float64)
     return PolarizedMap(
-        planck256_map(freq, split, 1, type), 
-        planck256_map(freq, split, 2, type), 
-        planck256_map(freq, split, 3, type))
+        planck256_map(freq, split, 1, T), 
+        planck256_map(freq, split, 2, T), 
+        planck256_map(freq, split, 3, T))
 end
 
-function planck256_maskT(freq, split, type::Type=Float64)
-    rootpath = planck256_mapdir()
-    fname = "nside256_COM_Mask_Likelihood-temperature-$(freq)-$(split)_2048_R3.00.fits"
-    return readMapFromFITS(joinpath(rootpath, "plancklowres", fname), 1, type)
-end
 
-function planck256_maskP(freq, split, type::Type=Float64)
+"""
+    planck256_mask(freq, split, maptype, T::Type=Float64) -> Map{T}
+
+# Arguments:
+- `freq::String`: Planck frequency ∈ {"100", "143", "217"}
+- `split::String`: half mission split ∈ {"hm1", "hm2"}
+- `maptype`: pass T or P, as a String or Symbol  
+
+# Returns: 
+- `Map{T, RingOrder}`: the mask
+"""
+function planck256_mask(freq, split, maptype, T::Type=Float64)
+    maptype_str = String(maptype)
+    if maptype_str == "T"
+        map_str = "temperature"
+    elseif maptype_str == "P"
+        map_str = "polarization"
+    else
+        throw(ArgumentError("maptype must be either \"T\" or \"P\""))
+    end
+
     rootpath = planck256_mapdir()
-    fname = "nside256_COM_Mask_Likelihood-polarization-$(freq)-$(split)_2048_R3.00.fits"
-    return readMapFromFITS(joinpath(rootpath, "plancklowres", fname), 1, type)
+    fname = "nside256_COM_Mask_Likelihood-$(map_str)-$(freq)-$(split)_2048_R3.00.fits"
+    return readMapFromFITS(joinpath(rootpath, "plancklowres", fname), 1, T)
 end
 
 
