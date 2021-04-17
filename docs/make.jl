@@ -3,13 +3,14 @@ using Documenter
 
 ENV["PLOTS_DEFAULT_BACKEND"] = "GR"
 ENV["GKSwstype"]="nul"
-const PLOTS_DEFAULTS = Dict(:theme=>:default, :fontfamily => "Computer Modern",
-    :linewidth=>1.5,
-    :titlefontsize=>(16+8), :guidefontsize=>(11+5), 
-    :tickfontsize=>(8+4), :legendfontsize=>(8+4),
-    # :left_margin=>5mm, :right_margin=>5mm
-    )
 using Plots
+using Plots.PlotMeasures: mm
+
+default(
+    fontfamily = "Computer Modern", linewidth=1.5,
+    titlefontsize=(16+8), guidefontsize=(11+5), 
+    tickfontsize=(8+4), legendfontsize=(8+4),
+    left_margin=5mm, right_margin=5mm)
 
 makedocs(;
     modules=[PowerSpectra],
