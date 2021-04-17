@@ -13,6 +13,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Quick Start" => "quickstart.md",
         "Spectra" => "spectra.md",
         "Covariance" => "covariance.md",
         "Beams" => "beams.md",
