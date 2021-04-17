@@ -52,6 +52,6 @@ julia> x[IdentityRange(2:3)]
 
 ```
 
-The one major difference is that matrix multiplication and linear solve operator `\` are specialized for `SpectralArray` to ignore the monopole and dipole, as pseudo-``C_{\ell}`` methods do not handle those multipoles very well.
+The one major difference is that matrix multiplication and linear solve operator `\` are specialized for the output of `mcm`.
 
 You can wrap an array `A` without copying by just calling `SpectralArray(A)`.
