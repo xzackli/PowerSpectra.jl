@@ -270,7 +270,7 @@ function mask!(m::Map, mask::Map)
 end
 
 """mask an IQU map in-place with a maskT and a maskP"""
-function mask!(m::PolarizedMap, maskT::Map, maskP::Map)
+function mask!(m::PolarizedMap, maskT, maskP)
     m.i .*= maskT
     m.q .*= maskP
     m.u .*= maskP
