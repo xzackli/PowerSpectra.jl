@@ -5,6 +5,7 @@ using Healpix
 using JLD2
 using DelimitedFiles
 
+
 @testset "Planck 100 GHz MCM" begin
     nside = 256
     lmax = nside2lmax(nside)
@@ -16,16 +17,16 @@ using DelimitedFiles
     flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
 
     M₀₀ = mcm(:TT, map2alm(maskT₁), map2alm(maskT₂))
-    @load "test/data/mcm00.jld2" mcm00
+    @load "data/mcm00.jld2" mcm00
     @test mcm00 ≈ parent(M₀₀)
     ##
-    @load "test/data/mcm20.jld2" mcm20
+    @load "data/mcm20.jld2" mcm20
     A = mcm20[1:2:2*lmax+1, 1:2:2*lmax+1]
     M₂₀ = mcm(:ET, map2alm(maskP₁), map2alm(maskT₂))
     @test A[3:end, 3:end] ≈ parent(M₂₀)[3:end, 3:end]
     M₂₀ = mcm(:BT, map2alm(maskP₁), map2alm(maskT₂))
     @test A[3:end, 3:end] ≈ parent(M₂₀)[3:end, 3:end]
-    @load "test/data/mcm02.jld2" mcm02
+    @load "data/mcm02.jld2" mcm02
     A = mcm02[1:2:2*lmax+1, 1:2:2*lmax+1]
     M₀₂ = mcm(:TE, map2alm(maskT₁), map2alm(maskP₂))
     @test A[3:end, 3:end] ≈ parent(M₀₂)[3:end, 3:end]
@@ -33,7 +34,7 @@ using DelimitedFiles
     @test A[3:end, 3:end] ≈ parent(M₀₂)[3:end, 3:end]
 
     ##
-    @load "test/data/mcm22.jld2" mcm22
+    @load "data/mcm22.jld2" mcm22
     M⁺⁺ = mcm(:M⁺⁺, map2alm(maskP₁), map2alm(maskP₂))
     M⁻⁻ = mcm(:M⁻⁻, map2alm(maskP₁), map2alm(maskP₂))
 
