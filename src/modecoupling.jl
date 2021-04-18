@@ -222,6 +222,7 @@ function mcm(spec::Symbol, alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}};
         return [ 𝐌⁺⁺   (-𝐌⁻⁻);
                 (-𝐌⁻⁻)   𝐌⁺⁺ ]
     end
+    throw(ArgumentError("$(spec) not a valid spectrum."))
 end
 
 
@@ -249,7 +250,119 @@ end
 mcm(spec::Symbol, m₁::Map, m₂::Map; lmin=0, lmax=nothing) =
     mcm(spec, map2alm(m₁), map2alm(m₂); lmin=lmin, lmax=lmax)
 
-# Workspace mode-coupling routines
+
+
+"""Scale a map."""
+function scale!(m::Map, s::Number)
+    m .*= s
+end
+function scale!(m::PolarizedMap, sT::Number, sP::Number)
+    m.i .*= sT
+    m.q .*= sP
+    m.u .*= sP
+end
+scale!(m::PolarizedMap, s::Number) = scale!(m, s, s)
+
+
+"""mask a map in-place"""
+function mask!(m::Map, mask::Map)
+    m .*= mask
+end
+
+"""mask an IQU map in-place with a maskT and a maskP"""
+function mask!(m::PolarizedMap, maskT::Map, maskP::Map)
+    m.i .*= maskT
+    m.q .*= maskP
+    m.u .*= maskP
+end
+mask!(m::PolarizedMap, mask) = mask!(m, mask, mask)
+
+"""
+    master(map₁::PolarizedMap, maskT₁::Map, maskP₁::Map,
+           map₂::PolarizedMap, maskT₂::Map, maskP₂::Map; already_masked=false)
+
+Perform a mode-decoupling calculation for two polarized maps, along with masks to apply.
+Returns spectra for ``TT``, ``TE``, ``ET``, ``EE``, ``EB``, ``BE``, and ``BB``.
+
+# Arguments:
+- `map₁::PolarizedMap`: the first IQU map
+- `maskT₁::Map`: mask for first map's intensity
+- `maskP₁::Map`: mask for first map's polarization
+- `map₂::PolarizedMap`: the second IQU map
+- `maskT₂::Map`: mask for second map's intensity
+- `maskP₂::Map`: mask for second map's polarization
+
+# Keywords
+- `already_masked::Bool=false`: are the input maps already multiplied with the masks?
+
+# Returns: 
+- `Dict{Symbol,SpectralVector}`: spectra `Dict`, indexed with `:TT`, `:TE`, `:ET`, etc.
+"""
+function master(map₁::PolarizedMap, maskT₁::Map, maskP₁::Map,
+                map₂::PolarizedMap, maskT₂::Map, maskP₂::Map; already_masked::Bool=false)
+    if already_masked
+        maskedmap₁, maskedmap₂ = map₁, map₂
+    else
+        maskedmap₁ = deepcopy(map₁)
+        maskedmap₂ = deepcopy(map₂)
+        mask!(maskedmap₁, maskT₁, maskP₁)
+        mask!(maskedmap₂, maskT₂, maskP₂)
+    end
+    return maskedalm2spectra(map2alm(maskedmap₁), map2alm(maskT₁), map2alm(maskP₁),
+                             map2alm(maskedmap₂), map2alm(maskT₂), map2alm(maskP₂))
+end
+
+"""Construct a NamedTuple with T,E,B names for the alms."""
+function name_alms(alms::Vector)
+    return (T=alms[1], E=alms[2], B=alms[3])
+end
+
+"""Compute spectra from alms of masked maps and alms of the masks themselves."""
+function maskedalm2spectra(maskedmap₁vec::Vector{A}, maskT₁::A, maskP₁::A,
+                           maskedmap₂vec::Vector{A}, maskT₂::A, maskP₂::A
+                           ) where {CT, A <: Alm{CT}}
+    ## add TEB names
+    maskedmap₁ = name_alms(maskedmap₁vec)
+    maskedmap₂ = name_alms(maskedmap₂vec)
+    spectra = Dict{Symbol, SpectralVector}()
+
+    ## spectra that are independent
+    for (X, Y) in ((:T,:T), (:T,:E), (:E,:T))
+        spec = Symbol(X, Y)  # join X and Y 
+
+        ## select temp or pol mask
+        maskX = (X == :T) ? maskT₁ : maskP₁
+        maskY = (Y == :T) ? maskT₂ : maskP₂
+
+        ## compute mcm
+        M = mcm(spec, maskX, maskY)
+        pCl = SpectralVector(alm2cl(maskedmap₁[X], maskedmap₂[Y]))
+        Cl = M \ pCl
+        spectra[spec] = Cl  # store the result
+    end
+
+    M_EE_BB, M_EB_BE = mcm((:EE_BB, :EB_BE), maskP₁, maskP₂)
+
+    ## EE and BB have to be decoupled together
+    pCl_EE = SpectralVector(alm2cl(maskedmap₁[:E], maskedmap₂[:E]))
+    pCl_BB = SpectralVector(alm2cl(maskedmap₁[:B], maskedmap₂[:B]))
+    ## apply the 2×2 block mode-coupling matrix to the stacked EE and BB spectra
+    @spectra Cl_EE, Cl_BB = M_EE_BB \ [pCl_EE; pCl_BB]
+    spectra[:EE] = Cl_EE
+    spectra[:BB] = Cl_BB
+
+    ## EB and BE have to be decoupled together
+    pCl_EB = SpectralVector(alm2cl(maskedmap₁[:E], maskedmap₂[:B]))
+    pCl_BE = SpectralVector(alm2cl(maskedmap₁[:B], maskedmap₂[:E]))
+    ## apply the 2×2 block mode-coupling matrix to the stacked EB and BE spectra
+    @spectra Cl_EB, Cl_BE = M_EB_BE \ [pCl_EB; pCl_BE]
+    spectra[:EB] = Cl_EB
+    spectra[:BE] = Cl_BE
+
+    return spectra
+end
+
+
 
 
 # EXPERIMENTAL

@@ -172,7 +172,8 @@ macro spectra(args)
     items, suitcase = args.args
     items = isa(items, Symbol) ? [items] : items.args
     suitcase_instance = gensym()
-    kd = [:( $key = PowerSpectra.getblock($suitcase_instance, $i) ) for (i, key) in enumerate(items)]
+    kd = [:( $key = SpectralVector(PowerSpectra.getblock($suitcase_instance, $i)) ) for 
+        (i, key) in enumerate(items)]
     kdblock = Expr(:block, kd...)
     expr = quote
         local $suitcase_instance = $suitcase # handles if suitcase is not a variable but an expression

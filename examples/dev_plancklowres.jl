@@ -2,28 +2,40 @@
 using Healpix
 using PowerSpectra
 using Plots
-using Plots.PlotMeasures: mm
 
 nside = 256
-m₁ = 1e6 * PowerSpectra.planck256_map("100", "hm1", "I_STOKES")
-m₂ = 1e6 * PowerSpectra.planck256_map("100", "hm2", "I_STOKES")
-plot(m₁, clim=(-200,200), rightmargin=5mm)
+m₁ = PowerSpectra.planck256_polmap("100", "hm1")
+m₂ = PowerSpectra.planck256_polmap("100", "hm2")
+maskT₁ = PowerSpectra.planck256_mask("100", "hm1", :T)
+maskP₁ = PowerSpectra.planck256_mask("100", "hm1", :P)
+maskT₂ = PowerSpectra.planck256_mask("100", "hm2", :T)
+maskP₂ = PowerSpectra.planck256_mask("100", "hm2", :P)
 
-##
-mask₁ = PowerSpectra.planck256_maskT("100", "hm1")
-mask₂ = PowerSpectra.planck256_maskT("100", "hm2")
-plot(mask₁, rightmargin=5mm)
+# convert to μK
+scale!(m₁, 1e6)
+scale!(m₂, 1e6)
 
-##
-M_TT = mcm(:TT, map2alm(mask₁), map2alm(mask₂))
-pCl = SpectralVector(alm2cl(map2alm(m₁ * mask₁), map2alm(m₂ * mask₂)))
-Cl = M_TT \ pCl
-
-##
+## utility function for doing TEB mode decoupling
+Cl = master(m₁, maskT₁, maskP₁, 
+            m₂, maskT₂, maskP₂)
 lmax = nside2lmax(256)
-bl = PowerSpectra.planck_beam_bl("100", "hm1", "100", "hm2", :TT, :TT; lmax=lmax)
-ℓ = eachindex(Cl)
-plot( (ℓ.^2 / (2π)) .*  Cl ./ bl.^2, label="\$D_{\\ell}\$", xlim=(0,2nside) )
+print(keys(Cl))
 
+##
+spec = :TE
+bl = PowerSpectra.planck_beam_bl("100", "hm1", "100", "hm2", spec, spec; lmax=lmax)
+ℓ = eachindex(bl)
+plot( (ℓ.^2 / (2π)) .*  Cl[spec] ./ bl.^2, label="\$D_{\\ell}\$", xlim=(0,2nside) )
 theory = PowerSpectra.planck_theory_Dl()
-plot!(theory[:TT], label="theory")
+plot!(theory[spec], label="theory $(spec)")
+
+##
+spec = :EE
+bl = PowerSpectra.planck_beam_bl("100", "hm1", "100", "hm2", spec, spec; lmax=lmax)
+ℓ = eachindex(bl)
+plot( (ℓ.^2 / (2π)) .*  Cl[spec] ./ bl.^2, label="\$D_{\\ell}\$", xlim=(0,2nside) )
+theory = PowerSpectra.planck_theory_Dl()
+plot!(theory[spec], label="theory $(spec)")
+
+
+##
