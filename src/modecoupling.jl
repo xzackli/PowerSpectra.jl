@@ -264,16 +264,27 @@ end
 scale!(m::PolarizedMap, s::Number) = scale!(m, s, s)
 
 
-"""mask a map in-place"""
-function mask!(m::Map, mask::Map)
-    m .*= mask
-end
 
-"""mask an IQU map in-place with a maskT and a maskP"""
+"""
+    mask!(m::Map, mask)
+    mask!(m::PolarizedMap, maskT, maskP)
+
+Mask a map or polarized map in place.
+
+# Arguments:
+- `m::Union{Map,PolarizedMap}`: map or polarized map to mask
+- `maskT::Map`: mask for first map's intensity
+- `maskP::Map`: mask for first map's polarization
+"""
+function mask!(m::Map, mask)
+    m .*= mask
+    return m
+end
 function mask!(m::PolarizedMap, maskT, maskP)
     m.i .*= maskT
     m.q .*= maskP
     m.u .*= maskP
+    return m
 end
 mask!(m::PolarizedMap, mask) = mask!(m, mask, mask)
 
