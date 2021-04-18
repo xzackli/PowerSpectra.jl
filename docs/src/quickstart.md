@@ -104,6 +104,8 @@ maskP₂ = PowerSpectra.planck256_mask("100", "hm2", :P)
 # convert to μK
 scale!(m₁, 1e6)
 scale!(m₂, 1e6)
+
+lmax = nside2lmax(256)
 ```
 
 Now we simply call the [`master`](@ref) utility function with the polarized map, 

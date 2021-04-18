@@ -148,7 +148,7 @@ function getblock(A::BlockSpectralMatrix{T,M_BLOCKS,1},
     for block_i in 1:(i-1)
         offset += length(A.m_ells[block_i])
     end
-    return parent(A)[(1+offset):(length(A.m_ells[i])+offset)]
+    return SpectralVector(parent(A)[(1+offset):(length(A.m_ells[i])+offset)], A.m_ells[i])
 end
 
 
@@ -172,7 +172,7 @@ macro spectra(args)
     items, suitcase = args.args
     items = isa(items, Symbol) ? [items] : items.args
     suitcase_instance = gensym()
-    kd = [:( $key = SpectralVector(PowerSpectra.getblock($suitcase_instance, $i)) ) for 
+    kd = [:( $key = PowerSpectra.getblock($suitcase_instance, $i) ) for 
         (i, key) in enumerate(items)]
     kdblock = Expr(:block, kd...)
     expr = quote

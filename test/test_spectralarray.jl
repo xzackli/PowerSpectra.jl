@@ -1,7 +1,6 @@
 using Test
 using PowerSpectra
 using Healpix
-using StableRNGs
 using IdentityRanges
 using LinearAlgebra
 

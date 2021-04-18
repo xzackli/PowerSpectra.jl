@@ -16,6 +16,7 @@ import OffsetArrays: OffsetArray, OffsetVector
 import OffsetArrays
 import StaticArrays: SA
 import FITSIO: FITS
+import IdentityRanges: IdentityRange
 
 using BandedMatrices
 using LinearAlgebra

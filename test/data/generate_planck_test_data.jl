@@ -2,10 +2,6 @@
 ENV["OMP_NUM_THREADS"] = 16
 using PowerSpectra
 using Healpix
-# using PyCall, PyPlot
-# using CSV, DataFrames, LinearAlgebra
-# using BenchmarkTools
-# hp = pyimport("healpy")
 using PyCall
 using DelimitedFiles
 nmt = pyimport("pymaster")
@@ -13,22 +9,41 @@ nmt = pyimport("pymaster")
 nside = 256
 lmax = nside2lmax(nside)
 
-maskT₁ = PowerSpectra.planck256_mask("100", "hm1", "T")
-maskP₁ = PowerSpectra.planck256_mask("100", "hm1", "P")
-maskT₂ = PowerSpectra.planck256_mask("100", "hm2", "T")
-maskP₂ = PowerSpectra.planck256_mask("100", "hm2", "P")
+m₁ = PowerSpectra.planck256_polmap("100", "hm1")
+m₂ = PowerSpectra.planck256_polmap("100", "hm2")
+maskT₁ = PowerSpectra.planck256_mask("100", "hm1", :T)
+maskP₁ = PowerSpectra.planck256_mask("100", "hm1", :P)
+maskT₂ = PowerSpectra.planck256_mask("100", "hm2", :T)
+maskP₂ = PowerSpectra.planck256_mask("100", "hm2", :P)
 flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+scale!(m₁, 1e6)
+scale!(m₂, 1e6)
 
 ##
-f₁_0 = nmt.NmtField(maskT₁.pixels, [flat_map.pixels])
-f₁_2 = nmt.NmtField(maskP₁.pixels, [flat_map.pixels, flat_map.pixels])
-f₂_0 = nmt.NmtField(maskT₂.pixels, [flat_map.pixels])
-f₂_2 = nmt.NmtField(maskP₂.pixels, [flat_map.pixels, flat_map.pixels])
+f₁_0 = nmt.NmtField(maskT₁.pixels, [m₁.i.pixels])
+f₁_2 = nmt.NmtField(maskP₁.pixels, [m₁.q.pixels, m₁.u.pixels])
+f₂_0 = nmt.NmtField(maskT₂.pixels, [m₂.i.pixels])
+f₂_2 = nmt.NmtField(maskP₂.pixels, [m₂.q.pixels, m₂.u.pixels])
 
 b = nmt.NmtBin.from_nside_linear(nside, 1);
 
 ##
+# Compute MASTER estimator
+# spin-0 x spin-0
+cl_00 = nmt.compute_full_master(f₁_0, f₂_0, b)
+# spin-0 x spin-2
+cl_02 = nmt.compute_full_master(f₁_0, f₂_2, b)
+# spin-0 x spin-2
+cl_20 = nmt.compute_full_master(f₁_2, f₂_0, b)
+# spin-2 x spin-2
+cl_22 = nmt.compute_full_master(f₁_2, f₂_2, b)
+
+##
 using JLD2
+@save "test/data/planck_spec.jld2" {compress=true} cl_00 cl_02 cl_20 cl_22
+
+
+##
 w = nmt.NmtWorkspace()
 @time w.compute_coupling_matrix(f₁_0, f₂_0, b)
 mcm00 = w.get_coupling_matrix()

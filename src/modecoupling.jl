@@ -294,12 +294,14 @@ Returns spectra for ``TT``, ``TE``, ``ET``, ``EE``, ``EB``, ``BE``, and ``BB``.
 
 # Keywords
 - `already_masked::Bool=false`: are the input maps already multiplied with the masks?
+- `lmin::Int=0`: minimum multipole
 
 # Returns: 
 - `Dict{Symbol,SpectralVector}`: spectra `Dict`, indexed with `:TT`, `:TE`, `:ET`, etc.
 """
 function master(map₁::PolarizedMap, maskT₁::Map, maskP₁::Map,
-                map₂::PolarizedMap, maskT₂::Map, maskP₂::Map; already_masked::Bool=false)
+                map₂::PolarizedMap, maskT₂::Map, maskP₂::Map; 
+                already_masked::Bool=false, lmin::Int=0)
     if already_masked
         maskedmap₁, maskedmap₂ = map₁, map₂
     else
@@ -309,7 +311,8 @@ function master(map₁::PolarizedMap, maskT₁::Map, maskP₁::Map,
         mask!(maskedmap₂, maskT₂, maskP₂)
     end
     return maskedalm2spectra(map2alm(maskedmap₁), map2alm(maskT₁), map2alm(maskP₁),
-                             map2alm(maskedmap₂), map2alm(maskT₂), map2alm(maskP₂))
+                             map2alm(maskedmap₂), map2alm(maskT₂), map2alm(maskP₂); 
+                             lmin=lmin)
 end
 
 """Construct a NamedTuple with T,E,B names for the alms."""
@@ -319,15 +322,15 @@ end
 
 """Compute spectra from alms of masked maps and alms of the masks themselves."""
 function maskedalm2spectra(maskedmap₁vec::Vector{A}, maskT₁::A, maskP₁::A,
-                           maskedmap₂vec::Vector{A}, maskT₂::A, maskP₂::A
-                           ) where {CT, A <: Alm{CT}}
+                           maskedmap₂vec::Vector{A}, maskT₂::A, maskP₂::A;
+                           lmin=0) where {CT, A <: Alm{CT}}
     ## add TEB names
     maskedmap₁ = name_alms(maskedmap₁vec)
     maskedmap₂ = name_alms(maskedmap₂vec)
     spectra = Dict{Symbol, SpectralVector}()
 
     ## spectra that are independent
-    for (X, Y) in ((:T,:T), (:T,:E), (:E,:T))
+    for (X, Y) in ((:T,:T), (:T,:E), (:E,:T), (:T,:B), (:B,:T))
         spec = Symbol(X, Y)  # join X and Y 
 
         ## select temp or pol mask
@@ -335,25 +338,24 @@ function maskedalm2spectra(maskedmap₁vec::Vector{A}, maskT₁::A, maskP₁::A,
         maskY = (Y == :T) ? maskT₂ : maskP₂
 
         ## compute mcm
-        M = mcm(spec, maskX, maskY)
-        pCl = SpectralVector(alm2cl(maskedmap₁[X], maskedmap₂[Y]))
+        M = mcm(spec, maskX, maskY; lmin=lmin)
+        pCl = SpectralVector(alm2cl(maskedmap₁[X], maskedmap₂[Y]))[IdentityRange(lmin:end)]
         Cl = M \ pCl
         spectra[spec] = Cl  # store the result
     end
 
-    M_EE_BB, M_EB_BE = mcm((:EE_BB, :EB_BE), maskP₁, maskP₂)
-
+    M_EE_BB, M_EB_BE = mcm((:EE_BB, :EB_BE), maskP₁, maskP₂; lmin=lmin)
     ## EE and BB have to be decoupled together
-    pCl_EE = SpectralVector(alm2cl(maskedmap₁[:E], maskedmap₂[:E]))
-    pCl_BB = SpectralVector(alm2cl(maskedmap₁[:B], maskedmap₂[:B]))
+    pCl_EE = SpectralVector(alm2cl(maskedmap₁[:E], maskedmap₂[:E]))[IdentityRange(lmin:end)]
+    pCl_BB = SpectralVector(alm2cl(maskedmap₁[:B], maskedmap₂[:B]))[IdentityRange(lmin:end)]
     ## apply the 2×2 block mode-coupling matrix to the stacked EE and BB spectra
     @spectra Cl_EE, Cl_BB = M_EE_BB \ [pCl_EE; pCl_BB]
     spectra[:EE] = Cl_EE
     spectra[:BB] = Cl_BB
 
     ## EB and BE have to be decoupled together
-    pCl_EB = SpectralVector(alm2cl(maskedmap₁[:E], maskedmap₂[:B]))
-    pCl_BE = SpectralVector(alm2cl(maskedmap₁[:B], maskedmap₂[:E]))
+    pCl_EB = SpectralVector(alm2cl(maskedmap₁[:E], maskedmap₂[:B]))[IdentityRange(lmin:end)]
+    pCl_BE = SpectralVector(alm2cl(maskedmap₁[:B], maskedmap₂[:E]))[IdentityRange(lmin:end)]
     ## apply the 2×2 block mode-coupling matrix to the stacked EB and BE spectra
     @spectra Cl_EB, Cl_BE = M_EB_BE \ [pCl_EB; pCl_BE]
     spectra[:EB] = Cl_EB
@@ -362,120 +364,3 @@ function maskedalm2spectra(maskedmap₁vec::Vector{A}, maskT₁::A, maskP₁::A,
     return spectra
 end
 
-
-
-
-# EXPERIMENTAL
-# EE and BB with coupling between them!
-# function mcm22(workspace, f1::CovField{T}, f2::CovField{T}) where {T}
-#     M_EE = parent(mcm(workspace, "EE", f1.name, f2.name))
-#     M_EB = parent(mcm(workspace, "EB", f1.name, f2.name))
-#     num_ell = size(M_EE,1)
-#     M22 = zeros(2num_ell, 2num_ell)
-
-#     M22[1:num_ell,1:num_ell] .= M_EE
-#     M22[num_ell+1:2num_ell,num_ell+1:2num_ell] .= M_EE
-#     M22[1:num_ell,num_ell+1:2num_ell] .= M_EB
-#     M22[num_ell+1:2num_ell,1:num_ell] .= M_EB
-
-#     return M22  # probably need to do pivoted qr as this may be nearly rank deficient
-# end
-# function mcm22(workspace, f1_name::String, f2_name::String) where {T}
-#     M_EE = parent(mcm(workspace, "EE", f1_name, f2_name))
-#     M_EB = parent(mcm(workspace, "EB", f1_name, f2_name))
-#     num_ell = size(M_EE,1)
-#     M22 = zeros(2num_ell, 2num_ell)
-
-#     M22[1:num_ell,1:num_ell] .= M_EE
-#     M22[num_ell+1:2num_ell,num_ell+1:2num_ell] .= M_EE
-#     M22[1:num_ell,num_ell+1:2num_ell] .= M_EB
-#     M22[num_ell+1:2num_ell,1:num_ell] .= M_EB
-
-#     return M22  # probably need to do pivoted qr as this may be nearly rank deficient
-# end
-
-# mcm22(f1, f2) = mcm22(SpectralWorkspace(f1, f2), f1, f2)
-
-# i.e.
-# ĉ_EE = alm2cl(a1[2], a2[2])
-# ĉ_BB = alm2cl(a1[3], a2[3])
-# ctot = qr(M22, Val(true)) \ vcat(ĉ_EE, ĉ_BB)
-# c_EE = ctot[1:num_ell]
-# c_BB = ctot[num_ell+1:2num_ell];
-
-
-# """
-#     map2cl(...)
-
-# # Arguments:
-# - `map_1::Map{T}`: masked map
-# - `map_2::Map{T}`: masked map
-# - `factorized_mcm::Factorization`: lu(mode coupling matrix)
-# - `Bℓ_1::SpectralVector{T}`: beam associated with first map
-# - `Bℓ_2::SpectralVector{T}`: beam associated with second map
-
-# # Returns:
-# - `Array{T,1}`: spectrum
-# """
-# function map2cl(
-#         map_1::Map{T}, map_2::Map{T}, factorized_mcm::Factorization,
-#         Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
-#     return alm2cl(map2alm(map_1), map2alm(map_2), factorized_mcm, Bℓ_1, Bℓ_2)
-# end
-
-# function map2cl(
-#         map_1::Map{T}, map_2::Map{T}, factorized_mcm::Factorization) where T
-#     Cl_hat = alm2cl(map2alm(map_1), map2alm(map_2))
-#     return alm2cl(map2alm(map_1), map2alm(map_2), factorized_mcm)
-# end
-
-
-# function alm2cl(
-#         alm_1::Alm{Complex{T},Array{Complex{T},1}}, alm_2::Alm{Complex{T},Array{Complex{T},1}},
-#         factorized_mcm::Factorization, Bℓ_1::SpectralVector{T}, Bℓ_2::SpectralVector{T}) where T
-#     Cl_hat = alm2cl(alm_1, alm_2, factorized_mcm)
-#     return Cl_hat ./ (parent(Bℓ_1) .* parent(Bℓ_2))
-# end
-
-
-# function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, factorized_mcm::Factorization) where {T<:Number}
-#     Cl_hat = alm2cl(alm₁, alm₂)
-#     Cl_hat[1:2] .= zero(T)  # set monopole and dipole to zero
-#     ldiv!(factorized_mcm, Cl_hat)
-#     return Cl_hat
-# end
-
-# function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::AbstractArray) where {T<:Number}
-#     return alm2cl(alm₁, alm₂, lu(mcm))
-# end
-
-# function alm2cl(alm₁::Alm{Complex{T}}, alm₂::Alm{Complex{T}}, mcm::SpectralArray) where {T<:Number}
-#     return alm2cl(alm₁, alm₂, lu(parent(mcm)))
-# end
-
-
-# function alm2cl(a1_E_B::Tuple{Alm, Alm}, a2_E_B::Tuple{Alm, Alm}, mcm)
-#     ĉ_EE = alm2cl(a1_E_B[1], a2_E_B[1])
-#     ĉ_BB = alm2cl(a1_E_B[2], a2_E_B[2])
-#     num_ell = size(ĉ_EE, 1)
-#     ctot = qr(mcm, Val(true)) \ vcat(ĉ_EE, ĉ_BB)
-#     c_EE = ctot[1:num_ell]
-#     c_BB = ctot[num_ell+1:2num_ell]
-#     return c_EE, c_BB
-# end
-
-
-"""
-    mask!(m::Map{T}, mask::Map{T}) where T
-
-Convenience function for applying a mask to a map.
-"""
-function mask!(m::Map{T}, mask::Map{T}) where T
-    m.pixels .*= mask.pixels
-end
-
-function mask!(m::PolarizedMap{T}, maskT::Map{T}, maskP::Map{T}) where T
-    m.i.pixels .*= maskT.pixels
-    m.q.pixels .*= maskP.pixels
-    m.u.pixels .*= maskP.pixels
-end

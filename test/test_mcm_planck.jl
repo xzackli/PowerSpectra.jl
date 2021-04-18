@@ -73,3 +73,33 @@ using DelimitedFiles
 end
 
 
+##
+@testset "Planck 100 GHz MCM decoupling" begin
+    nside = 256
+    m₁ = PowerSpectra.planck256_polmap("100", "hm1")
+    m₂ = PowerSpectra.planck256_polmap("100", "hm2")
+    maskT₁ = PowerSpectra.planck256_mask("100", "hm1", :T)
+    maskP₁ = PowerSpectra.planck256_mask("100", "hm1", :P)
+    maskT₂ = PowerSpectra.planck256_mask("100", "hm2", :T)
+    maskP₂ = PowerSpectra.planck256_mask("100", "hm2", :P)
+    
+    # convert to μK
+    scale!(m₁, 1e6)
+    scale!(m₂, 1e6)
+    Cl = master(m₁, maskT₁, maskP₁,
+                m₂, maskT₂, maskP₂; lmin=2)
+
+    @load "data/planck_spec.jld2" cl_00 cl_02 cl_20 cl_22
+
+    @test cl_00[1,:] ≈ Cl[:TT][2:end]
+
+    @test cl_02[1,:] ≈ Cl[:TE][2:end]
+    @test cl_02[2,:] ≈ Cl[:TB][2:end]
+    @test cl_20[1,:] ≈ Cl[:ET][2:end]
+    @test cl_20[2,:] ≈ Cl[:BT][2:end]
+
+    @test cl_22[1,:] ≈ Cl[:EE][2:end]
+    @test cl_22[2,:] ≈ Cl[:EB][2:end]
+    @test cl_22[3,:] ≈ Cl[:BE][2:end]
+    @test cl_22[4,:] ≈ Cl[:BB][2:end]
+end
