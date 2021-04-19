@@ -35,6 +35,7 @@ DataStructures = "≥ 0.17"
 FillArrays = "≥ 0.10"
 Healpix = "2.3, 3"
 IdentityRanges = "≥ 0.3"
+JLD2 = "0.4"
 Lazy = "≥ 0.15"
 OffsetArrays = "1, 1.4"
 ReferenceImplementations = "0.1"
@@ -50,12 +51,11 @@ CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 IdentityRanges = "bbac6d45-d8f3-5730-bfe4-7a449cd117ca"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 
 [targets]
-test = ["Test", "NPZ", "DataFrames", "CSV", "DelimitedFiles", "IdentityRanges", 
-    "StableRNGs", "LinearAlgebra", "JLD2"]
+test = ["Test", "NPZ", "DataFrames", "CSV", "DelimitedFiles", "IdentityRanges", "StableRNGs", "LinearAlgebra", "JLD2"]
