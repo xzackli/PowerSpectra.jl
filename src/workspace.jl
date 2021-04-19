@@ -69,8 +69,8 @@ struct CovarianceWorkspace{T <: Real, MT, WT, EWT, WST}
     lmax::Int
     mask_p::MT                  #::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
     weight_p::WT                 #::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
-    effective_weights::EWT       #::ThreadSafeDict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}}}
-    W_spectra::WST               #::ThreadSafeDict{WIndex, SpectralVector{T}}
+    effective_weights::EWT       #::Dict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}}}
+    W_spectra::WST               #::Dict{WIndex, SpectralVector{T}}
 end
 
 function CovarianceWorkspace(T::Type, field_names::NTuple{4, String}, lmax::Int, mask_p::MT, 
@@ -117,8 +117,8 @@ function CovarianceWorkspace(m_i::CovField{T}, m_j::CovField{T},
         lmax,
         mask_p,
         weight_p,
-        ThreadSafeDict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}, Vector{Complex{T}}}}(),
-        ThreadSafeDict{WIndex, SpectralVector{T, Vector{T}}}())
+        Dict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}, Vector{Complex{T}}}}(),
+        Dict{WIndex, SpectralVector{T, Vector{T}}}())
 end
 
 

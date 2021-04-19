@@ -42,6 +42,14 @@ Get the Nyquist frequency from nside, ``3n_{\mathrm{side}} - 1``.
 nside2lmax(nside) = 3nside - 1
 
 
+"""A dictionary that always returns one thing, no matter what key."""
+struct ConstantDict{K,V} <: AbstractDict{K,V}
+    c::V
+end
+Base.getindex(d::ConstantDict, key) = d.c
+
+
+
 @doc raw"""
     function fitdipole(m::Map{T}, [w::Map{T}=1]) where T
 

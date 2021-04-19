@@ -2,14 +2,11 @@ module PowerSpectra
 
 import ThreadPools: @qthreads
 import Base.Threads: @threads
-import Base: copyto!
-import UnsafeArrays: uview, UnsafeArray
-import ThreadSafeDicts: ThreadSafeDict
-import DataStructures: DefaultDict
+import UnsafeArrays: uview
 import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
-    RingInfo, getringinfo!, almIndex, alm2map, nside2npix, pix2ang, pix2vecRing
-import Healpix: readMapFromFITS, nest2ring
+    RingInfo, getringinfo!, almIndex, alm2map, nside2npix, pix2ang, pix2vecRing,
+    readMapFromFITS, nest2ring
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array
 import FillArrays: Zeros, Ones
 import OffsetArrays: OffsetArray, OffsetVector
@@ -20,12 +17,12 @@ import IdentityRanges: IdentityRange
 
 using BandedMatrices
 using LinearAlgebra
-# import Distributions: MvNormal
 using Random
 using CSV, DataFrames
 using Lazy: @forward
 using ReferenceImplementations
 using LazyArtifacts
+# import Distributions: MvNormal
 # import LoopVectorization: @avx
 
 
@@ -38,6 +35,7 @@ include("covariance.jl")
 include("beam.jl")
 include("exampledata.jl")
 
+export IdentityRange
 
 export mcm, decouple_covmat, mask!, scale!, map2cl, alm2cl, master
 export @spectra

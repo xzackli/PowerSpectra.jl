@@ -40,7 +40,8 @@ function coupledcov(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace{T},
 
     if length(noise_ratios) == 0  # by default, do not rescale for noise
         identity_spectrum = spectralones(0:lmax)
-        noise_ratios = DefaultDict(identity_spectrum)
+        noise_ratios = ConstantDict{SpectrumName,typeof(identity_spectrum)}(
+            identity_spectrum)
     end
 
     if (ch1==:TT) && (ch2==:TT)
