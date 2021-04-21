@@ -94,7 +94,7 @@ function planck256_mask(freq, split, maptype, T::Type=Float64)
 end
 
 
-function planck_beam_bl(T::Type, freq1, split1, freq2, split2, spec1_, spec2_; 
+function planck_beam_Wl(T::Type, freq1, split1, freq2, split2, spec1_, spec2_; 
                           lmax=4000)
     spec1 = String(spec1_)
     spec2 = String(spec2_)
@@ -119,10 +119,10 @@ function planck_beam_bl(T::Type, freq1, split1, freq2, split2, spec1_, spec2_;
     end
     return SpectralVector(bl)
 end
-planck_beam_bl(T::Type, freq1, split1, freq2, split2, spec1; kwargs...) = 
+planck_beam_Wl(T::Type, freq1, split1, freq2, split2, spec1; kwargs...) = 
     lanck_beam_bl(T, freq1, split1, freq2, split2, spec1, spec1; kwargs...)
-planck_beam_bl(freq1::String, split1, freq2, split2, spec1, spec2; kwargs...) = 
-    planck_beam_bl(Float64, freq1, split1, freq2, split2, spec1, spec2; kwargs...)
+planck_beam_Wl(freq1::String, split1, freq2, split2, spec1, spec2; kwargs...) = 
+    planck_beam_Wl(Float64, freq1, split1, freq2, split2, spec1, spec2; kwargs...)
 
 
 function planck_theory_Dl()

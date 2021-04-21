@@ -1,9 +1,14 @@
 # utilities for power spectrum estimation
 
 function binning_matrix(left_bins, right_bins, weight_function_ℓ; lmax=nothing)
-    nbins = length(left_bins)
     lmax = isnothing(lmax) ? right_bins[end] : lmax
-    P = zeros(nbins, lmax)
+    bincut = right_bins .≤ lmax
+    left_bins = left_bins[bincut]
+    right_bings = right_bins[bincut]
+
+    nbins = length(left_bins)
+    P = zeros(nbins, lmax+1)
+
     for b in 1:nbins
         weights = weight_function_ℓ.(left_bins[b]:right_bins[b])
         norm = sum(weights)
