@@ -14,7 +14,7 @@ nside = 256
 lmax = 3 * nside - 1
 
 flat_beam = SpectralVector(ones(3*nside))
-flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+flat_mask = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
 
 
 mask = readMapFromFITS("test/example_mask_1.fits", 1, Float64)
@@ -112,7 +112,7 @@ writedlm("test/example_TT_spectrum.txt", cl_00[1,:])
 
 ##
 #######
-flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+flat_mask = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
 theory = CSV.read(data_dir * "theory.csv"; limit=2000)
 
 clf()
@@ -122,7 +122,7 @@ gcf()
 
 ##
 m0 = hp.synfast(theory.cltt, nside=nside, verbose=false, pixwin=true, new=true)
-m = Map{Float64, RingOrder}(nside)
+m = HealpixMap{Float64, RingOrder}(nside)
 m.pixels .= m0;
 # map = readMapFromFITS(data_dir * "map.fits", 1, Float64)
 
@@ -161,7 +161,7 @@ function generate_sim_array(spec, nsims, nside, mask_, fact_mcm)
         m0 = hp.synfast(spec, nside=nside, verbose=false, pixwin=false, new=true)
         norm = mean(m0)
         m0 .-= norm
-        m = Map{Float64, RingOrder}(nside)
+        m = HealpixMap{Float64, RingOrder}(nside)
         m.pixels .= m0
         result[:,i] .= spectra_from_masked_maps(m * mask_, m * mask_, factorized_mcm, wl, wl)
     end

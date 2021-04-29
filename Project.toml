@@ -27,7 +27,7 @@ WignerFamilies = "a8f88a7a-0a89-491c-8ecb-051e99aa9f5e"
 BandedMatrices = "≥ 0.16"
 CSV = "≥ 0.8"
 Combinatorics = "1"
-DataFrames = "≥ 0.22"
+DataFrames = "0.22, 1.0"
 FillArrays = "≥ 0.10"
 Healpix = "2.3, 3"
 IdentityRanges = "≥ 0.3"
@@ -42,6 +42,7 @@ julia = "1.6"
 
 [extras]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 IdentityRanges = "bbac6d45-d8f3-5730-bfe4-7a449cd117ca"
@@ -52,4 +53,4 @@ StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "NPZ", "DataFrames", "CSV", "DelimitedFiles", "IdentityRanges", "StableRNGs", "LinearAlgebra", "JLD2"]
+test = ["Test", "NPZ", "DataFrames", "CSV", "DelimitedFiles", "StableRNGs", "LinearAlgebra", "JLD2", "CodecZlib"]

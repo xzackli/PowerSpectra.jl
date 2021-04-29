@@ -4,7 +4,7 @@ import ThreadPools: @qthreads
 import Base.Threads: @threads
 import UnsafeArrays: uview
 import Combinatorics: permutations, combinations, with_replacement_combinations
-import Healpix: Map, PolarizedMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
+import Healpix: HealpixMap, PolarizedHealpixMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
     RingInfo, getringinfo!, almIndex, alm2map, nside2npix, pix2ang, pix2vecRing,
     readMapFromFITS, nest2ring
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array

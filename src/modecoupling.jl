@@ -247,61 +247,61 @@ end
 
 
 # convenience function
-mcm(spec::Symbol, m₁::Map, m₂::Map; lmin=0, lmax=nothing) =
+mcm(spec::Symbol, m₁::HealpixMap, m₂::HealpixMap; lmin=0, lmax=nothing) =
     mcm(spec, map2alm(m₁), map2alm(m₂); lmin=lmin, lmax=lmax)
 
 
 
 """Scale a map."""
-function scale!(m::Map, s::Number)
+function scale!(m::HealpixMap, s::Number)
     m .*= s
 end
-function scale!(m::PolarizedMap, sT::Number, sP::Number)
+function scale!(m::PolarizedHealpixMap, sT::Number, sP::Number)
     m.i .*= sT
     m.q .*= sP
     m.u .*= sP
 end
-scale!(m::PolarizedMap, s::Number) = scale!(m, s, s)
+scale!(m::PolarizedHealpixMap, s::Number) = scale!(m, s, s)
 
 
 
 """
-    mask!(m::Map, mask)
-    mask!(m::PolarizedMap, maskT, maskP)
+    mask!(m::HealpixMap, mask)
+    mask!(m::PolarizedHealpixMap, maskT, maskP)
 
 Mask a map or polarized map in place.
 
 # Arguments:
-- `m::Union{Map,PolarizedMap}`: map or polarized map to mask
-- `maskT::Map`: mask for first map's intensity
-- `maskP::Map`: mask for first map's polarization
+- `m::Union{HealpixMap,PolarizedHealpixMap}`: map or polarized map to mask
+- `maskT::HealpixMap`: mask for first map's intensity
+- `maskP::HealpixMap`: mask for first map's polarization
 """
-function mask!(m::Map, mask)
+function mask!(m::HealpixMap, mask)
     m .*= mask
     return m
 end
-function mask!(m::PolarizedMap, maskT, maskP)
+function mask!(m::PolarizedHealpixMap, maskT, maskP)
     m.i .*= maskT
     m.q .*= maskP
     m.u .*= maskP
     return m
 end
-mask!(m::PolarizedMap, mask) = mask!(m, mask, mask)
+mask!(m::PolarizedHealpixMap, mask) = mask!(m, mask, mask)
 
 """
-    master(map₁::PolarizedMap, maskT₁::Map, maskP₁::Map,
-           map₂::PolarizedMap, maskT₂::Map, maskP₂::Map; already_masked=false)
+    master(map₁::PolarizedHealpixMap, maskT₁::HealpixMap, maskP₁::HealpixMap,
+           map₂::PolarizedHealpixMap, maskT₂::HealpixMap, maskP₂::HealpixMap; already_masked=false)
 
 Perform a mode-decoupling calculation for two polarized maps, along with masks to apply.
 Returns spectra for ``TT``, ``TE``, ``ET``, ``EE``, ``EB``, ``BE``, and ``BB``.
 
 # Arguments:
-- `map₁::PolarizedMap`: the first IQU map
-- `maskT₁::Map`: mask for first map's intensity
-- `maskP₁::Map`: mask for first map's polarization
-- `map₂::PolarizedMap`: the second IQU map
-- `maskT₂::Map`: mask for second map's intensity
-- `maskP₂::Map`: mask for second map's polarization
+- `map₁::PolarizedHealpixMap`: the first IQU map
+- `maskT₁::HealpixMap`: mask for first map's intensity
+- `maskP₁::HealpixMap`: mask for first map's polarization
+- `map₂::PolarizedHealpixMap`: the second IQU map
+- `maskT₂::HealpixMap`: mask for second map's intensity
+- `maskP₂::HealpixMap`: mask for second map's polarization
 
 # Keywords
 - `already_masked::Bool=false`: are the input maps already multiplied with the masks?
@@ -310,8 +310,8 @@ Returns spectra for ``TT``, ``TE``, ``ET``, ``EE``, ``EB``, ``BE``, and ``BB``.
 # Returns: 
 - `Dict{Symbol,SpectralVector}`: spectra `Dict`, indexed with `:TT`, `:TE`, `:ET`, etc.
 """
-function master(map₁::PolarizedMap, maskT₁::Map, maskP₁::Map,
-                map₂::PolarizedMap, maskT₂::Map, maskP₂::Map; 
+function master(map₁::PolarizedHealpixMap, maskT₁::HealpixMap, maskP₁::HealpixMap,
+                map₂::PolarizedHealpixMap, maskT₂::HealpixMap, maskP₂::HealpixMap; 
                 already_masked::Bool=false, lmin::Int=0)
     if already_masked
         maskedmap₁, maskedmap₂ = map₁, map₂

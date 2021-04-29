@@ -29,19 +29,19 @@ n1 = hp.synfast(
 
 ##
 flat_beam = SpectralVector(ones(3*nside))
-flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+flat_mask = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
 mask1 = readMapFromFITS("$(data_dir)/example_mask_1.fits", 1, Float64)
 mask2 = readMapFromFITS("$(data_dir)/example_mask_2.fits", 1, Float64)
 
 ##
 flat_beam = SpectralVector(ones(3*nside))
-flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+flat_mask = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
 m1 = CovField("143_hm1", mask1, mask1, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
 m2 = CovField("143_hm2", mask2, mask2, flat_mask, flat_mask, flat_mask, flat_beam, flat_beam)
 workspace = SpectralWorkspace(m1, m2)
 
 npix = nside2npix(nside)
-map1_ = PolarizedMap{Float64, RingOrder, Vector{Float64}}(
+map1_ = PolarizedHealpixMap{Float64, RingOrder, Vector{Float64}}(
     n1[1,:],
     n1[2,:],
     n1[3,:])

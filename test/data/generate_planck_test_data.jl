@@ -15,7 +15,7 @@ maskT₁ = PowerSpectra.planck256_mask("100", "hm1", :T)
 maskP₁ = PowerSpectra.planck256_mask("100", "hm1", :P)
 maskT₂ = PowerSpectra.planck256_mask("100", "hm2", :T)
 maskP₂ = PowerSpectra.planck256_mask("100", "hm2", :P)
-flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+flat_map = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
 scale!(m₁, 1e6)
 scale!(m₂, 1e6)
 
@@ -84,7 +84,7 @@ using BenchmarkTools
 ##
 
 # flat_beam = SpectralVector(ones(3*nside))
-# flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+# flat_mask = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
 
 
 # mask = readMapFromFITS("test/example_mask_1.fits", 1, Float64)
