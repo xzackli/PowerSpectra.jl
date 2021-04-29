@@ -59,8 +59,8 @@ Here's an example that uses the mode-coupling matrix from above to obtain spectr
 # generate two uniform maps
 nside = mask1.resolution.nside
 npix = nside2npix(nside)
-map1 = Map{Float64, RingOrder}(ones(npix))
-map2 = Map{Float64, RingOrder}(ones(npix))
+map1 = HealpixMap{Float64, RingOrder}(ones(npix))
+map2 = HealpixMap{Float64, RingOrder}(ones(npix))
 
 # mask the maps with different masks
 map1.pixels .*= mask1.pixels
