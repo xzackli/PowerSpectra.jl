@@ -2,8 +2,8 @@
 """
     decouple_covmat(Y, B1, B2; lmin1=2, lmin2=2)
 
-Decouples a covariance matrix Y, performing B₁⁻¹ × M × (B₂⁻¹)^†
-by mutating M. Zeros out ℓ₁, ℓ₂ within BOTH lmin1 and lmin2 (i.e the corner).
+Decouples a covariance matrix Y, performing B₁⁻¹ × Y × (B₂⁻¹)^†
+by mutating Y. 
 """
 function decouple_covmat(Y::SA, B1::SA, B2::SA) where {T, SA <: SpectralArray{T,2}}
     M = deepcopy(Y)
