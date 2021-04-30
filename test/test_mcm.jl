@@ -13,7 +13,7 @@ using IdentityRanges
     nside = 256
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
     flat_beam = SpectralVector(ones(3*nside))
-    flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    flat_map = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
     M = mcm(:TT, mask, mask; lmin=2)
     reference = readdlm("data/mcm_TT_diag.txt")
     @test all(reference .≈ diag(parent(M))[1:end-1])
@@ -29,7 +29,7 @@ end
 @testset "Mode Coupling Matrix Diag EE" begin
     nside = 256
     mask = readMapFromFITS("data/example_mask_1.fits", 1, Float64)
-    flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    flat_mask = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
     M = mcm(:M⁺⁺, mask, mask)
     # factorized_mcm12 = lu(parent(M))
     reference = readdlm("data/mcm_EE_diag.txt")
@@ -56,7 +56,7 @@ end
     mask2_T = readMapFromFITS("data/mask2_T.fits", 1, Float64)
     mask1_P = readMapFromFITS("data/mask1_P.fits", 1, Float64)
     mask2_P = readMapFromFITS("data/mask2_P.fits", 1, Float64)
-    unit_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    unit_map = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
     unit_beam = spectralones(0:(3nside-1))
 
     M = mcm(:TT, mask1_T, mask2_T)

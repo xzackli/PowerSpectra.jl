@@ -3,9 +3,9 @@ abstract type AbstractField{T} end
 
 struct CovField{T, AAT, AAP, AAσ, AA_BEAM} <: AbstractField{T}
     name::String
-    maskT::Map{T, RingOrder, AAT}
-    maskP::Map{T, RingOrder, AAP}
-    σ²::PolarizedMap{T, RingOrder, AAσ}
+    maskT::HealpixMap{T, RingOrder, AAT}
+    maskP::HealpixMap{T, RingOrder, AAP}
+    σ²::PolarizedHealpixMap{T, RingOrder, AAσ}
     beamT::SpectralVector{T, AA_BEAM}
     beamP::SpectralVector{T, AA_BEAM}
 end
@@ -13,7 +13,7 @@ end
 
 """
     CovField(name, maskT, maskP,
-        σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA},
+        σ²II::HealpixMap{T, O, AA}, σ²QQ::HealpixMap{T, O, AA}, σ²UU::HealpixMap{T, O, AA},
         beamT::SpectralVector{T}, beamP::SpectralVector{T})
 
 Create a structure for describing the information needed for a covariance
@@ -21,32 +21,32 @@ involving this field.
 
 # Arguments:
 - `name::String`: name of this field
-- `maskT::Map{T}`: temperature mask
-- `maskP::Map{T}`: polarization mask
-- `σ²::PolarizedMap{T}`: pixel variances
+- `maskT::HealpixMap{T}`: temperature mask
+- `maskP::HealpixMap{T}`: polarization mask
+- `σ²::PolarizedHealpixMap{T}`: pixel variances
 - `beamT::SpectralVector{T}`: temperature beam
 - `beamP::SpectralVector{T}`: polarization beam
 """
 function CovField end
 
 
-function CovField(name::String, maskT::Map{T}, maskP::Map{T}, σ²::PolarizedMap) where T
+function CovField(name::String, maskT::HealpixMap{T}, maskP::HealpixMap{T}, σ²::PolarizedHealpixMap) where T
     nside = maskT.resolution.nside
     return CovField(name, maskT, maskP, σ², 
         SpectralVector(ones(3nside)), SpectralVector(ones(3nside)))
 end
 
-function CovField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA},
-        σ²II::Map{T, O, AA}, σ²QQ::Map{T, O, AA}, σ²UU::Map{T, O, AA}) where {T, O, AA}
-    σ² = PolarizedMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
+function CovField(name::String, maskT::HealpixMap{T, O, AA}, maskP::HealpixMap{T, O, AA},
+        σ²II::HealpixMap{T, O, AA}, σ²QQ::HealpixMap{T, O, AA}, σ²UU::HealpixMap{T, O, AA}) where {T, O, AA}
+    σ² = PolarizedHealpixMap{T, O, AA}(σ²II, σ²QQ, σ²UU)
     return CovField(name, maskT, maskP, σ²)
 end
 
-function CovField(name::String, maskT::Map{T, O, AA}, maskP::Map{T, O, AA}) where {T, O, AA}
+function CovField(name::String, maskT::HealpixMap{T, O, AA}, maskP::HealpixMap{T, O, AA}) where {T, O, AA}
     nside = maskT.resolution.nside
     one_beam = SpectralVector(ones(3nside))
-    zero_map = Map{T, O, AA}(zeros(nside2npix(nside)))
-    σ² = PolarizedMap{T, O, AA}(zero_map, zero_map, zero_map)
+    zero_map = HealpixMap{T, O, AA}(zeros(nside2npix(nside)))
+    σ² = PolarizedHealpixMap{T, O, AA}(zero_map, zero_map, zero_map)
     return CovField(name, maskT, maskP, σ², one_beam, one_beam)
 end
 
@@ -67,8 +67,8 @@ const WIndex = Tuple{Symbol, Symbol, String, String, Symbol, String, String, Sym
 struct CovarianceWorkspace{T <: Real, MT, WT, EWT, WST}
     field_names::NTuple{4, String}
     lmax::Int
-    mask_p::MT                  #::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
-    weight_p::WT                 #::Dict{Tuple{String, Symbol}, Map{T,RingOrder}}
+    mask_p::MT                  #::Dict{Tuple{String, Symbol}, HealpixMap{T,RingOrder}}
+    weight_p::WT                 #::Dict{Tuple{String, Symbol}, HealpixMap{T,RingOrder}}
     effective_weights::EWT       #::Dict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}}}
     W_spectra::WST               #::Dict{WIndex, SpectralVector{T}}
 end
@@ -100,12 +100,12 @@ function CovarianceWorkspace(m_i::CovField{T}, m_j::CovField{T},
                              m_p::CovField{T}, m_q::CovField{T}; lmax::Int=0) where {T}
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
     lmax = iszero(lmax) ? nside2lmax(m_i.maskT.resolution.nside) : lmax  # set an lmax if not specified
-    mask_p = Dict{Tuple{String, Symbol},Map{T,RingOrder}}(
+    mask_p = Dict{Tuple{String, Symbol},HealpixMap{T,RingOrder}}(
         (m_i.name, :TT) => m_i.maskT, (m_j.name, :TT) => m_j.maskT,
         (m_p.name, :TT) => m_p.maskT, (m_q.name, :TT) => m_q.maskT,
         (m_i.name, :PP) => m_i.maskP, (m_j.name, :PP) => m_j.maskP,
         (m_p.name, :PP) => m_p.maskP, (m_q.name, :PP) => m_q.maskP)
-    weight_p = Dict{Tuple{String, Symbol},Map{T,RingOrder}}(
+    weight_p = Dict{Tuple{String, Symbol},HealpixMap{T,RingOrder}}(
         (m_i.name, :II) => m_i.σ².i, (m_i.name, :QQ) => m_i.σ².q, (m_i.name, :UU) => m_i.σ².u,
         (m_j.name, :II) => m_j.σ².i, (m_j.name, :QQ) => m_j.σ².q, (m_j.name, :UU) => m_j.σ².u,
         (m_p.name, :II) => m_p.σ².i, (m_p.name, :QQ) => m_p.σ².q, (m_p.name, :UU) => m_p.σ².u,

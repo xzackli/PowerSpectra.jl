@@ -31,8 +31,8 @@ end
     mask2_T = readMapFromFITS("data/mask2_T.fits", 1, Float64)
     mask1_P = readMapFromFITS("data/mask1_P.fits", 1, Float64)
     mask2_P = readMapFromFITS("data/mask2_P.fits", 1, Float64)
-    unit_var = Map{Float64, RingOrder}(ones(nside2npix(nside)))
-    flat_mask = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    unit_var = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)))
+    flat_mask = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
     beam1 = SpectralVector(ones(3nside))
     beam2 = SpectralVector(ones(3nside))
     theory = CSV.read("data/theory.csv", DataFrame)
@@ -75,7 +75,7 @@ end
         (:TE, "143_hm2", "143_hm2") => clte,
     )
 
-    σ² = PolarizedMap{Float64, RingOrder, typeof(unit_var)}(unit_var, unit_var, unit_var)
+    σ² = PolarizedHealpixMap{Float64, RingOrder, typeof(unit_var)}(unit_var, unit_var, unit_var)
     m1 = CovField("143_hm1", mask1_T, mask1_P, σ², beam1, beam1)
     m2 = CovField("143_hm2", mask2_T, mask2_P, σ², beam2, beam2)
     workspace = CovarianceWorkspace(m1, m2, m1, m2)

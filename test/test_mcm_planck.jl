@@ -14,7 +14,7 @@ using DelimitedFiles
     maskP₁ = PowerSpectra.planck256_mask("100", "hm1", "P")
     maskT₂ = PowerSpectra.planck256_mask("100", "hm2", "T")
     maskP₂ = PowerSpectra.planck256_mask("100", "hm2", "P")
-    flat_map = Map{Float64, RingOrder}(ones(nside2npix(nside)) )
+    flat_map = HealpixMap{Float64, RingOrder}(ones(nside2npix(nside)) )
 
     M₀₀ = mcm(:TT, map2alm(maskT₁), map2alm(maskT₂))
     @load "data/mcm00.jld2" mcm00

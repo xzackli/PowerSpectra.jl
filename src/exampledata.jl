@@ -25,7 +25,7 @@ function planck_FITS_name_to_col(name_)
 end
 
 """
-    planck256_map(freq, split, col, type::Type=Float64) -> Map{T, RingOrder}
+    planck256_map(freq, split, col, type::Type=Float64) -> HealpixMap{T, RingOrder}
 
 Returns a Planck 2018 half-mission frequency map downgraded to nside 256 in KCMB units.
 FITS file column numbers are 
@@ -60,7 +60,7 @@ function planck256_map(freq::String, split, col, T::Type=Float64)
 end
 
 function planck256_polmap(freq, split, T::Type=Float64)
-    return PolarizedMap(
+    return PolarizedHealpixMap(
         planck256_map(freq, split, 1, T), 
         planck256_map(freq, split, 2, T), 
         planck256_map(freq, split, 3, T))
@@ -68,7 +68,7 @@ end
 
 
 """
-    planck256_mask(freq, split, maptype, T::Type=Float64) -> Map{T}
+    planck256_mask(freq, split, maptype, T::Type=Float64) -> HealpixMap{T}
 
 # Arguments:
 - `freq::String`: Planck frequency ∈ {"100", "143", "217"}
@@ -76,7 +76,7 @@ end
 - `maptype`: pass T or P, as a String or Symbol  
 
 # Returns: 
-- `Map{T, RingOrder}`: the mask
+- `HealpixMap{T, RingOrder}`: the mask
 """
 function planck256_mask(freq, split, maptype, T::Type=Float64)
     maptype_str = String(maptype)

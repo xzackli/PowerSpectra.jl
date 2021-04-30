@@ -56,13 +56,13 @@ Base.getindex(d::ConstantDict, key) = d.c
 
 
 @doc raw"""
-    function fitdipole(m::Map{T}, [w::Map{T}=1]) where T
+    function fitdipole(m::HealpixMap{T}, [w::HealpixMap{T}=1]) where T
 
 Fit the monopole and dipole of a map. 
 
 # Arguments:
-- `m::Map{T}`: map to fit
-- `w::Map{T}`: weight map. Defaults to a FillArray of ones.
+- `m::HealpixMap{T}`: map to fit
+- `w::HealpixMap{T}`: weight map. Defaults to a FillArray of ones.
 
 # Returns: 
 - `Tuple{T, NTuple{3,T}}`: (monopole, (dipole x, dipole y, dipole z))
@@ -70,7 +70,7 @@ Fit the monopole and dipole of a map.
 fitdipole
 
 # basic reference, from  https://healpix.jpl.nasa.gov/html/subroutinesnode86.htm
-@refimpl function fitdipole(m::Map{T}, w::Map{T}) where T
+@refimpl function fitdipole(m::HealpixMap{T}, w::HealpixMap{T}) where T
     upA = zeros(T,4,4)  # upper triangular version of A
     b = zeros(T, 4)
     for p ∈ eachindex(m.pixels)
@@ -88,7 +88,7 @@ fitdipole
 end
 
 # more accurate version using carry bits
-function fitdipole(m::Map{T}, w::Map{T}) where T
+function fitdipole(m::HealpixMap{T}, w::HealpixMap{T}) where T
     # A and b 
     upA = zeros(T,4,4)  # upper triangular version of A
     b = zeros(T, 4)
@@ -130,8 +130,8 @@ function fitdipole(m::Map{T}, w::Map{T}) where T
     return f[1], (f[2], f[3], f[4])  # monopole, dipole
 end
 
-function fitdipole(m::Map{T,O}) where {T,O}
-    fitdipole(m, Map{T,O}(Ones(length(m.pixels))))
+function fitdipole(m::HealpixMap{T,O}) where {T,O}
+    fitdipole(m, HealpixMap{T,O}(Ones(length(m.pixels))))
 end
 
 
@@ -139,11 +139,11 @@ end
     subtract_monopole_dipole!(map_in, monopole, dipole)
 
 # Arguments:
-- `map_in::Map`: the map to modify
+- `map_in::HealpixMap`: the map to modify
 - `monopole::T`: monopole value
 - `dipole::NTuple{3,T}`: dipole value
 """
-function subtract_monopole_dipole!(map_in::Map, 
+function subtract_monopole_dipole!(map_in::HealpixMap, 
         monopole::T, dipole::NTuple{3,T}) where T 
     res = map_in.resolution
     for p ∈ eachindex(map_in.pixels)

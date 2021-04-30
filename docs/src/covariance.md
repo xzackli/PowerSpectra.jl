@@ -19,7 +19,7 @@ The expressions for the covariance matrix tend to reuse the same expressions man
 
 ## Computing the Covariance
 
-First, let's set up the required data -- masks and variances. The variance is a [`Healpix.PolarizedMap`](https://ziotom78.github.io/Healpix.jl/dev/mapfunc/#Healpix.PolarizedMap) containing the fields `i`, `q`, `u`. In this example, we read the masks from disk, but set the variances for everything to 1.
+First, let's set up the required data -- masks and variances. The variance is a [`Healpix.PolarizedHealpixMap`](https://ziotom78.github.io/Healpix.jl/dev/mapfunc/#Healpix.PolarizedHealpixMap) containing the fields `i`, `q`, `u`. In this example, we read the masks from disk, but set the variances for everything to 1.
 ```julia
 using Healpix, PowerSpectra
 mask1_T = readMapFromFITS("test/data/mask1_T.fits", 1, Float64)
@@ -29,7 +29,7 @@ mask2_P = readMapFromFITS("test/data/mask2_T.fits", 1, Float64)
 
 # for this example, pixel variance = 1
 nside = mask1_T.resolution.nside
-unit_var = PolarizedMap{Float64, RingOrder}(nside)
+unit_var = PolarizedHealpixMap{Float64, RingOrder}(nside)
 unit_var.i .= 1.0
 unit_var.q .= 1.0
 unit_var.u .= 1.0

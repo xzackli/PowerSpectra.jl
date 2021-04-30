@@ -27,7 +27,7 @@ ps_mask = ones(hp.nside2npix(nside))
 ps_mask[ rand(length(mask_arr)) .> 0.9999 ] .= 0.0
 ps_mask = nmt.mask_apodization(ps_mask, 4.0, apotype="C2")
 
-mask = Map{Float64, RingOrder}(mask_arr) 
+mask = HealpixMap{Float64, RingOrder}(mask_arr) 
 saveToFITS(mask, "test/mask1_P.fits")
 mask.pixels .= mask_arr .* ps_mask
 saveToFITS(mask, "test/mask1_T.fits")
@@ -46,7 +46,7 @@ ps_mask = ones(hp.nside2npix(nside))
 ps_mask[ rand(length(mask_arr)) .> 0.9999 ] .= 0.0
 ps_mask = nmt.mask_apodization(ps_mask, 4.0, apotype="C2")
 
-mask = Map{Float64, RingOrder}(mask_arr) 
+mask = HealpixMap{Float64, RingOrder}(mask_arr) 
 saveToFITS(mask, "test/mask2_P.fits")
 mask.pixels .= mask_arr .* ps_mask
 saveToFITS(mask, "test/mask2_T.fits")
@@ -61,7 +61,7 @@ using DataFrames
 data_dir = "/home/zequnl/.julia/dev/PowerSpectra/notebooks/data/"
 theory = CSV.File(data_dir * "theory.csv") |> DataFrame  
 m0 = hp.synfast(theory.cltt, nside=nside, verbose=false, pixwin=true, new=true)
-saveToFITS(Map{Float64, RingOrder}(m0), "test/example_map.fits")
+saveToFITS(HealpixMap{Float64, RingOrder}(m0), "test/example_map.fits")
 
 
 
