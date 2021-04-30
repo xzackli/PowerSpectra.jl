@@ -1,2 +1,3 @@
 notebooks/* linguist-vendored
 *.ipynb linguist-vendored
+test/data/* linguist-vendored

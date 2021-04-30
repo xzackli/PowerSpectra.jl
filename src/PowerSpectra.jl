@@ -12,7 +12,6 @@ import FillArrays: Zeros, Ones
 import OffsetArrays: OffsetArray, OffsetVector
 import OffsetArrays
 import StaticArrays: SA
-import FITSIO: FITS
 import IdentityRanges: IdentityRange
 
 using BandedMatrices
@@ -35,19 +34,16 @@ include("covariance.jl")
 include("beam.jl")
 include("exampledata.jl")
 
-export IdentityRange
 
-export mcm, decouple_covmat, mask!, scale!, map2cl, alm2cl, master
+export IdentityRange
+export mcm, decouple_covmat, mask!, scale!, master
 export @spectra
-export compute_covmat_TTTT, compute_covmat_EEEE
 export SpectralVector, SpectralArray, BlockSpectralMatrix
 export spectralzeros, spectralones
 export channelindex
 export fitdipole, subtract_monopole_dipole!, nside2lmax
-
 export CovField
 export CovarianceWorkspace, coupledcov
-
 export binning_matrix, read_commented_header
 export synalm, synalm!
 export SpectrumName
