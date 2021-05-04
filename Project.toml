@@ -23,6 +23,18 @@ UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
 WignerFamilies = "a8f88a7a-0a89-491c-8ecb-051e99aa9f5e"
 
 [compat]
+BandedMatrices = "0.14, 0.15, 0.16"
+CSV = "0.8"
+Combinatorics = "1"
+DataFrames = "1"
+FillArrays = "0.11"
+IdentityRanges = "0.3"
+Lazy = "0.15"
+OffsetArrays = "1"
+ReferenceImplementations = "0.1"
+StaticArrays = "1"
+ThreadPools = "1, 2"
+UnsafeArrays = "1"
 WignerFamilies = "1"
 julia = "1.6"
 
