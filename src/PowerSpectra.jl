@@ -21,6 +21,7 @@ using CSV, DataFrames
 using Lazy: @forward
 using ReferenceImplementations
 using LazyArtifacts
+using FITSIO
 # import Distributions: MvNormal
 # import LoopVectorization: @avx
 
