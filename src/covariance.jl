@@ -16,7 +16,7 @@ end
 
 """
     coupledcov(ch1, ch2, workspace, spectra;
-               noise_ratios=Dict(), lmax=0) where T
+               noiseratios=Dict(), lmax=0) where T
 
 # Arguments:
 - `ch1::Symbol`: spectrum type of first spectrum (i.e. :TT, :TE, :EE)
@@ -25,53 +25,53 @@ end
 - `spectra`: signal spectra
 
 # Keywords
-- `noise_ratios::AbstractDict`: ratio of noise spectra to white noise
+- `noiseratios::AbstractDict`: ratio of noise spectra to white noise
 - `lmax=0`: maximum multipole moment for covariance matrix
 
 # Returns:
 - `SpectralArray{T,2}`: covariance matrix (0-indexed)
 """
 function coupledcov(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace{T},
-                    spectra::AbstractDict, noise_ratios::AbstractDict=Dict();
+                    spectra::AbstractDict, noiseratios::AbstractDict=Dict();
                     lmin=0, lmax=nothing) where T
 
     lmax = isnothing(lmax) ? workspace.lmax : lmax
     𝐂 = spectralzeros(lmin:lmax, lmin:lmax)
 
-    if length(noise_ratios) == 0  # by default, do not rescale for noise
+    if length(noiseratios) == 0  # by default, do not rescale for noise
         identity_spectrum = spectralones(0:lmax)
-        noise_ratios = ConstantDict{SpectrumName,typeof(identity_spectrum)}(
+        noiseratios = ConstantDict{SpectrumName,typeof(identity_spectrum)}(
             identity_spectrum)
     end
 
     if (ch1==:TT) && (ch2==:TT)
-        return coupledcovTTTT!(𝐂, workspace, spectra, noise_ratios)
+        return coupledcovTTTT!(𝐂, workspace, spectra, noiseratios)
     elseif (ch1==:EE) && (ch2==:EE)
-        return coupledcovEEEE!(𝐂, workspace, spectra, noise_ratios)
+        return coupledcovEEEE!(𝐂, workspace, spectra, noiseratios)
     elseif (ch1==:TE) && (ch2==:TE)
-        return coupledcovTETE!(𝐂, workspace, spectra, noise_ratios)
+        return coupledcovTETE!(𝐂, workspace, spectra, noiseratios)
     elseif (ch1==:TT) && ( ch2==:TE)
-        return coupledcovTTTE!(𝐂, workspace, spectra, noise_ratios)
+        return coupledcovTTTE!(𝐂, workspace, spectra, noiseratios)
     elseif (ch1==:TT) && ( ch2==:EE)
-        return coupledcovTTEE!(𝐂, workspace, spectra, noise_ratios)
+        return coupledcovTTEE!(𝐂, workspace, spectra, noiseratios)
     elseif (ch1==:TE) && (ch2==:EE)
-        return coupledcovTEEE!(𝐂, workspace, spectra, noise_ratios)
+        return coupledcovTEEE!(𝐂, workspace, spectra, noiseratios)
     end
     print("$(ch1),$(ch2) not implemented")
 end
 
 
 function coupledcovTTTT!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T},
-                         spectra, noise_ratios) where {T <: Real}
+                         spectra, noiseratios) where {T <: Real}
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
 
-    r_ℓ_ip = noise_ratios[:TT, i, p]
-    r_ℓ_jq = noise_ratios[:TT, j, q]
-    r_ℓ_iq = noise_ratios[:TT, i, q]
-    r_ℓ_jp = noise_ratios[:TT, j, p]
+    r_ℓ_ip = noiseratios[:TT, i, p]
+    r_ℓ_jq = noiseratios[:TT, j, q]
+    r_ℓ_iq = noiseratios[:TT, i, q]
+    r_ℓ_jp = noiseratios[:TT, j, p]
 
     loop_covTTTT!(𝐂,
         spectra[:TT,i,p], spectra[:TT,j,q], spectra[:TT,i,q], spectra[:TT,j,p],
@@ -124,16 +124,16 @@ end
 
 
 function coupledcovEEEE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                         noise_ratios) where {T <: Real}
+                         noiseratios) where {T <: Real}
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
 
-    r_ℓ_ip = noise_ratios[:EE, i, p]
-    r_ℓ_jq = noise_ratios[:EE, j, q]
-    r_ℓ_iq = noise_ratios[:EE, i, q]
-    r_ℓ_jp = noise_ratios[:EE, j, p]
+    r_ℓ_ip = noiseratios[:EE, i, p]
+    r_ℓ_jq = noiseratios[:EE, j, q]
+    r_ℓ_iq = noiseratios[:EE, i, q]
+    r_ℓ_jp = noiseratios[:EE, j, p]
 
     loop_covEEEE!(𝐂,
         spectra[:EE,i,p], spectra[:EE,j,q], spectra[:EE,i,q], spectra[:EE,j,p],
@@ -186,15 +186,15 @@ end
 
 
 function coupledcovTTTE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                                     noise_ratios) where {T <: Real}
+                                     noiseratios) where {T <: Real}
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    r_ℓ_ip = noise_ratios[:TT, i, p]
-    r_ℓ_jp = noise_ratios[:TT, j, p]
+    r_ℓ_ip = noiseratios[:TT, i, p]
+    r_ℓ_jp = noiseratios[:TT, j, p]
 
     loop_covTTTE!(𝐂,
         spectra[:TT,i,p], spectra[:TT,j,p], spectra[:TE,i,q], spectra[:TE,j,q],
@@ -240,15 +240,15 @@ end
 
 
 function coupledcovTETE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                                     noise_ratios) where {T <: Real}
+                                     noiseratios) where {T <: Real}
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    r_TT_ip = noise_ratios[:TT, i, p]
-    r_PP_jq = noise_ratios[:EE, j, q]
+    r_TT_ip = noiseratios[:TT, i, p]
+    r_PP_jq = noiseratios[:EE, j, q]
 
     loop_covTETE!(𝐂,
         spectra[:TT,i,p], spectra[:EE,j,q], spectra[:TE,i,q], spectra[:TE,j,p],
@@ -309,14 +309,14 @@ end
 
 
 function coupledcovTEEE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                                     noise_ratios; planck=true) where {T <: Real}
+                                     noiseratios; planck=true) where {T <: Real}
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
 
-    r_EE_jq = noise_ratios[:EE, j, q]
-    r_EE_jp = noise_ratios[:EE, j, p]
+    r_EE_jq = noiseratios[:EE, j, q]
+    r_EE_jp = noiseratios[:EE, j, p]
 
     if planck
         loop_covTEEE_planck!(𝐂,
@@ -410,7 +410,7 @@ end
 
 
 function coupledcovTTEE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                         noise_ratios) where {T <: Real}
+                         noiseratios) where {T <: Real}
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))

@@ -249,7 +249,11 @@ end
 # convenience function
 mcm(spec::Symbol, m₁::HealpixMap, m₂::HealpixMap; lmin=0, lmax=nothing) =
     mcm(spec, map2alm(m₁), map2alm(m₂); lmin=lmin, lmax=lmax)
-
+function mcm(spec::Symbol, f₁::CovField, f₂::CovField; lmin=0, lmax=nothing)
+    mask1 = (string(spec)[1] == 'T') ? f₁.maskT : f₁.maskP
+    mask2 = (string(spec)[2] == 'T') ? f₂.maskT : f₂.maskP
+    mcm(spec, map2alm(mask1), map2alm(mask2); lmin=lmin, lmax=lmax)
+end
 
 
 """Scale a map."""
