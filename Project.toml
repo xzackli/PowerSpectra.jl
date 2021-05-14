@@ -24,6 +24,7 @@ UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
 WignerFamilies = "a8f88a7a-0a89-491c-8ecb-051e99aa9f5e"
 
 [compat]
+StaticArrays = "1.2"
 WignerFamilies = "1"
 julia = "1.6"
 
