@@ -13,11 +13,4 @@ matrices for T, E, and B-mode spectra, using pseudo-Cl methods
 [Efstathiou 2006](https://arxiv.org/abs/astro-ph/0601107), 
 [Hamimeche and Lewis 2008](https://arxiv.org/abs/0801.0554)).
 
-Please consult the [documentation](https://xzackli.github.io/PowerSpectra.jl/dev) for how to use this package. The package is not yet 
-registered, so you will need to install this (and the latest Healpix.jl) straight from GitHub.
-
-```julia
-using Pkg  
-Pkg.add(PackageSpec(name="Healpix", rev="master")) 
-Pkg.add(url="https://github.com/xzackli/PowerSpectra.jl.git")
-```
+Please consult the [documentation](https://xzackli.github.io/PowerSpectra.jl/dev) for how to use this package. 
