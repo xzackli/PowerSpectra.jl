@@ -20,7 +20,7 @@ end
 
 function read_commented_header(filename; delim=" ", strip_spaces=true)
     header = CSV.read(filename, DataFrame; header=false, delim=delim, ignorerepeated=true,
-        limit=1, type=String)
+        limit=1, types=String)
     if strip_spaces
         headers = [String(strip(header[1,"Column$(i)"])) for i in 1:ncol(header)]
 
