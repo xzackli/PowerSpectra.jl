@@ -1,10 +1,10 @@
 [planck_pr3_lowres_maps]
-git-tree-sha1 = "fa9cb260bc1d1c324b0c694c357e3b89ce969a20"
+git-tree-sha1 = "b0c9b99dd3736f709f26147b6fbe7e966516b7aa"
 lazy = true
 
     [[planck_pr3_lowres_maps.download]]
-    url = "https://github.com/xzackli/PowerSpectra.jl/releases/download/v0.0.1/plancklowres.tar.gz"
-    sha256 = "3e05203140e53316c1bd2444560d5725730cf63f23a1c400525a4cb1c7745dae"
+    url = "https://github.com/xzackli/PowerSpectra.jl/releases/download/v0.0.2/plancklowres.tar.gz"
+    sha256 = "d8fdd9df2f1754d3528a9c3151f2f4f42b2d54b48936262cd5a3a8c89b945aca"
 
 [planck_pr3_beams]
 git-tree-sha1 = "4e546e76ad331ddacfd39a18d8e3e33d065a0179"
