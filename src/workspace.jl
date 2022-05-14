@@ -1,11 +1,21 @@
 
 abstract type AbstractField{T} end
 
-struct CovField{T, AAT, AAP, AAσ, AA_BEAM} <: AbstractField{T}
+# struct CovField{T, AAT, AAP, AAσ, AA_BEAM} <: AbstractField{T}
+#     name::String
+#     maskT::HealpixMap{T, RingOrder, AAT}
+#     maskP::HealpixMap{T, RingOrder, AAP}
+#     σ²::PolarizedHealpixMap{T, RingOrder, AAσ}
+#     beamT::SpectralVector{T, AA_BEAM}
+#     beamP::SpectralVector{T, AA_BEAM}
+# end
+
+
+struct CovField{T, MTT, MTP, AAσ, AA_BEAM} <: AbstractField{T}
     name::String
-    maskT::HealpixMap{T, RingOrder, AAT}
-    maskP::HealpixMap{T, RingOrder, AAP}
-    σ²::PolarizedHealpixMap{T, RingOrder, AAσ}
+    maskT::MTT
+    maskP::MTP
+    σ²::AAσ
     beamT::SpectralVector{T, AA_BEAM}
     beamP::SpectralVector{T, AA_BEAM}
 end
@@ -96,16 +106,17 @@ noise-weighted masks.
 # Keywords
 - `lmax::Int=0`: maximum multipole to compute covariance matrix
 """
-function CovarianceWorkspace(m_i::CovField{T}, m_j::CovField{T},
-                             m_p::CovField{T}, m_q::CovField{T}; lmax::Int=0) where {T}
+function CovarianceWorkspace(m_i::CovField{T,MTT}, m_j::CovField{T,MTT},
+                             m_p::CovField{T,MTT}, m_q::CovField{T,MTT}; lmax::Int=0) where {T,MTT}
+    print(MTT)
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
     lmax = iszero(lmax) ? nside2lmax(m_i.maskT.resolution.nside) : lmax  # set an lmax if not specified
-    mask_p = Dict{Tuple{String, Symbol},HealpixMap{T,RingOrder}}(
+    mask_p = Dict{Tuple{String, Symbol},MTT}(
         (m_i.name, :TT) => m_i.maskT, (m_j.name, :TT) => m_j.maskT,
         (m_p.name, :TT) => m_p.maskT, (m_q.name, :TT) => m_q.maskT,
         (m_i.name, :PP) => m_i.maskP, (m_j.name, :PP) => m_j.maskP,
         (m_p.name, :PP) => m_p.maskP, (m_q.name, :PP) => m_q.maskP)
-    weight_p = Dict{Tuple{String, Symbol},HealpixMap{T,RingOrder}}(
+    weight_p = Dict{Tuple{String, Symbol},MTT}(
         (m_i.name, :II) => m_i.σ².i, (m_i.name, :QQ) => m_i.σ².q, (m_i.name, :UU) => m_i.σ².u,
         (m_j.name, :II) => m_j.σ².i, (m_j.name, :QQ) => m_j.σ².q, (m_j.name, :UU) => m_j.σ².u,
         (m_p.name, :II) => m_p.σ².i, (m_p.name, :QQ) => m_p.σ².q, (m_p.name, :UU) => m_p.σ².u,
