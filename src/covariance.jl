@@ -61,8 +61,8 @@ function coupledcov(ch1::Symbol, ch2::Symbol, workspace::CovarianceWorkspace{T},
 end
 
 
-function coupledcovTTTT!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T},
-                         spectra, noiseratios) where {T <: Real}
+function coupledcovTTTT!(𝐂::SpectralArray, workspace::CovarianceWorkspace,
+                         spectra, noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
@@ -123,8 +123,8 @@ function loop_covTTTT!(𝐂::SpectralArray{T,2},
 end
 
 
-function coupledcovEEEE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                         noiseratios) where {T <: Real}
+function coupledcovEEEE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, spectra,
+                         noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
@@ -185,8 +185,8 @@ function loop_covEEEE!(𝐂::SpectralArray{T,2},
 end
 
 
-function coupledcovTTTE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                                     noiseratios) where {T <: Real}
+function coupledcovTTTE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, spectra,
+                                     noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
@@ -239,8 +239,8 @@ function loop_covTTTE!(𝐂::SpectralArray{T,2},
 end
 
 
-function coupledcovTETE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                                     noiseratios) where {T <: Real}
+function coupledcovTETE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, spectra,
+                                     noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
@@ -308,8 +308,8 @@ function loop_covTETE!(𝐂::SpectralArray{T,2},
 end
 
 
-function coupledcovTEEE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                                     noiseratios; planck=true) where {T <: Real}
+function coupledcovTEEE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, spectra,
+                                     noiseratios; planck=true)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
@@ -409,8 +409,8 @@ function loop_covTEEE_planck!(𝐂::SpectralArray{T,2},
 end
 
 
-function coupledcovTTEE!(𝐂::SpectralArray{T,2}, workspace::CovarianceWorkspace{T}, spectra,
-                         noiseratios) where {T <: Real}
+function coupledcovTTEE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, spectra,
+                         noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
