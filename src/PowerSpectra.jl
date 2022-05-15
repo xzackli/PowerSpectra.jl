@@ -7,6 +7,7 @@ import Combinatorics: permutations, combinations, with_replacement_combinations
 import Healpix: HealpixMap, PolarizedHealpixMap, Alm, RingOrder, alm2cl, map2alm, numberOfAlms,
     RingInfo, getringinfo!, almIndex, alm2map, nside2npix, pix2ang, pix2vecRing,
     readMapFromFITS, nest2ring
+import Pixell: Enmap, pixareamap
 import WignerFamilies: wigner3j_f!, WignerF, WignerSymbolVector, get_wigner_array
 import FillArrays: Zeros, Ones
 import OffsetArrays: OffsetArray, OffsetVector
