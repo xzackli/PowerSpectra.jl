@@ -265,3 +265,7 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
     end
 end
 synalm!(Cl::AbstractArray{T,3}, alms::Vector) where T = synalm!(Random.default_rng(), Cl, alms)
+
+
+# Healpix parent 
+Base.parent(x::HealpixMap) = x.pixels

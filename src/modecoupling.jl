@@ -1,7 +1,7 @@
 
 # Projector function for TT. Goes into the mode-coupling matrix.
 function Ξ_TT(𝐖::SpectralVector{T, AA},
-              w3j²₀₀::WignerSymbolVector{T, Int},
+              w3j²₀₀::WignerSymbolVector,
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²₀₀), firstindex(𝐖))
@@ -16,7 +16,7 @@ end
 # Projector function for EE. Goes into the mode-coupling matrix.
 # Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 function Ξ_EE(𝐖::SpectralVector{T, AA},
-              w3j²₂₂::WignerSymbolVector{T, Int},
+              w3j²₂₂::WignerSymbolVector,
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(𝐖))
@@ -33,7 +33,7 @@ end
 # Projector function for EE. Goes into the mode-coupling matrix.
 # Note that w3j² refers to the square of ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 function Ξ_EB(𝐖::SpectralVector{T, AA},
-              w3j²₂₂::WignerSymbolVector{T, Int},
+              w3j²₂₂::WignerSymbolVector,
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j²₂₂), firstindex(𝐖))
@@ -51,7 +51,7 @@ end
 # Projector function for TE. Goes into the mode-coupling matrix.
 # Note that w3j₀₀₂₂ refers to ( ℓ ℓ₂ ℓ₃ 0 0 0 ) × ( ℓ ℓ₂ ℓ₃ 0 -2 2 )
 function Ξ_TE(𝐖::SpectralVector{T, AA},
-              w3j₀₀₂₂::WignerSymbolVector{T, Int},
+              w3j₀₀₂₂::WignerSymbolVector,
               ℓ₁::Int, ℓ₂::Int) where {T, AA}
     Ξ = zero(T)
     ℓ₃_start = max(firstindex(w3j₀₀₂₂), firstindex(𝐖))

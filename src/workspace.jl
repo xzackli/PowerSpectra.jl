@@ -88,14 +88,14 @@ function CovarianceWorkspace(T::Type, field_names::NTuple{4, String}, lmax::Int,
     CovarianceWorkspace{T, MT, WT, EWT, WST}(field_names, lmax, mask_p, weight_p, 
         effective_weights, W_spectra)
 end
-    
+
 
 """
     CovarianceWorkspace(m_i, m_j, m_p, m_q; lmax::Int=0)
 
 Inputs and cache for covariance calculations. A covariance matrix relates the masks of
 four fields and spins. This structure caches various cross-spectra between masks and
-noise-weighted masks.
+noise-weighted masks. By default, operates at Float64 precision.
 
 # Arguments:
 - `m_i::CovField{T}`: map i
@@ -106,9 +106,8 @@ noise-weighted masks.
 # Keywords
 - `lmax::Int=0`: maximum multipole to compute covariance matrix
 """
-function CovarianceWorkspace(m_i::CovField{T,MTT}, m_j::CovField{T,MTT},
-                             m_p::CovField{T,MTT}, m_q::CovField{T,MTT}; lmax::Int=0) where {T,MTT}
-    print(MTT)
+function CovarianceWorkspace(m_i::CovField{TC,MTT}, m_j::CovField{TC,MTT},
+                             m_p::CovField{TC,MTT}, m_q::CovField{TC,MTT}; lmax::Int=0) where {TC,MTT}
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
     lmax = iszero(lmax) ? nside2lmax(m_i.maskT.resolution.nside) : lmax  # set an lmax if not specified
     mask_p = Dict{Tuple{String, Symbol},MTT}(
@@ -123,14 +122,18 @@ function CovarianceWorkspace(m_i::CovField{T,MTT}, m_j::CovField{T,MTT},
         (m_q.name, :II) => m_q.σ².i, (m_q.name, :QQ) => m_q.σ².q, (m_q.name, :UU) => m_q.σ².u)
 
     return CovarianceWorkspace(
-        T,
+        Float64,
         field_names,
         lmax,
         mask_p,
         weight_p,
-        Dict{Tuple{Symbol, String, String, Symbol}, Alm{Complex{T}, Vector{Complex{T}}}}(),
-        Dict{WIndex, SpectralVector{T, Vector{T}}}())
+        Dict{Tuple{Symbol, String, String, Symbol}, Alm{ComplexF64, Vector{ComplexF64}}}(),
+        Dict{WIndex, SpectralVector{Float64, Vector{Float64}}}())
 end
+
+
+pixsize(m::HealpixMap) = 4π / m.resolution.numOfPixels
+pixsize(m::Enmap) = pixareamap(m)
 
 
 function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) where T
@@ -142,17 +145,18 @@ function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) w
 
     m_iX = workspace.mask_p[i, X]
     m_jY = workspace.mask_p[j, Y]
+    map_buffer = similar(m_iX)
 
     if A == :∅∅
-        map_buffer = m_iX * m_jY
+        parent(map_buffer) .= parent(m_iX) .* parent(m_jY)  # healpix doesn't broadcast properly
         w_result = map2alm(map_buffer)
         workspace.effective_weights[A, i, j, α] = w_result
         return w_result
     elseif (A in (:II, :QQ, :UU))
         if i == j
-            map_buffer = m_iX * m_jY
-            Ω_p = 4π / map_buffer.resolution.numOfPixels
-            map_buffer.pixels .*= workspace.weight_p[i, A].pixels .* Ω_p
+            parent(map_buffer) .= parent(m_iX) .* parent(m_jY)
+            Ω_p = pixsize(map_buffer)
+            parent(map_buffer) .*= parent(workspace.weight_p[i, A]) .* Ω_p
             w_result = map2alm(map_buffer)
             workspace.effective_weights[A, i, j, α] = w_result
             return w_result
@@ -195,7 +199,7 @@ function window_function_W!(workspace::CovarianceWorkspace{T}, X, Y, i, j, α, p
         for wY in wterms_Y
             result .+= alm2cl(
                 effective_weight_alm!(workspace, wX, i, j, α),
-                effective_weight_alm!(workspace, wY, p, q, β))
+                effective_weight_alm!(workspace, wY, p, q, β))[begin:workspace.lmax+1]
         end
     end
     norm = one(T) / (length(wterms_X) * length(wterms_Y))
