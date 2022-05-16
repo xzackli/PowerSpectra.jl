@@ -65,7 +65,6 @@ function coupledcovTTTT!(𝐂::SpectralArray, workspace::CovarianceWorkspace,
                          spectra, noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
-    lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
 
     r_ℓ_ip = noiseratios[:TT, i, p]
@@ -127,7 +126,6 @@ function coupledcovEEEE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, sp
                          noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
-    lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
 
     r_ℓ_ip = noiseratios[:EE, i, p]
@@ -189,9 +187,7 @@ function coupledcovTTTE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, sp
                                      noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
-    lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
-    W = workspace.W_spectra
 
     r_ℓ_ip = noiseratios[:TT, i, p]
     r_ℓ_jp = noiseratios[:TT, j, p]
@@ -243,9 +239,7 @@ function coupledcovTETE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, sp
                                      noiseratios)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
-    lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
-    W = workspace.W_spectra
 
     r_TT_ip = noiseratios[:TT, i, p]
     r_PP_jq = noiseratios[:EE, j, q]
@@ -312,7 +306,6 @@ function coupledcovTEEE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, sp
                                      noiseratios; planck=true)
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
-    lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
 
     r_EE_jq = noiseratios[:EE, j, q]
@@ -413,11 +406,8 @@ function coupledcovTTEE!(𝐂::SpectralArray{T}, workspace::CovarianceWorkspace,
                          noiseratios) where T
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
-    lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
-    W = workspace.W_spectra
 
-    fill!(𝐂, zero(T))
     loop_covTTEE!(𝐂,
         spectra[:TE,i,p], spectra[:TE,i,q], spectra[:TE,j,q], spectra[:TE,j,p],
         window_function_W!(workspace, :∅∅, :∅∅, i, p, :TP, j, q, :TP),
