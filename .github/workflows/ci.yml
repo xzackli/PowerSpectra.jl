@@ -11,7 +11,6 @@ jobs:
       matrix:
         version:
           - '1.7'
-          - 'nightly'
         os:
           - ubuntu-latest
           # - macOS-latest
@@ -22,10 +21,6 @@ jobs:
         include:
           - version: 'nightly'
             os: ubuntu-latest
-            arch: x64
-            experimental: true
-          - version: 'nightly'
-            os: macOS-latest
             arch: x64
             experimental: true
     steps:
