@@ -89,6 +89,9 @@ function CovarianceWorkspace(T::Type, field_names::NTuple{4, String}, lmax::Int,
         effective_weights, W_spectra)
 end
 
+"""Heuristic for a maximum multipole"""
+getlmax(m::HealpixMap) = nside2lmax(m.resolution.nside) 
+getlmax(m::Enmap) = fullringnum(getwcs(m)) - 1
 
 """
     CovarianceWorkspace(m_i, m_j, m_p, m_q; lmax::Int=0)
@@ -109,7 +112,7 @@ noise-weighted masks. By default, operates at Float64 precision.
 function CovarianceWorkspace(m_i::CovField{TC,MTT}, m_j::CovField{TC,MTT},
                              m_p::CovField{TC,MTT}, m_q::CovField{TC,MTT}; lmax::Int=0) where {TC,MTT}
     field_names = (m_i.name, m_j.name, m_p.name, m_q.name)  # for easy access
-    lmax = iszero(lmax) ? nside2lmax(m_i.maskT.resolution.nside) : lmax  # set an lmax if not specified
+    lmax = iszero(lmax) ? getlmax(m_i.maskT) : lmax  # set an lmax if not specified
     mask_p = Dict{Tuple{String, Symbol},MTT}(
         (m_i.name, :TT) => m_i.maskT, (m_j.name, :TT) => m_j.maskT,
         (m_p.name, :TT) => m_p.maskT, (m_q.name, :TT) => m_q.maskT,
@@ -131,10 +134,9 @@ function CovarianceWorkspace(m_i::CovField{TC,MTT}, m_j::CovField{TC,MTT},
         Dict{WIndex, SpectralVector{Float64, Vector{Float64}}}())
 end
 
-
+# dispatches for the two map types we support
 pixsize(m::HealpixMap) = 4π / m.resolution.numOfPixels
 pixsize(m::Enmap) = pixareamap(m)
-
 
 function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) where T
     if (A, i, j, α) in keys(workspace.effective_weights)
