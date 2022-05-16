@@ -46,7 +46,8 @@ end
     nltt = SpectralVector(convert(Vector, noise.nltt))
 
     # this test specifies a map with unit variance. the corresponding white noise level is divided out in r_coeff
-    N_white = 4π / nside2npix(nside)
+    Ω_p = PowerSpectra.pixsize(mask1_T)
+    N_white = Ω_p
     r_coeff = Dict{PowerSpectra.SpectrumName, SpectralVector{Float64, Vector{Float64}}}(
         (:TT, "143_hm1", "143_hm1") => sqrt.(nltt ./ N_white),
         (:TT, "143_hm1", "143_hm2") => identity_spectrum,
