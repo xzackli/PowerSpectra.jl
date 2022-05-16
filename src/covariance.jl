@@ -409,15 +409,15 @@ function loop_covTEEE_planck!(𝐂::SpectralArray{T,2},
 end
 
 
-function coupledcovTTEE!(𝐂::SpectralArray, workspace::CovarianceWorkspace, spectra,
-                         noiseratios)
+function coupledcovTTEE!(𝐂::SpectralArray{T}, workspace::CovarianceWorkspace, spectra,
+                         noiseratios) where T
 
     @assert axes(𝐂, 1) == axes(𝐂, 2)
     lmin, lmax = first(axes(𝐂, 1)), last(axes(𝐂, 1))
     i, j, p, q = workspace.field_names
     W = workspace.W_spectra
 
-    𝐂 = SpectralArray(zeros(T, (lmax+1, lmax+1)))
+    fill!(𝐂, zero(T))
     loop_covTTEE!(𝐂,
         spectra[:TE,i,p], spectra[:TE,i,q], spectra[:TE,j,q], spectra[:TE,j,p],
         window_function_W!(workspace, :∅∅, :∅∅, i, p, :TP, j, q, :TP),

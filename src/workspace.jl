@@ -147,7 +147,7 @@ function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) w
 
     m_iX = workspace.mask_p[i, X]
     m_jY = workspace.mask_p[j, Y]
-    map_buffer = similar(m_iX)
+    map_buffer = deepcopy(m_iX)
 
     if A == :∅∅
         parent(map_buffer) .= parent(m_iX) .* parent(m_jY)  # healpix doesn't broadcast properly
