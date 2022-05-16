@@ -268,4 +268,4 @@ synalm!(Cl::AbstractArray{T,3}, alms::Vector) where T = synalm!(Random.default_r
 
 
 # Healpix parent 
-Base.parent(x::HealpixMap) = x.pixels
+# Base.parent(x::HealpixMap) = x.pixels

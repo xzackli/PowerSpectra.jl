@@ -76,7 +76,7 @@ end
         (:TE, "143_hm2", "143_hm2") => clte,
     )
 
-    σ² = PolarizedHealpixMap{Float64, RingOrder, typeof(unit_var)}(unit_var, unit_var, unit_var)
+    σ² = PolarizedHealpixMap(unit_var, unit_var, unit_var)
     m1 = CovField("143_hm1", mask1_T, mask1_P, σ², beam1, beam1)
     m2 = CovField("143_hm2", mask2_T, mask2_P, σ², beam2, beam2)
     workspace = CovarianceWorkspace(m1, m2, m1, m2)
