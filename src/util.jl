@@ -201,7 +201,8 @@ alms = [Alm{Complex{Float64}}(3nside-1, 3nside-1) for i in 1:2]
 synalm!(Cl, alms)
 ```
 """
-function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {T}
+function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector; 
+        lmin=0, lmax=-1) where {T}
     # This implementation could be 1.2x faster by storing the cholesky factorization, but
     # typically you also perform two SHTs with each synalm, which dominates the cost.
 
@@ -209,25 +210,31 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
     @assert ncomp > 0
     @assert size(Cl,1) == size(Cl,2)
     @assert size(alms,1) > 0
-    lmax = alms[1].lmax
+    lmax = (lmax < 0) ? first(alms).lmax : lmax
 
     # first we synthesize just a unit normal for alms. we'll adjust the magnitudes later
     for comp in 1:ncomp
         randn!(rng, alms[comp].alm)
+        for ℓ in 0:(lmin-1)
+            for m in 0:ℓ
+                i_alm = almIndex(alms[comp], ℓ, m)  # compute alm index
+                alms[comp].alm[i_alm] = zero(T)
+            end
+        end
     end
     𝐂 = Array{T,2}(undef, (ncomp, ncomp))  # covariance for this given ℓ
     h𝐂 = Hermitian(Array{T,2}(undef, (ncomp, ncomp)))  # hermitian buffer
     alm_out = zeros(Complex{T}, ncomp)
     alm_in = zeros(Complex{T}, ncomp)
 
-    for ℓ in 0:lmax
+    for ℓ in lmin:lmax
         # build the 𝐂 matrix for ℓ
         for cᵢ in 1:ncomp, cⱼ in 1:ncomp
             𝐂[cᵢ, cⱼ] = Cl[cᵢ, cⱼ, ℓ+1]
         end
 
         if iszero(𝐂)
-            for m in 0:ℓ
+            for m in lmin:ℓ
                 i_alm = almIndex(alms[1], ℓ, m)  # compute alm index
                 for comp in 1:ncomp  # copy buffer back into the alms
                     alms[comp].alm[i_alm] = zero(T)
@@ -264,7 +271,8 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector) where {
         end
     end
 end
-synalm!(Cl::AbstractArray{T,3}, alms::Vector) where T = synalm!(Random.default_rng(), Cl, alms)
+synalm!(Cl::AbstractArray{T,3}, alms::Vector; lmin=0, lmax=-1) where T = 
+    synalm!(Random.default_rng(), Cl, alms; lmin=lmin, lmax=lmax)
 
 
 # Healpix parent 
