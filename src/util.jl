@@ -184,13 +184,13 @@ synalm(Cl::AbstractArray{T,3}, nside::Int) where T = synalm(Random.default_rng()
 
 
 """
-    synalm!([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, alms::Vector{Alm{Complex{T}}}) where T
+    synalm!([rng=GLOBAL_RNG], Cl::AbstractArray{T,3}, alms) where T
 
 In-place synthesis of spherical harmonic coefficients, given spectra.
 
 # Arguments:
 - `Cl::AbstractArray{T,3}`: array with dimensions of comp, comp, ℓ
-- `alms::Vector`: array of Alm to fill
+- `alms::Union{NTuple{N,Alm}, Vector{Alm}}`: array of Alm to fill
 
 # Examples
 ```julia
@@ -201,8 +201,9 @@ alms = [Alm{Complex{Float64}}(3nside-1, 3nside-1) for i in 1:2]
 synalm!(Cl, alms)
 ```
 """
-function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector; 
-        lmin=0, lmax=-1) where {T}
+function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, 
+        alms::Union{NTuple{N,Alm}, Vector{Alm}};
+        lmin=0, lmax=-1) where {T, N}
     # This implementation could be 1.2x faster by storing the cholesky factorization, but
     # typically you also perform two SHTs with each synalm, which dominates the cost.
 
@@ -271,9 +272,10 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, alms::Vector;
         end
     end
 end
-synalm!(Cl::AbstractArray{T,3}, alms::Vector; lmin=0, lmax=-1) where T = 
+function synalm!(Cl::AbstractArray{T,3}, alms::Union{NTuple{N,Alm}, Vector{Alm}}; 
+        lmin=0, lmax=-1) where {T, N} 
     synalm!(Random.default_rng(), Cl, alms; lmin=lmin, lmax=lmax)
-
+end
 
 # Healpix parent 
 # Base.parent(x::HealpixMap) = x.pixels
