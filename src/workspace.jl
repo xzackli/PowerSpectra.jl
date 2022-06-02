@@ -144,6 +144,7 @@ function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) w
     end
 
     X, Y = split_maptype(α)
+    lmax = workspace.lmax
 
     m_iX = workspace.mask_p[i, X]
     m_jY = workspace.mask_p[j, Y]
@@ -151,7 +152,7 @@ function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) w
 
     if A == :∅∅
         parent(map_buffer) .= parent(m_iX) .* parent(m_jY)  # healpix doesn't broadcast properly
-        w_result = map2alm(map_buffer)
+        w_result = map2alm(map_buffer; lmax=lmax)
         workspace.effective_weights[A, i, j, α] = w_result
         return w_result
     elseif (A in (:II, :QQ, :UU))
@@ -159,14 +160,13 @@ function effective_weight_alm!(workspace::CovarianceWorkspace{T}, A, i, j, α) w
             parent(map_buffer) .= parent(m_iX) .* parent(m_jY)
             Ω_p = pixsize(map_buffer)
             parent(map_buffer) .*= parent(workspace.weight_p[i, A]) .* Ω_p
-            w_result = map2alm(map_buffer)
+            w_result = map2alm(map_buffer; lmax=lmax)
             workspace.effective_weights[A, i, j, α] = w_result
             return w_result
         end
     end
 
     # otherwise return zero
-    lmax = workspace.lmax
     return Alm(lmax, lmax, zeros(ComplexF64, numberOfAlms(lmax, lmax)))
 end
 
