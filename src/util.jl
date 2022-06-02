@@ -202,8 +202,8 @@ synalm!(Cl, alms)
 ```
 """
 function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3}, 
-        alms::Union{NTuple{N,Alm}, Vector{Alm}};
-        lmin=0, lmax=-1) where {T, N}
+        alms::Union{NTuple{N,Alm}, Vector{A}};
+        lmin=0, lmax=-1) where {T, N, A <: Alm}
     # This implementation could be 1.2x faster by storing the cholesky factorization, but
     # typically you also perform two SHTs with each synalm, which dominates the cost.
 
@@ -272,8 +272,8 @@ function synalm!(rng::AbstractRNG, Cl::AbstractArray{T,3},
         end
     end
 end
-function synalm!(Cl::AbstractArray{T,3}, alms::Union{NTuple{N,Alm}, Vector{Alm}}; 
-        lmin=0, lmax=-1) where {T, N} 
+function synalm!(Cl::AbstractArray{T,3}, alms::Union{NTuple{N,A}, Vector{A}}; 
+        lmin=0, lmax=-1) where {T, N, A <: Alm} 
     synalm!(Random.default_rng(), Cl, alms; lmin=lmin, lmax=lmax)
 end
 
