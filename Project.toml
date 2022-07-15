@@ -1,7 +1,7 @@
 name = "PowerSpectra"
 uuid = "87acb811-fa58-4e83-857d-605afdc1041b"
 authors = ["xzackli <xzackli@gmail.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
@@ -25,12 +25,12 @@ UnsafeArrays = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
 WignerFamilies = "a8f88a7a-0a89-491c-8ecb-051e99aa9f5e"
 
 [compat]
-BandedMatrices = "0.16"
-CSV = "0.9"
+BandedMatrices = "0.16, 0.17"
+CSV = "0.9, 0.10"
 Combinatorics = "1"
 DataFrames = "1"
 FITSIO = "0.16"
-FillArrays = "0.12"
+FillArrays = "0.12, 0.13"
 Healpix = "3, 4"
 IdentityRanges = "0.3"
 Lazy = "0.15"
